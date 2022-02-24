@@ -24,10 +24,10 @@ import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 import android.graphics.drawable.Drawable;
-import android.util.SparseIntArray;
-import android.view.View;
+import android.util.SparseIntArray; // TODO: 2/24/22 replace with Map<integer, Integer>
+import android.view.View; // TODO: 2/24/22 替换为flexItem
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
+import android.widget.CompoundButton; // TODO: 2/24/22 删除对应逻辑
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -642,7 +642,7 @@ class FlexboxHelper {
      *
      * @param compoundButton the compound button that need to be evaluated
      */
-    private void evaluateMinimumSizeForCompoundButton(CompoundButton compoundButton) {
+    private void evaluateMinimumSizeForCompoundButton(CompoundButton compoundButton) { // TODO: 2/24/22 delete
         FlexItem flexItem = (FlexItem) compoundButton.getLayoutParams();
         int minWidth = flexItem.getMinWidth();
         int minHeight = flexItem.getMinHeight();

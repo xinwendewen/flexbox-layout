@@ -113,7 +113,7 @@ class FlexboxAndroidTest {
     fun testOrderAttribute_fromCode() {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(R.layout.activity_order_test,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val fifth = createTextView(activity, "5", 0)
                         val sixth = createTextView(activity, "6", -10)
@@ -177,7 +177,7 @@ class FlexboxAndroidTest {
     fun testOrderAttribute_addViewInMiddle() {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(R.layout.activity_order_test,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val fifth = createTextView(activity, "5", 0)
                         // Add the new TextView in the middle of the indices
@@ -204,7 +204,7 @@ class FlexboxAndroidTest {
     @Throws(Throwable::class)
     fun testOrderAttribute_removeLastView() {
         val flexboxLayout = createFlexboxLayout(R.layout.activity_order_test,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.removeViewAt(flexboxLayout.childCount - 1)
                     }
@@ -225,7 +225,7 @@ class FlexboxAndroidTest {
     @Throws(Throwable::class)
     fun testOrderAttribute_removeViewInMiddle() {
         val flexboxLayout = createFlexboxLayout(R.layout.activity_order_test,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.removeViewAt(2)
                     }
@@ -239,166 +239,6 @@ class FlexboxAndroidTest {
         assertThat((flexboxLayout.getReorderedChildAt(1) as TextView).text.toString(), `is`("4"))
         // order: 2, index 0
         assertThat((flexboxLayout.getReorderedChildAt(2) as TextView).text.toString(), `is`("1"))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_wrap() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test)
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        // The width of the FlexboxLayout is not enough for placing the three text views.
-        // The third text view should be placed below the first one
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        val flexLines = flexboxLayout.flexLines
-        assertThat(flexLines.size, `is`(2))
-        val flexLine1 = flexLines[0]
-        val activity = activityRule.activity
-        assertThat(flexLine1.mainSize, `is`(activity.dpToPixel(320)))
-        assertThat(flexLine1.crossSize, `is`(activity.dpToPixel(120)))
-        val flexLine2 = flexLines[1]
-        assertThat(flexLine2.mainSize, `is`(activity.dpToPixel(160)))
-        assertThat(flexLine2.crossSize, `is`(activity.dpToPixel(120)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_nowrap() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.NOWRAP
-                        flexboxLayout.alignItems = AlignItems.FLEX_START
-                    }
-                })
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.NOWRAP))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        // The width of the FlexboxLayout is not enough for placing the three text views.
-        // But the flexWrap attribute is set to NOWRAP, the third text view is placed
-        // to the right of the second one and overflowing the parent FlexboxLayout.
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(1))
-        val flexLines = flexboxLayout.flexLines
-        assertThat(flexLines.size, `is`(1))
-        val flexLine = flexLines[0]
-        val activity = activityRule.activity
-        assertThat(flexLine.mainSize, `is`(activity.dpToPixel(480)))
-        assertThat(flexLine.crossSize, `is`(activity.dpToPixel(300)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_wrap_reverse() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        // The width of the FlexboxLayout is not enough for placing the three text views.
-        // There should be two flex lines same as WRAP, but the layout starts from bottom
-        // to top in FlexWrap.WRAP_REVERSE
-        onView(withId(R.id.text3)).check(isCompletelyAbove(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyAbove(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_wrap_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        // The height of the FlexboxLayout is not enough for placing the three text views.
-        // The third text view should be placed right of the first one
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_nowrap_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.flexWrap = FlexWrap.NOWRAP
-                    }
-                })
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.NOWRAP))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        // The height of the FlexboxLayout is not enough for placing the three text views.
-        // But the flexWrap attribute is set to NOWRAP, the third text view is placed
-        // below the second one and overflowing the parent FlexboxLayout.
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(1))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexWrap_wrap_reverse_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        // The width of the FlexboxLayout is not enough for placing the three text views.
-        // There should be two flex lines same as WRAP, but the layout starts from right
-        // to left in FlexWrap.WRAP_REVERSE
-        onView(withId(R.id.text3)).check(isCompletelyLeftOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyLeftOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
     }
 
     @Test
@@ -424,7 +264,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_flex_item_match_parent_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.flexDirection = FlexDirection.COLUMN
                     }
@@ -512,1985 +352,6 @@ class FlexboxAndroidTest {
         assertThat(flexboxLayout.width, `is`(textView1.width + textView2.width + textView3.width))
     }
 
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexStart() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test)
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_START))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexStart_withParentPadding() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_parent_padding)
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_START))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        val text1 = activity.findViewById<TextView>(R.id.text1)
-        // Both the parent FrameLayout and the FlexboxLayout have different padding values
-        // but the text1.getLeft should be the padding value for the FlexboxLayout, not including
-        // the parent's padding value
-        assertThat(text1.left, `is`(flexboxLayout.paddingLeft))
-        assertThat(text1.top, `is`(flexboxLayout.paddingTop))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexEnd() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_END))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyLeftOf(withId(R.id.text3)))
-        onView(withId(R.id.text1)).check(isCompletelyLeftOf(withId(R.id.text2)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexEnd_withParentPadding() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_parent_padding,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_END))
-        onView(withId(R.id.text2)).check(isCompletelyLeftOf(withId(R.id.text3)))
-        onView(withId(R.id.text1)).check(isCompletelyLeftOf(withId(R.id.text2)))
-        val text3 = activity.findViewById<TextView>(R.id.text3)
-        // Both the parent FrameLayout and the FlexboxLayout have different padding values
-        // but the text3.getRight should be the padding value for the FlexboxLayout, not including
-        // the parent's padding value
-        assertThat(flexboxLayout.width - text3.right, `is`(flexboxLayout.paddingRight))
-        assertThat(text3.top, `is`(flexboxLayout.paddingTop))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_center() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.CENTER
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.CENTER))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val space = (flexboxLayout.width - textView1.width - textView2.width - textView3.width) / 2
-        assertThat(textView1.left, isEqualAllowingError(space))
-        assertThat(flexboxLayout.right - textView3.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_center_withParentPadding() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_parent_padding,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.CENTER
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.CENTER))
-
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width -
-                textView3.width - flexboxLayout.paddingLeft - flexboxLayout.paddingRight
-        space /= 2
-        assertThat(textView1.left - flexboxLayout.paddingLeft, isEqualAllowingError(space))
-        assertThat(flexboxLayout.width - textView3.right - flexboxLayout.paddingRight,
-                isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width
-        space /= 2
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(space))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width -
-                padding * 2
-        space /= 2
-        assertThat(textView1.left, `is`(padding))
-        assertThat(flexboxLayout.right - textView3.right, `is`(padding))
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(space))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width
-        space /= 6 // Divide by the number of children * 2
-        assertTrue(space - 1 <= textView1.left && textView1.left <= space + 1)
-        val spaceInMiddle = space * 2
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(spaceInMiddle))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.right - textView3.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceEvenly() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_EVENLY
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_EVENLY))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width
-        space /= 4 // Divide by the number of children + 1
-        assertThat(textView1.left, isEqualAllowingError(space))
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(space))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(space))
-        assertThat(flexboxLayout.right - textView3.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width -
-                padding * 2
-        space /= 6 // Divide by the number of children * 2
-        assertThat(textView1.left - padding, isEqualAllowingError(space))
-
-        val spaceInMiddle = space * 2
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(spaceInMiddle))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.right - textView3.right - padding, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceEvenly_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_EVENLY
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_EVENLY))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView2.width - textView3.width -
-                padding * 2
-        space /= 4 // Divide by the number of children + 1
-        assertThat(textView1.left - padding, isEqualAllowingError(space))
-
-        assertThat(textView2.left - textView1.right, isEqualAllowingError(space))
-        assertThat(textView3.left - textView2.right, isEqualAllowingError(space))
-        assertThat(flexboxLayout.right - textView3.right - padding, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexStart_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_START))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_flexEnd_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.alignItems = AlignItems.STRETCH
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.FLEX_END))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyAbove(withId(R.id.text3)))
-        onView(withId(R.id.text1)).check(isCompletelyAbove(withId(R.id.text2)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_center_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.CENTER
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.CENTER))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height
-        space /= 2
-        assertThat(textView1.top, isEqualAllowingError(space))
-        assertThat(flexboxLayout.bottom - textView3.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height
-        space /= 2
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(space))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween_flexDirection_column_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height - padding * 2
-        space /= 2
-        assertThat(textView1.top, `is`(padding))
-        assertThat(flexboxLayout.bottom - textView3.bottom, `is`(padding))
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(space))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height
-        space /= 6 // Divide by the number of children * 2
-        assertThat(textView1.top, isEqualAllowingError(space))
-        val spaceInMiddle = space * 2
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(spaceInMiddle))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.bottom - textView3.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceEvenly_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_EVENLY
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_EVENLY))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height
-        space /= 4 // Divide by the number of children + 1
-        assertThat(textView1.top, isEqualAllowingError(space))
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(space))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(space))
-        assertThat(flexboxLayout.bottom - textView3.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround_flexDirection_column_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height -
-                padding * 2
-        space /= 6 // Divide by the number of children * 2
-        assertThat(textView1.top - padding, isEqualAllowingError(space))
-        val spaceInMiddle = space * 2
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(spaceInMiddle))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.bottom - textView3.bottom - padding, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceEvenly_flexDirection_column_withPadding() {
-        val activity = activityRule.activity
-        val padding = 40
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_justify_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_EVENLY
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.setPadding(padding, padding, padding, padding)
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_EVENLY))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView2.height - textView3.height -
-                padding * 2
-        space /= 4 // Divide by the number of children + 1
-        assertThat(textView1.top - padding, isEqualAllowingError(space))
-        assertThat(textView2.top - textView1.bottom, isEqualAllowingError(space))
-        assertThat(textView3.top - textView2.bottom, isEqualAllowingError(space))
-        assertThat(flexboxLayout.bottom - textView3.bottom - padding,
-                isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround_including_gone_views() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_gone,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                    }
-                }
-        )
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.width - textView1.width - textView3.width
-        space /= 4 // Divide by the number of visible children * 2
-        assertThat(textView1.left, isEqualAllowingError(space))
-        val spaceInMiddle = space * 2
-        assertThat(textView3.left - textView1.right, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.right - textView3.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween_including_gone_views() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_gone,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                    }
-                })
-
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val space = flexboxLayout.width - textView1.width - textView3.width
-        assertThat(textView3.left - textView1.right, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceAround_including_gone_views_direction_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_gone,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_AROUND
-                    }
-                })
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_AROUND))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var space = flexboxLayout.height - textView1.height - textView3.height
-        space /= 4 // Divide by the number of visible children * 2
-        assertThat(textView1.top, isEqualAllowingError(space))
-        val spaceInMiddle = space * 2
-        assertThat(textView3.top - textView1.bottom, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.bottom - textView3.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testJustifyContent_spaceBetween_including_gone_views_direction_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_justify_content_with_gone,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.justifyContent = JustifyContent.SPACE_BETWEEN
-                    }
-                })
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        assertThat(flexboxLayout.justifyContent, `is`(JustifyContent.SPACE_BETWEEN))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val space = flexboxLayout.height - textView1.height - textView3.height
-        assertThat(textView3.top - textView1.bottom, isEqualAllowingError(space))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexGrow_withExactParentLength() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_grow_test)
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        // the third TextView is expanded to the right edge of the FlexboxLayout
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.width, `is`(flexboxLayout.width - textView1.width - textView2.width))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexGrow_withExactParentLength_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_grow_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        // the third TextView is expanded to the bottom edge of the FlexboxLayout
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.height, `is`(flexboxLayout.height - textView1.height - textView2.height))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexGrow_including_view_gone() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_grow_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        val textView2 = activity.findViewById<TextView>(R.id.text2)
-                        textView2.visibility = View.GONE
-                    }
-                })
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        // the third TextView is expanded to the right edge of the FlexboxLayout
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView2.visibility, `is`(View.GONE))
-        assertThat(textView3.width, `is`(flexboxLayout.width - textView1.width))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_stretch() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test)
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.STRETCH))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val flexLineCrossSize = flexboxLayout.height / 2
-        // Two flex line's cross sizes are expanded to the half of the height of the FlexboxLayout.
-        // The third textView's top should be aligned width the second flex line.
-        assertThat(textView3.top, `is`(flexLineCrossSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexStart() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_START
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_START))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.top, `is`(textView1.height))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexEnd() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_END))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isCompletelyAbove(withId(R.id.text3)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyAbove(withId(R.id.text3)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.bottom, `is`(flexboxLayout.bottom - textView3.height))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexEnd_parentPadding() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_END
-                        flexboxLayout.setPadding(32, 32, 32, 32)
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_END))
-        onView(withId(R.id.text1)).check(isCompletelyAbove(withId(R.id.text3)))
-        onView(withId(R.id.text2)).check(isCompletelyAbove(withId(R.id.text3)))
-
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.bottom, `is`(flexboxLayout.bottom - flexboxLayout.paddingBottom))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexEnd_parentPadding_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                        flexboxLayout.setPadding(32, 32, 32, 32)
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_END))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isCompletelyLeftOf(withId(R.id.text3)))
-        onView(withId(R.id.text2)).check(isCompletelyLeftOf(withId(R.id.text3)))
-
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.right, `is`(flexboxLayout.right - flexboxLayout.paddingRight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_center() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.CENTER
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.CENTER))
-
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        var spaceAboveAndBottom = flexboxLayout.height - textView1.height - textView3.height
-        spaceAboveAndBottom /= 2
-
-        assertThat(textView1.top, isEqualAllowingError(spaceAboveAndBottom))
-        assertThat(flexboxLayout.bottom - textView3.bottom, isEqualAllowingError(spaceAboveAndBottom))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceBetween() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_BETWEEN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_BETWEEN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceBetween_withPadding() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_BETWEEN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_BETWEEN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceAround() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_AROUND
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_AROUND))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        var spaceAround = flexboxLayout.height - textView1.height - textView3.height
-        spaceAround /= 4 // Divide by the number of flex lines * 2
-
-        assertThat(textView1.top, isEqualAllowingError(spaceAround))
-        val spaceInMiddle = textView1.bottom + spaceAround * 2
-        assertThat(textView3.top, isEqualAllowingError(spaceInMiddle))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_stretch_parentWrapContent() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        val parentLp = flexboxLayout.layoutParams
-                        parentLp.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                        flexboxLayout.layoutParams = parentLp
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.STRETCH))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        // alignContent is only effective if the parent's height/width mode is MeasureSpec.EXACTLY.
-        // The size of the flex lines don't change even if the alignContent is set to
-        // ALIGN_CONTENT_STRETCH
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.top, `is`(textView1.height))
-        assertThat(flexboxLayout.flexLines.size, `is`(2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_stretch_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.STRETCH))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val flexLineCrossSize = flexboxLayout.width / 2
-        // Two flex line's cross sizes are expanded to the half of the width of the FlexboxLayout.
-        // The third textView's left should be aligned with the second flex line.
-        assertThat(textView3.left, `is`(flexLineCrossSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexStart_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_START
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_START))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.left, `is`(textView1.width))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexEnd_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_END))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isCompletelyLeftOf(withId(R.id.text3)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text3)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.right, `is`(flexboxLayout.right - textView3.width))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_center_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.CENTER
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.CENTER))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val spaceLeftAndRight = (flexboxLayout.width - textView1.width - textView3.width) / 2
-
-        assertThat(textView1.left, isEqualAllowingError(spaceLeftAndRight))
-        assertThat(textView3.right, isEqualAllowingError(flexboxLayout.right - spaceLeftAndRight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceBetween_flexDirection_column() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_BETWEEN
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_BETWEEN))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceAround_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_AROUND
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_AROUND))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        var spaceAround = flexboxLayout.width - textView1.width - textView3.width
-        spaceAround /= 4 // Divide by the number of flex lines * 2
-
-        assertThat(textView1.left, isEqualAllowingError(spaceAround))
-        val spaceInMiddle = textView1.right + spaceAround * 2
-        assertThat(textView3.left, isEqualAllowingError(spaceInMiddle))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_stretch_parentWrapContent_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        val parentLp = flexboxLayout.layoutParams
-                        parentLp.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                        flexboxLayout.layoutParams = parentLp
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.STRETCH))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        // the third TextView is wrapped to the next flex line
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        // alignContent is only effective if the parent's height/width mode is MeasureSpec.EXACTLY.
-        // The size of the flex lines don't change even if the alignContent is set to
-        // ALIGN_CONTENT_STRETCH
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView3.left, `is`(textView1.width))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexEnd_wrapReverse_contentOverflowed() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test_overflowed,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_END
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_END))
-        onView(withId(R.id.text6)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text5)).check(isCompletelyLeftOf(withId(R.id.text6)))
-        onView(withId(R.id.text4)).check(isCompletelyBelow(withId(R.id.text6)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_flexStart_wrapReverse_contentOverflowed() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test_overflowed,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.FLEX_START
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.FLEX_START))
-        onView(withId(R.id.text1)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyAbove(withId(R.id.text1)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceBetween_wrapReverse_contentOverflowed() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test_overflowed,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_BETWEEN
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_BETWEEN))
-        onView(withId(R.id.text1)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyAbove(withId(R.id.text1)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_center_wrapReverse_contentOverflowed() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test_overflowed,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.CENTER
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.CENTER))
-        val textView6 = activity.findViewById<TextView>(R.id.text6)
-        val textView4 = activity.findViewById<TextView>(R.id.text4)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-
-        assertThat(textView6.top - flexboxLayout.top, isEqualAllowingError(
-                (flexboxLayout.height - textView6.height - textView4.height - textView2.height) / 2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignContent_spaceAround_wrapReverse_contentOverflowed() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_content_test_overflowed,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignContent = AlignContent.SPACE_AROUND
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                    }
-                })
-        assertThat(flexboxLayout.alignContent, `is`(AlignContent.SPACE_AROUND))
-        val textView6 = activity.findViewById<TextView>(R.id.text6)
-        val textView4 = activity.findViewById<TextView>(R.id.text4)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-
-        assertThat(textView6.top - flexboxLayout.top, isEqualAllowingError(
-                (flexboxLayout.height - textView6.height - textView4.height - textView2.height) / 2))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_stretch() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_stretch_test)
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.STRETCH))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.height, isEqualAllowingError(flexLineSize))
-        assertThat(textView2.height, isEqualAllowingError(flexLineSize))
-        assertThat(textView3.height, isEqualAllowingError(flexLineSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignSelf_stretch() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_align_self_stretch_test)
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        // Only the first TextView's alignSelf is set to ALIGN_SELF_STRETCH
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.height, isEqualAllowingError(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignSelf_stretch_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_self_stretch_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        // Only the first TextView's alignSelf is set to ALIGN_SELF_STRETCH
-        val flexLineSize = flexboxLayout.width / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.width, isEqualAllowingError(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexStart() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test)
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_START))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.height, not(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-        assertThat(textView3.top, isEqualAllowingError(flexLineSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.height, not(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-        assertThat(textView1.bottom, isEqualAllowingError(flexLineSize))
-        assertThat(textView2.bottom, isEqualAllowingError(flexLineSize))
-        assertThat(textView3.bottom, `is`(flexboxLayout.bottom))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd_parentPadding() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_align_items_parent_padding_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        assertThat(textView1.bottom, `is`(flexboxLayout.bottom - flexboxLayout.paddingBottom))
-        assertThat(textView2.bottom, `is`(flexboxLayout.bottom - flexboxLayout.paddingBottom))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd_parentPadding_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_align_items_parent_padding_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        assertThat(textView1.right, `is`(flexboxLayout.right - flexboxLayout.paddingRight))
-        assertThat(textView2.right, `is`(flexboxLayout.right - flexboxLayout.paddingRight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_center() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.CENTER
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.CENTER))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        // All TextView's heights are the same. No issues should be found if using the first
-        // TextView to calculate the space above and below
-        val spaceAboveAndBelow = (flexLineSize - textView1.height) / 2
-        assertThat(textView1.height, not(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-        assertThat(textView1.top, isEqualAllowingError(spaceAboveAndBelow))
-        assertThat(textView2.top, isEqualAllowingError(spaceAboveAndBelow))
-        assertThat(textView3.top, isEqualAllowingError(flexLineSize + spaceAboveAndBelow))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd_wrapReverse() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        assertThat(textView1.height, not(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-        assertThat(textView1.top, isEqualAllowingError(flexboxLayout.height - flexLineSize))
-        assertThat(textView2.top, isEqualAllowingError(flexboxLayout.height - flexLineSize))
-        assertThat(textView3.top, `is`(0))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_center_wrapReverse() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                        flexboxLayout.alignItems = AlignItems.CENTER
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.CENTER))
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        // All TextView's heights are the same. No issues should be found if using the first
-        // TextView to calculate the space above and below
-        val spaceAboveAndBelow = (flexLineSize - textView1.height) / 2
-        assertThat(textView1.height, not(flexLineSize))
-        assertThat(textView2.height, not(flexLineSize))
-        assertThat(textView3.height, not(flexLineSize))
-        assertThat(textView1.bottom, isEqualAllowingError(flexboxLayout.height - spaceAboveAndBelow))
-        assertThat(textView2.bottom, isEqualAllowingError(flexboxLayout.height - spaceAboveAndBelow))
-        assertThat(textView3.bottom,
-                isEqualAllowingError(flexboxLayout.height - flexLineSize - spaceAboveAndBelow))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexStart_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_START))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.width / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.width, not(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-        assertThat(textView3.left, isEqualAllowingError(flexLineSize))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.height / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        assertThat(textView1.width, not(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-        assertThat(textView1.right, isEqualAllowingError(flexLineSize))
-        assertThat(textView2.right, isEqualAllowingError(flexLineSize))
-        assertThat(textView3.right, `is`(flexboxLayout.right))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_center_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.alignItems = AlignItems.CENTER
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.CENTER))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.width / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        // All TextView's widths are the same. No issues should be found if using the first
-        // TextView to calculate the space left and right
-        val spaceLeftAndRight = (flexLineSize - textView1.width) / 2
-        assertThat(textView1.width, not(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-        assertThat(textView1.left, isEqualAllowingError(spaceLeftAndRight))
-        assertThat(textView2.left, isEqualAllowingError(spaceLeftAndRight))
-        assertThat(textView3.left, isEqualAllowingError(flexLineSize + spaceLeftAndRight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_flexEnd_wrapReverse_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                        flexboxLayout.alignItems = AlignItems.FLEX_END
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.FLEX_END))
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.width / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        assertThat(textView1.width, not(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-        assertThat(textView1.left, isEqualAllowingError(flexboxLayout.width - flexLineSize))
-        assertThat(textView2.left, isEqualAllowingError(flexboxLayout.width - flexLineSize))
-        assertThat(textView3.left, `is`(0))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_center_wrapReverse_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_align_items_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-                        flexboxLayout.alignItems = AlignItems.CENTER
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        assertThat(flexboxLayout.alignItems, `is`(AlignItems.CENTER))
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP_REVERSE))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-
-        // There should be 2 flex lines in the layout with the given layout.
-        val flexLineSize = flexboxLayout.width / 2
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-
-        // All TextView's widths are the same. No issues should be found if using the first
-        // TextView to calculate the space above and below
-        val spaceLeftAndRight = (flexLineSize - textView1.width) / 2
-        assertThat(textView1.width, not(flexLineSize))
-        assertThat(textView2.width, not(flexLineSize))
-        assertThat(textView3.width, not(flexLineSize))
-        assertThat(textView1.right, isEqualAllowingError(flexboxLayout.width - spaceLeftAndRight))
-        assertThat(textView2.right, isEqualAllowingError(flexboxLayout.width - spaceLeftAndRight))
-        assertThat(textView3.right,
-                isEqualAllowingError(flexboxLayout.width - flexLineSize - spaceLeftAndRight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_baseline() {
-        val activity = activityRule.activity
-        createFlexboxLayout(R.layout.activity_align_items_baseline_test)
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val topPluBaseline1 = textView1.top + textView1.baseline
-        val topPluBaseline2 = textView2.top + textView2.baseline
-        val topPluBaseline3 = textView3.top + textView3.baseline
-
-        assertThat(topPluBaseline1, `is`(topPluBaseline2))
-        assertThat(topPluBaseline2, `is`(topPluBaseline3))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_baseline_wrapContent() {
-        // This test verifies the issue that baseline calculation is broken on API level +24
-        // https://github.com/google/flexbox-layout/issues/341
-        val activity = activityRule.activity
-        val layout = createFlexboxLayout(R.layout.activity_align_items_baseline_wrap_content)
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val topPluBaseline1 = textView1.top + textView1.baseline
-        val topPluBaseline2 = textView2.top + textView2.baseline
-        val topPluBaseline3 = textView3.top + textView3.baseline
-
-        assertThat(topPluBaseline1, `is`(topPluBaseline2))
-        assertThat(topPluBaseline2, `is`(topPluBaseline3))
-        assertThat(layout.flexLines.size, `is`(1))
-        assertTrue(layout.flexLines[0].crossSize > textView1.height)
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testAlignItems_baseline_wrapReverse() {
-        val activity = activityRule.activity
-        createFlexboxLayout(R.layout.activity_align_items_baseline_test, object : Configuration {
-            override fun apply(flexboxLayout: FlexboxLayout) {
-                flexboxLayout.flexWrap = FlexWrap.WRAP_REVERSE
-            }
-        })
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val bottomPluBaseline1 = textView1.bottom + textView1.baseline
-        val bottomPluBaseline2 = textView2.bottom + textView2.baseline
-        val bottomPluBaseline3 = textView3.bottom + textView3.baseline
-
-        assertThat(bottomPluBaseline1, `is`(bottomPluBaseline2))
-        assertThat(bottomPluBaseline2, `is`(bottomPluBaseline3))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexDirection_row_reverse() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.ROW_REVERSE
-                    }
-                })
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.ROW_REVERSE))
-
-        // The layout direction should be right to left
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyLeftOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isRightAlignedWith(withId(R.id.flexbox_layout)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexDirection_column_reverse() {
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_wrap_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN_REVERSE
-                    }
-                })
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN_REVERSE))
-        onView(withId(R.id.text1)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyAbove(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-        onView(withId(R.id.text3)).check(isBottomAlignedWith(withId(R.id.flexbox_layout)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexBasisPercent_wrap() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_flex_basis_percent_test)
-
-        // The text1 length is 50%, the text2 length is 60% and the wrap property is WRAP,
-        // the text2 should be on the second flex line.
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val lp1 = textView1.layoutParams as FlexboxLayout.LayoutParams
-        val lp2 = textView2.layoutParams as FlexboxLayout.LayoutParams
-        assertThat(textView1.width, `is`(Math.round(flexboxLayout.width * lp1.flexBasisPercent)))
-        assertThat(textView2.width, `is`(Math.round(flexboxLayout.width * lp2.flexBasisPercent)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexBasisPercent_nowrap() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_basis_percent_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.NOWRAP
-                    }
-                })
-
-        // The text1 length is 50%, the text2 length is 60% and the text3 has the fixed width,
-        // but the flex wrap attribute is NOWRAP, and flexShrink attributes for all
-        // children are the default value (1), three text views are shrank to fit in a single flex
-        // line.
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.NOWRAP))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyRightOf(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val totalWidth = textView1.width + textView2.width + textView3.width
-        // Allowing minor different length with the flex container since the sum of the three text
-        // views width is not always the same as the flex container's main size caused by round
-        // errors in calculating the percent lengths.
-        assertThat(flexboxLayout.width, isEqualAllowingError(totalWidth))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexBasisPercent_wrap_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_basis_percent_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        // The text1 length is 50%, the text2 length is 60% and the wrap property is WRAP,
-        // the text2 should be on the second flex line.
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.WRAP))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyRightOf(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val lp1 = textView1.layoutParams as FlexboxLayout.LayoutParams
-        val lp2 = textView2.layoutParams as FlexboxLayout.LayoutParams
-        assertThat(textView1.height, `is`(Math.round(flexboxLayout.height * lp1.flexBasisPercent)))
-        assertThat(textView2.height, `is`(Math.round(flexboxLayout.height * lp2.flexBasisPercent)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexBasisPercent_nowrap_flexDirection_column() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_flex_basis_percent_test,
-                object : Configuration {
-                    override fun apply(flexboxLayout: FlexboxLayout) {
-                        flexboxLayout.flexWrap = FlexWrap.NOWRAP
-                        flexboxLayout.flexDirection = FlexDirection.COLUMN
-                    }
-                })
-
-        // The text1 length is 50%, the text2 length is 60% and the text3 has the fixed height,
-        // but the flex wrap attribute is NOWRAP, and flexShrink attributes for all
-        // children are the default value (1), three text views are shrank to fit in a single
-        // flex line.
-        assertThat(flexboxLayout.flexWrap, `is`(FlexWrap.NOWRAP))
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-        onView(withId(R.id.text1)).check(isTopAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text1)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text2)).check(isCompletelyBelow(withId(R.id.text1)))
-        onView(withId(R.id.text3)).check(isLeftAlignedWith(withId(R.id.flexbox_layout)))
-        onView(withId(R.id.text3)).check(isCompletelyBelow(withId(R.id.text2)))
-
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val totalHeight = textView1.height + textView2.height + textView3.height
-        // Allowing minor different length with the flex container since the sum of the three text
-        // views width is not always the same as the flex container's main size caused by round
-        // errors in calculating the percent lengths.
-        assertThat(flexboxLayout.height, isEqualAllowingError(totalHeight))
-    }
 
     @Test
     @FlakyTest
@@ -2774,7 +635,7 @@ class FlexboxAndroidTest {
     @Throws(Throwable::class)
     fun testWrapBefore_nowrap() {
         val flexboxLayout = createFlexboxLayout(R.layout.activity_wrap_before_test,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.flexWrap = FlexWrap.NOWRAP
                     }
@@ -2979,7 +840,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerVertical = FlexboxLayout.SHOW_DIVIDER_MIDDLE
                     }
@@ -3018,7 +879,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerVertical = FlexboxLayout.SHOW_DIVIDER_END
                     }
@@ -3058,7 +919,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerVertical = FlexboxLayout.SHOW_DIVIDER_BEGINNING or FlexboxLayout.SHOW_DIVIDER_MIDDLE or FlexboxLayout.SHOW_DIVIDER_END
                     }
@@ -3101,7 +962,7 @@ class FlexboxAndroidTest {
         val divider = ResourcesCompat.getDrawable(activity.resources, R.drawable.divider, null)
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.dividerDrawableHorizontal = divider
                         flexboxLayout.showDividerHorizontal = FlexboxLayout.SHOW_DIVIDER_BEGINNING
@@ -3141,7 +1002,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3185,7 +1046,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3229,7 +1090,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3263,7 +1124,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_row,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val thickDivider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider_thick, null)
@@ -3330,7 +1191,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerHorizontal = FlexboxLayout.SHOW_DIVIDER_MIDDLE
                     }
@@ -3368,7 +1229,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerHorizontal = FlexboxLayout.SHOW_DIVIDER_END
                     }
@@ -3406,7 +1267,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.showDividerHorizontal = FlexboxLayout.SHOW_DIVIDER_BEGINNING or FlexboxLayout.SHOW_DIVIDER_MIDDLE or FlexboxLayout.SHOW_DIVIDER_END
                     }
@@ -3446,7 +1307,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3477,7 +1338,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3508,7 +1369,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3539,7 +1400,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3571,7 +1432,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val divider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider, null)
@@ -3611,7 +1472,7 @@ class FlexboxAndroidTest {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(
                 R.layout.activity_divider_test_direction_column,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         val thickDivider = ResourcesCompat
                                 .getDrawable(activity.resources, R.drawable.divider_thick, null)
@@ -3673,36 +1534,6 @@ class FlexboxAndroidTest {
         val text2 = activity.findViewById<TextView>(R.id.text2)
         assertThat(text1.width, `is`(not(text2.width)))
         assertThat(text1.height + text2.height, isEqualAllowingError(flexboxLayout.height))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexDirection_row_alignItems_center_margin_oneSide() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_direction_row_align_items_center_margin_oneside)
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.ROW))
-
-        val text1 = activity.findViewById<TextView>(R.id.text1)
-        assertThat(text1.top, isEqualAllowingError(activity.dpToPixel(30)))
-        assertThat(flexboxLayout.bottom - text1.bottom, isEqualAllowingError(activity.dpToPixel(50)))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testFlexDirection_column_alignItems_center_margin_oneSide() {
-        val activity = activityRule.activity
-        val flexboxLayout = createFlexboxLayout(
-                R.layout.activity_direction_column_align_items_center_margin_oneside)
-
-        assertThat(flexboxLayout.flexDirection, `is`(FlexDirection.COLUMN))
-
-        val text1 = activity.findViewById<TextView>(R.id.text1)
-        assertThat(text1.left, isEqualAllowingError(activity.dpToPixel(30)))
-        assertThat(flexboxLayout.right - text1.right, isEqualAllowingError(activity.dpToPixel(50)))
     }
 
     @Test
@@ -3836,7 +1667,7 @@ class FlexboxAndroidTest {
         // view is in the next flex line. In that case, the second view's position is misplaced.
         // https://github.com/google/flexbox-layout/issues/283
         createFlexboxLayout(R.layout.activity_first_view_gone_first_line_single_item,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.flexDirection = FlexDirection.COLUMN
                     }
@@ -3871,7 +1702,7 @@ class FlexboxAndroidTest {
         // view's position is misplaced and the third view becomes invisible .
         // https://github.com/google/flexbox-layout/issues/303
         createFlexboxLayout(R.layout.activity_first_view_gone_layout_grow_set_for_rest,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.flexDirection = FlexDirection.COLUMN
                     }
@@ -3898,7 +1729,7 @@ class FlexboxAndroidTest {
     @Throws(Throwable::class)
     fun testFirstViewGone_flexShrinkSetForRestOfItems_column() {
         createFlexboxLayout(R.layout.activity_first_view_gone_layout_shrink_set_for_rest,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.flexDirection = FlexDirection.COLUMN
                     }
@@ -3914,7 +1745,7 @@ class FlexboxAndroidTest {
     fun testAddItemProgrammatically_withMarginLayoutParams() {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(R.layout.activity_empty_children,
-        object : Configuration {
+        object : LayoutConfiguration {
             override fun apply(flexboxLayout: FlexboxLayout) {
                 flexboxLayout.alignItems = AlignItems.FLEX_START
                 val first = createTextView(activity, "1", 0)
@@ -3950,7 +1781,7 @@ class FlexboxAndroidTest {
     fun testAddItemProgrammatically_withFlexboxLayoutLayoutParams() {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(R.layout.activity_empty_children,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.alignItems = AlignItems.FLEX_START
                         val first = createTextView(activity, "1", 0)
@@ -3986,7 +1817,7 @@ class FlexboxAndroidTest {
     fun testMaxLines() {
         val activity = activityRule.activity
         val flexboxLayout = createFlexboxLayout(R.layout.activity_empty_children,
-                object : Configuration {
+                object : LayoutConfiguration {
                     override fun apply(flexboxLayout: FlexboxLayout) {
                         flexboxLayout.maxLine = 3
                         for (i in 1..50) {
@@ -4003,8 +1834,8 @@ class FlexboxAndroidTest {
     }
 
     @Throws(Throwable::class)
-    private fun createFlexboxLayout(@LayoutRes activityLayoutResId: Int,
-                                    configuration: Configuration = Configuration.EMPTY): FlexboxLayout {
+    fun createFlexboxLayout(@LayoutRes activityLayoutResId: Int,
+                                    configuration: LayoutConfiguration = LayoutConfiguration.EMPTY): FlexboxLayout {
         val activity = activityRule.activity
         activityRule.runOnUiThread {
             activity.setContentView(activityLayoutResId)
@@ -4053,14 +1884,4 @@ class FlexboxAndroidTest {
         })
     }
 
-    private interface Configuration {
-
-        fun apply(flexboxLayout: FlexboxLayout)
-
-        companion object {
-            val EMPTY: Configuration = object : Configuration {
-                override fun apply(flexboxLayout: FlexboxLayout) = Unit
-            }
-        }
-    }
 }
