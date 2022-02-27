@@ -16,29 +16,23 @@
 
 package com.google.android.flexbox;
 
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 
-import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
-
-import android.graphics.drawable.Drawable;
-import android.util.SparseIntArray; // TODO: 2/24/22 replace with Map<integer, Integer>
-import android.view.View; // TODO: 2/24/22 替换为flexItem
-import android.view.ViewGroup;
-import android.widget.CompoundButton; // TODO: 2/24/22 删除对应逻辑
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.view.MarginLayoutParamsCompat;
-import androidx.core.widget.CompoundButtonCompat;
+
+import com.xinwendewen.flexbox.MeasureRequestUtils;
+import com.xinwendewen.flexbox.NewFlexItem;
+import com.xinwendewen.flexbox.NewFlexItemImpl;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Offers various calculations for Flexbox to use the common logic between the classes such as
@@ -117,35 +111,35 @@ class FlexboxHelper {
      *                                 of the parent ViewGroup
      * @return an array which have the reordered indices
      */
-    int[] createReorderedIndices(View viewBeforeAdded, int indexForViewBeforeAdded,
-            ViewGroup.LayoutParams paramsForViewBeforeAdded, SparseIntArray orderCache) {
-        int childCount = mFlexContainer.getFlexItemCount();
-        List<Order> orders = createOrders(childCount);
-        Order orderForViewToBeAdded = new Order();
-        if (viewBeforeAdded != null
-                && paramsForViewBeforeAdded instanceof FlexItem) {
-            orderForViewToBeAdded.order = ((FlexItem)
-                    paramsForViewBeforeAdded).getOrder();
-        } else {
-            orderForViewToBeAdded.order = FlexItem.ORDER_DEFAULT;
-        }
-
-        if (indexForViewBeforeAdded == -1 || indexForViewBeforeAdded == childCount) {
-            orderForViewToBeAdded.index = childCount;
-        } else if (indexForViewBeforeAdded < mFlexContainer.getFlexItemCount()) {
-            orderForViewToBeAdded.index = indexForViewBeforeAdded;
-            for (int i = indexForViewBeforeAdded; i < childCount; i++) {
-                orders.get(i).index++;
-            }
-        } else {
-            // This path is not expected since OutOfBoundException will be thrown in the ViewGroup
-            // But setting the index for fail-safe
-            orderForViewToBeAdded.index = childCount;
-        }
-        orders.add(orderForViewToBeAdded);
-
-        return sortOrdersIntoReorderedIndices(childCount + 1, orders, orderCache);
-    }
+//    int[] createReorderedIndices(View viewBeforeAdded, int indexForViewBeforeAdded,
+//            ViewGroup.LayoutParams paramsForViewBeforeAdded, SparseIntArray orderCache) {
+//        int childCount = mFlexContainer.getFlexItemCount();
+//        List<Order> orders = createOrders(childCount);
+//        Order orderForViewToBeAdded = new Order();
+//        if (viewBeforeAdded != null
+//                && paramsForViewBeforeAdded instanceof FlexItem) {
+//            orderForViewToBeAdded.order = ((FlexItem)
+//                    paramsForViewBeforeAdded).getOrder();
+//        } else {
+//            orderForViewToBeAdded.order = FlexItem.ORDER_DEFAULT;
+//        }
+//
+//        if (indexForViewBeforeAdded == -1 || indexForViewBeforeAdded == childCount) {
+//            orderForViewToBeAdded.index = childCount;
+//        } else if (indexForViewBeforeAdded < mFlexContainer.getFlexItemCount()) {
+//            orderForViewToBeAdded.index = indexForViewBeforeAdded;
+//            for (int i = indexForViewBeforeAdded; i < childCount; i++) {
+//                orders.get(i).index++;
+//            }
+//        } else {
+//            // This path is not expected since OutOfBoundException will be thrown in the ViewGroup
+//            // But setting the index for fail-safe
+//            orderForViewToBeAdded.index = childCount;
+//        }
+//        orders.add(orderForViewToBeAdded);
+//
+//        return sortOrdersIntoReorderedIndices(childCount + 1, orders, orderCache);
+//    }
 
     /**
      * Create an array, which indicates the reordered indices that
@@ -153,25 +147,25 @@ class FlexboxHelper {
      *
      * @return @return an array which have the reordered indices
      */
-    int[] createReorderedIndices(SparseIntArray orderCache) {
-        int childCount = mFlexContainer.getFlexItemCount();
-        List<Order> orders = createOrders(childCount);
-        return sortOrdersIntoReorderedIndices(childCount, orders, orderCache);
-    }
+//    int[] createReorderedIndices(SparseIntArray orderCache) {
+//        int childCount = mFlexContainer.getFlexItemCount();
+//        List<Order> orders = createOrders(childCount);
+//        return sortOrdersIntoReorderedIndices(childCount, orders, orderCache);
+//    }
 
-    @NonNull
-    private List<Order> createOrders(int childCount) {
-        List<Order> orders = new ArrayList<>(childCount);
-        for (int i = 0; i < childCount; i++) {
-            View child = mFlexContainer.getFlexItemAt(i);
-            FlexItem flexItem = (FlexItem) child.getLayoutParams();
-            Order order = new Order();
-            order.order = flexItem.getOrder();
-            order.index = i;
-            orders.add(order);
-        }
-        return orders;
-    }
+//    @NonNull
+//    private List<Order> createOrders(int childCount) {
+//        List<Order> orders = new ArrayList<>(childCount);
+//        for (int i = 0; i < childCount; i++) {
+//            View child = mFlexContainer.getFlexItemAt(i);
+//            FlexItem flexItem = (FlexItem) child.getLayoutParams();
+//            Order order = new Order();
+//            order.order = flexItem.getOrder();
+//            order.index = i;
+//            orders.add(order);
+//        }
+//        return orders;
+//    }
 
     /**
      * Returns if any of the children's {@link FlexItem#getOrder()} attributes are
@@ -179,37 +173,37 @@ class FlexboxHelper {
      *
      * @return {@code true} if changed from the last measurement, {@code false} otherwise.
      */
-    boolean isOrderChangedFromLastMeasurement(SparseIntArray orderCache) {
-        int childCount = mFlexContainer.getFlexItemCount();
-        if (orderCache.size() != childCount) {
-            return true;
-        }
-        for (int i = 0; i < childCount; i++) {
-            View view = mFlexContainer.getFlexItemAt(i);
-            if (view == null) {
-                continue;
-            }
-            FlexItem flexItem = (FlexItem) view.getLayoutParams();
-            if (flexItem.getOrder() != orderCache.get(i)) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    boolean isOrderChangedFromLastMeasurement(SparseIntArray orderCache) {
+//        int childCount = mFlexContainer.getFlexItemCount();
+//        if (orderCache.size() != childCount) {
+//            return true;
+//        }
+//        for (int i = 0; i < childCount; i++) {
+//            View view = mFlexContainer.getFlexItemAt(i);
+//            if (view == null) {
+//                continue;
+//            }
+//            FlexItem flexItem = (FlexItem) view.getLayoutParams();
+//            if (flexItem.getOrder() != orderCache.get(i)) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
-    private int[] sortOrdersIntoReorderedIndices(int childCount, List<Order> orders,
-            SparseIntArray orderCache) {
-        Collections.sort(orders);
-        orderCache.clear();
-        int[] reorderedIndices = new int[childCount];
-        int i = 0;
-        for (Order order : orders) {
-            reorderedIndices[i] = order.index;
-            orderCache.append(order.index, order.order);
-            i++;
-        }
-        return reorderedIndices;
-    }
+//    private int[] sortOrdersIntoReorderedIndices(int childCount, List<Order> orders,
+//            SparseIntArray orderCache) {
+//        Collections.sort(orders);
+//        orderCache.clear();
+//        int[] reorderedIndices = new int[childCount];
+//        int i = 0;
+//        for (Order order : orders) {
+//            reorderedIndices[i] = order.index;
+//            orderCache.append(order.index, order.order);
+//            i++;
+//        }
+//        return reorderedIndices;
+//    }
 
     /**
      * Calculate how many flex lines are needed in the flex container.
@@ -386,13 +380,13 @@ class FlexboxHelper {
      * @param existingLines    If not null, calculated flex lines will be added to this instance
      */
     void calculateFlexLines(FlexLinesResult result, int mainMeasureSpec,
-            int crossMeasureSpec, int needsCalcAmount, int fromIndex, int toIndex,
-            @Nullable List<FlexLine> existingLines) {
+                            int crossMeasureSpec, int needsCalcAmount, int fromIndex, int toIndex,
+                            @Nullable List<FlexLine> existingLines) {
 
         boolean isMainHorizontal = mFlexContainer.isMainAxisDirectionHorizontal();
 
-        int mainMode = View.MeasureSpec.getMode(mainMeasureSpec);
-        int mainSize = View.MeasureSpec.getSize(mainMeasureSpec);
+        int mainMode = MeasureRequestUtils.getMeasureSpecMode(mainMeasureSpec);
+        int mainSize = MeasureRequestUtils.getMeasureSpecSize(mainMeasureSpec);
 
         int childState = 0;
 
@@ -426,23 +420,23 @@ class FlexboxHelper {
 
         int childCount = mFlexContainer.getFlexItemCount();
         for (int i = fromIndex; i < childCount; i++) {
-            View child = mFlexContainer.getReorderedFlexItemAt(i);
+            NewFlexItem child = mFlexContainer.getReorderedNewFlexItemAt(i);
 
             if (child == null) {
                 if (isLastFlexItem(i, childCount, flexLine)) {
                     addFlexLine(flexLines, flexLine, i, sumCrossSize);
                 }
                 continue;
-            } else if (child.getVisibility() == View.GONE) {
+            } else if (child.isGone()) {
                 flexLine.mGoneItemCount++;
                 flexLine.mItemCount++;
                 if (isLastFlexItem(i, childCount, flexLine)) {
                     addFlexLine(flexLines, flexLine, i, sumCrossSize);
                 }
                 continue;
-            } else if (child instanceof CompoundButton) {
-                evaluateMinimumSizeForCompoundButton((CompoundButton) child);
-            }
+            } //else if (child instanceof CompoundButton) {
+//                evaluateMinimumSizeForCompoundButton((CompoundButton) child);
+//            }
 
             FlexItem flexItem = (FlexItem) child.getLayoutParams();
 
@@ -453,7 +447,8 @@ class FlexboxHelper {
             int childMainSize = getFlexItemSizeMain(flexItem, isMainHorizontal);
 
             if (flexItem.getFlexBasisPercent() != FLEX_BASIS_PERCENT_DEFAULT
-                    && mainMode == View.MeasureSpec.EXACTLY) {
+//                    && mainMode == View.MeasureSpec.EXACTLY) {
+                    && MeasureRequestUtils.isExactliyMode(mainMode)) {
                 childMainSize = Math.round(mainSize * flexItem.getFlexBasisPercent());
                 // Use the dimension from the layout if the mainMode is not
                 // MeasureSpec.EXACTLY even if any fraction value is set to
@@ -490,7 +485,7 @@ class FlexboxHelper {
                 child.measure(childCrossMeasureSpec, childMainMeasureSpec);
                 updateMeasureCache(i, childCrossMeasureSpec, childMainMeasureSpec, child);
             }
-            mFlexContainer.updateViewCache(i, child);
+//            mFlexContainer.updateViewCache(i, child);
 
             // Check the size constraint after the first measurement for the child
             // To prevent the child's width/height violate the size constraints imposed by the
@@ -500,8 +495,8 @@ class FlexboxHelper {
             // less than the min width after the first measurement.
             checkSizeConstraints(child, i);
 
-            childState = View.combineMeasuredStates(
-                    childState, child.getMeasuredState());
+            childState = MeasureRequestUtils.combineMeasureStates(childState,
+                    child.getMeasuredState());
 
             if (isWrapRequired(child, mainMode, mainSize, flexLine.mMainSize,
                     getViewMeasuredSizeMain(child, isMainHorizontal)
@@ -514,7 +509,7 @@ class FlexboxHelper {
                 }
 
                 if (isMainHorizontal) {
-                    if (flexItem.getHeight() == ViewGroup.LayoutParams.MATCH_PARENT) {
+                    if (NewFlexItemImpl.isFlexItemHeightMatchParent(flexItem)) {
                         // This case takes care of the corner case where the cross size of the
                         // child is affected by the just added flex line.
                         // E.g. when the child's layout_height is set to match_parent, the height
@@ -532,7 +527,7 @@ class FlexboxHelper {
                         checkSizeConstraints(child, i);
                     }
                 } else {
-                    if (flexItem.getWidth() == ViewGroup.LayoutParams.MATCH_PARENT) {
+                    if (NewFlexItemImpl.isFlexItemHeightMatchParent(flexItem)) {
                         // This case takes care of the corner case where the cross size of the
                         // child is affected by the just added flex line.
                         // E.g. when the child's layout_width is set to match_parent, the width
@@ -573,13 +568,13 @@ class FlexboxHelper {
             flexLine.mTotalFlexGrow += flexItem.getFlexGrow();
             flexLine.mTotalFlexShrink += flexItem.getFlexShrink();
 
-            mFlexContainer.onNewFlexItemAdded(child, i, indexInFlexLine, flexLine);
+//            mFlexContainer.onNewFlexItemAdded(child, i, indexInFlexLine, flexLine);
 
             largestSizeInCross = Math.max(largestSizeInCross,
                     getViewMeasuredSizeCross(child, isMainHorizontal) +
                             getFlexItemMarginStartCross(flexItem, isMainHorizontal) +
-                            getFlexItemMarginEndCross(flexItem, isMainHorizontal) +
-                            mFlexContainer.getDecorationLengthCrossAxis(child));
+                            getFlexItemMarginEndCross(flexItem, isMainHorizontal));
+//                            mFlexContainer.getDecorationLengthCrossAxis(child));
             // Temporarily set the cross axis length as the largest child in the flexLine
             // Expand along the cross axis depending on the mAlignContent property if needed
             // later
@@ -642,17 +637,17 @@ class FlexboxHelper {
      *
      * @param compoundButton the compound button that need to be evaluated
      */
-    private void evaluateMinimumSizeForCompoundButton(CompoundButton compoundButton) { // TODO: 2/24/22 delete
-        FlexItem flexItem = (FlexItem) compoundButton.getLayoutParams();
-        int minWidth = flexItem.getMinWidth();
-        int minHeight = flexItem.getMinHeight();
-
-        Drawable drawable = CompoundButtonCompat.getButtonDrawable(compoundButton);
-        int drawableMinWidth = drawable == null ? 0 : drawable.getMinimumWidth();
-        int drawableMinHeight = drawable == null ? 0 : drawable.getMinimumHeight();
-        flexItem.setMinWidth(minWidth == NOT_SET ? drawableMinWidth : minWidth);
-        flexItem.setMinHeight(minHeight == NOT_SET ? drawableMinHeight : minHeight);
-    }
+//    private void evaluateMinimumSizeForCompoundButton(CompoundButton compoundButton) {
+//        FlexItem flexItem = (FlexItem) compoundButton.getLayoutParams();
+//        int minWidth = flexItem.getMinWidth();
+//        int minHeight = flexItem.getMinHeight();
+//
+//        Drawable drawable = CompoundButtonCompat.getButtonDrawable(compoundButton);
+//        int drawableMinWidth = drawable == null ? 0 : drawable.getMinimumWidth();
+//        int drawableMinHeight = drawable == null ? 0 : drawable.getMinimumHeight();
+//        flexItem.setMinWidth(minWidth == NOT_SET ? drawableMinWidth : minWidth);
+//        flexItem.setMinHeight(minHeight == NOT_SET ? drawableMinHeight : minHeight);
+//    }
 
     /**
      * Returns the container's start padding in the main axis. Either start or top.
@@ -717,7 +712,7 @@ class FlexboxHelper {
      * @param isMainHorizontal is the main axis horizontal
      * @return the view's measured size in the main axis
      */
-    private int getViewMeasuredSizeMain(View view, boolean isMainHorizontal) {
+    private int getViewMeasuredSizeMain(NewFlexItem view, boolean isMainHorizontal) {
         if (isMainHorizontal) {
             return view.getMeasuredWidth();
         }
@@ -732,7 +727,7 @@ class FlexboxHelper {
      * @param isMainHorizontal is the main axis horizontal
      * @return the view's measured size in the cross axis
      */
-    private int getViewMeasuredSizeCross(View view, boolean isMainHorizontal) {
+    private int getViewMeasuredSizeCross(NewFlexItem view, boolean isMainHorizontal) {
         if (isMainHorizontal) {
             return view.getMeasuredHeight();
         }
@@ -864,7 +859,7 @@ class FlexboxHelper {
      * @see FlexContainer#getFlexWrap()
      * @see FlexContainer#setFlexWrap(int)
      */
-    private boolean isWrapRequired(View view, int mode, int maxSize, int currentLength,
+    private boolean isWrapRequired(NewFlexItem view, int mode, int maxSize, int currentLength,
             int childLength, FlexItem flexItem, int index, int indexInFlexLine, int flexLinesSize) {
         if (mFlexContainer.getFlexWrap() == FlexWrap.NOWRAP) {
             return false;
@@ -872,7 +867,7 @@ class FlexboxHelper {
         if (flexItem.isWrapBefore()) {
             return true;
         }
-        if (mode == View.MeasureSpec.UNSPECIFIED) {
+        if (MeasureRequestUtils.isUnspecifiedMode(mode)) {
             return false;
         }
         int maxLine = mFlexContainer.getMaxLine();
@@ -881,8 +876,8 @@ class FlexboxHelper {
         if (maxLine != NOT_SET && maxLine <= flexLinesSize + 1) {
             return false;
         }
-        int decorationLength =
-                mFlexContainer.getDecorationLengthMainAxis(view, index, indexInFlexLine);
+        int decorationLength = 0;
+//                mFlexContainer.getDecorationLengthMainAxis(view, index, indexInFlexLine);
         if (decorationLength > 0) {
             childLength += decorationLength;
         }
@@ -910,7 +905,7 @@ class FlexboxHelper {
      * @param view  the view to be checked
      * @param index index of the view
      */
-    private void checkSizeConstraints(View view, int index) {
+    private void checkSizeConstraints(NewFlexItem view, int index) {
         boolean needsMeasure = false;
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         int childWidth = view.getMeasuredWidth();
@@ -932,12 +927,12 @@ class FlexboxHelper {
             childHeight = flexItem.getMaxHeight();
         }
         if (needsMeasure) {
-            int widthSpec = View.MeasureSpec.makeMeasureSpec(childWidth, View.MeasureSpec.EXACTLY);
-            int heightSpec = View.MeasureSpec
-                    .makeMeasureSpec(childHeight, View.MeasureSpec.EXACTLY);
+//            int widthSpec = View.MeasureSpec.makeMeasureSpec(childWidth, View.MeasureSpec.EXACTLY);
+            int widthSpec = MeasureRequestUtils.generateExactlyMeasureSpec(childWidth);
+            int heightSpec = MeasureRequestUtils.generateExactlyMeasureSpec(childHeight);
             view.measure(widthSpec, heightSpec);
             updateMeasureCache(index, widthSpec, heightSpec, view);
-            mFlexContainer.updateViewCache(index, view);
+//            mFlexContainer.updateViewCache(index, view);
         }
     }
 
@@ -970,10 +965,10 @@ class FlexboxHelper {
         switch (mFlexContainer.getFlexDirection()) {
             case FlexDirection.ROW: // Intentional fall through
             case FlexDirection.ROW_REVERSE:
-                int widthMode = View.MeasureSpec.getMode(widthMeasureSpec);
-                int widthSize = View.MeasureSpec.getSize(widthMeasureSpec);
+                int widthMode = MeasureRequestUtils.getMeasureSpecMode(widthMeasureSpec);
+                int widthSize = MeasureRequestUtils.getMeasureSpecSize(widthMeasureSpec);
                 int largestMainSize = mFlexContainer.getLargestMainSize();
-                if (widthMode == View.MeasureSpec.EXACTLY) {
+                if (MeasureRequestUtils.isExactliyMode(widthMode)) {
                     mainSize = widthSize;
                 } else {
                     mainSize = Math.min(largestMainSize, widthSize);
@@ -983,9 +978,9 @@ class FlexboxHelper {
                 break;
             case FlexDirection.COLUMN: // Intentional fall through
             case FlexDirection.COLUMN_REVERSE:
-                int heightMode = View.MeasureSpec.getMode(heightMeasureSpec);
-                int heightSize = View.MeasureSpec.getSize(heightMeasureSpec);
-                if (heightMode == View.MeasureSpec.EXACTLY) {
+                int heightMode = MeasureRequestUtils.getMeasureSpecMode(heightMeasureSpec);
+                int heightSize = MeasureRequestUtils.getMeasureSpecSize(heightMeasureSpec);
+                if (MeasureRequestUtils.isExactliyMode(heightMode)) {
                     mainSize = heightSize;
                 } else {
                     mainSize = mFlexContainer.getLargestMainSize();
@@ -1064,8 +1059,8 @@ class FlexboxHelper {
         float accumulatedRoundError = 0;
         for (int i = 0; i < flexLine.mItemCount; i++) {
             int index = flexLine.mFirstIndex + i;
-            View child = mFlexContainer.getReorderedFlexItemAt(index);
-            if (child == null || child.getVisibility() == View.GONE) {
+            NewFlexItem child = mFlexContainer.getReorderedNewFlexItemAt(index);
+            if (child == null || child.isGone()) {
                 continue;
             }
             FlexItem flexItem = (FlexItem) child.getLayoutParams();
@@ -1118,18 +1113,17 @@ class FlexboxHelper {
                     }
                     int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
                             heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
-                    int childWidthMeasureSpec = View.MeasureSpec.makeMeasureSpec(newWidth,
-                            View.MeasureSpec.EXACTLY);
+                    int childWidthMeasureSpec = MeasureRequestUtils.generateExactlyMeasureSpec(newWidth);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
                     childMeasuredWidth = child.getMeasuredWidth();
                     childMeasuredHeight = child.getMeasuredHeight();
                     updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
                             child);
-                    mFlexContainer.updateViewCache(index, child);
+//                    mFlexContainer.updateViewCache(index, child);
                 }
                 largestCrossSize = Math.max(largestCrossSize, childMeasuredHeight
-                        + flexItem.getMarginTop() + flexItem.getMarginBottom()
-                        + mFlexContainer.getDecorationLengthCrossAxis(child));
+                        + flexItem.getMarginTop() + flexItem.getMarginBottom());
+//                        + mFlexContainer.getDecorationLengthCrossAxis(child));
                 flexLine.mMainSize += childMeasuredWidth + flexItem.getMarginLeft()
                         + flexItem.getMarginRight();
             } else {
@@ -1182,18 +1176,18 @@ class FlexboxHelper {
                     }
                     int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
                             flexItem, flexLine.mSumCrossSizeBefore);
-                    int childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(newHeight,
-                            View.MeasureSpec.EXACTLY);
+                    int childHeightMeasureSpec =
+                            MeasureRequestUtils.generateExactlyMeasureSpec(newHeight);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
                     childMeasuredWidth = child.getMeasuredWidth();
                     childMeasuredHeight = child.getMeasuredHeight();
                     updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
                             child);
-                    mFlexContainer.updateViewCache(index, child);
+//                    mFlexContainer.updateViewCache(index, child);
                 }
                 largestCrossSize = Math.max(largestCrossSize, childMeasuredWidth
-                        + flexItem.getMarginLeft() + flexItem.getMarginRight()
-                        + mFlexContainer.getDecorationLengthCrossAxis(child));
+                        + flexItem.getMarginLeft() + flexItem.getMarginRight());
+//                        + mFlexContainer.getDecorationLengthCrossAxis(child));
                 flexLine.mMainSize += childMeasuredHeight + flexItem.getMarginTop()
                         + flexItem.getMarginBottom();
             }
@@ -1247,8 +1241,8 @@ class FlexboxHelper {
         }
         for (int i = 0; i < flexLine.mItemCount; i++) {
             int index = flexLine.mFirstIndex + i;
-            View child = mFlexContainer.getReorderedFlexItemAt(index);
-            if (child == null || child.getVisibility() == View.GONE) {
+            NewFlexItem child = mFlexContainer.getReorderedNewFlexItemAt(index);
+            if (child == null || child.isGone()) {
                 continue;
             }
             FlexItem flexItem = (FlexItem) child.getLayoutParams();
@@ -1302,18 +1296,18 @@ class FlexboxHelper {
                     int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
                             heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
                     int childWidthMeasureSpec =
-                            View.MeasureSpec.makeMeasureSpec(newWidth, View.MeasureSpec.EXACTLY);
+                            MeasureRequestUtils.generateExactlyMeasureSpec(newWidth);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 
                     childMeasuredWidth = child.getMeasuredWidth();
                     childMeasuredHeight = child.getMeasuredHeight();
                     updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
                             child);
-                    mFlexContainer.updateViewCache(index, child);
+//                    mFlexContainer.updateViewCache(index, child);
                 }
                 largestCrossSize = Math.max(largestCrossSize, childMeasuredHeight +
-                        flexItem.getMarginTop() + flexItem.getMarginBottom() +
-                        mFlexContainer.getDecorationLengthCrossAxis(child));
+                        flexItem.getMarginTop() + flexItem.getMarginBottom());
+//                        mFlexContainer.getDecorationLengthCrossAxis(child));
                 flexLine.mMainSize += childMeasuredWidth + flexItem.getMarginLeft()
                         + flexItem.getMarginRight();
             } else {
@@ -1362,18 +1356,18 @@ class FlexboxHelper {
                     int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
                             flexItem, flexLine.mSumCrossSizeBefore);
                     int childHeightMeasureSpec =
-                            View.MeasureSpec.makeMeasureSpec(newHeight, View.MeasureSpec.EXACTLY);
+                            MeasureRequestUtils.generateExactlyMeasureSpec(newHeight);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 
                     childMeasuredWidth = child.getMeasuredWidth();
                     childMeasuredHeight = child.getMeasuredHeight();
                     updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
                             child);
-                    mFlexContainer.updateViewCache(index, child);
+//                    mFlexContainer.updateViewCache(index, child);
                 }
                 largestCrossSize = Math.max(largestCrossSize, childMeasuredWidth +
-                        flexItem.getMarginLeft() + flexItem.getMarginRight() +
-                        mFlexContainer.getDecorationLengthCrossAxis(child));
+                        flexItem.getMarginLeft() + flexItem.getMarginRight());
+//                        mFlexContainer.getDecorationLengthCrossAxis(child));
                 flexLine.mMainSize += childMeasuredHeight + flexItem.getMarginTop()
                         + flexItem.getMarginBottom();
             }
@@ -1394,13 +1388,11 @@ class FlexboxHelper {
                 mFlexContainer.getPaddingLeft() + mFlexContainer.getPaddingRight() +
                         flexItem.getMarginLeft() + flexItem.getMarginRight() + padding,
                 flexItem.getWidth());
-        int childWidth = View.MeasureSpec.getSize(childWidthMeasureSpec);
+        int childWidth = getMeasureSpecSize(childWidthMeasureSpec);
         if (childWidth > flexItem.getMaxWidth()) {
-            childWidthMeasureSpec = View.MeasureSpec.makeMeasureSpec(flexItem.getMaxWidth(),
-                    View.MeasureSpec.getMode(childWidthMeasureSpec));
+            childWidthMeasureSpec = makeMeasureSpec(flexItem.getMaxWidth(), childWidthMeasureSpec);
         } else if (childWidth < flexItem.getMinWidth()) {
-            childWidthMeasureSpec = View.MeasureSpec.makeMeasureSpec(flexItem.getMinWidth(),
-                    View.MeasureSpec.getMode(childWidthMeasureSpec));
+            childWidthMeasureSpec = makeMeasureSpec(flexItem.getMinWidth(), childWidthMeasureSpec);
         }
         return childWidthMeasureSpec;
     }
@@ -1411,13 +1403,13 @@ class FlexboxHelper {
                 mFlexContainer.getPaddingTop() + mFlexContainer.getPaddingBottom()
                         + flexItem.getMarginTop() + flexItem.getMarginBottom() + padding,
                 flexItem.getHeight());
-        int childHeight = View.MeasureSpec.getSize(childHeightMeasureSpec);
+        int childHeight = getMeasureSpecSize(childHeightMeasureSpec);
         if (childHeight > flexItem.getMaxHeight()) {
-            childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(flexItem.getMaxHeight(),
-                    View.MeasureSpec.getMode(childHeightMeasureSpec));
+            childHeightMeasureSpec = makeMeasureSpec(flexItem.getMaxHeight(),
+                    childHeightMeasureSpec);
         } else if (childHeight < flexItem.getMinHeight()) {
-            childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(flexItem.getMinHeight(),
-                    View.MeasureSpec.getMode(childHeightMeasureSpec));
+            childHeightMeasureSpec = makeMeasureSpec(flexItem.getMinHeight(),
+                    childHeightMeasureSpec);
         }
         return childHeightMeasureSpec;
     }
@@ -1445,19 +1437,19 @@ class FlexboxHelper {
         switch (flexDirection) {
             case FlexDirection.ROW: // Intentional fall through
             case FlexDirection.ROW_REVERSE:
-                mode = View.MeasureSpec.getMode(heightMeasureSpec);
-                size = View.MeasureSpec.getSize(heightMeasureSpec);
+                mode = getMeasureSpecMode(heightMeasureSpec);
+                size = getMeasureSpecSize(heightMeasureSpec);
                 break;
             case FlexDirection.COLUMN: // Intentional fall through
             case FlexDirection.COLUMN_REVERSE:
-                mode = View.MeasureSpec.getMode(widthMeasureSpec);
-                size = View.MeasureSpec.getSize(widthMeasureSpec);
+                mode = getMeasureSpecMode(widthMeasureSpec);
+                size = getMeasureSpecSize(widthMeasureSpec);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid flex direction: " + flexDirection);
         }
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
-        if (mode == View.MeasureSpec.EXACTLY) {
+        if (MeasureRequestUtils.isExactliyMode(mode)) {
             int totalCrossSize = mFlexContainer.getSumOfCrossSize() + paddingAlongCrossAxis;
             if (flexLines.size() == 1) {
                 flexLines.get(0).mCrossSize = size - paddingAlongCrossAxis;
@@ -1632,8 +1624,8 @@ class FlexboxHelper {
                     if (j >= mFlexContainer.getFlexItemCount()) {
                         continue;
                     }
-                    View view = mFlexContainer.getReorderedFlexItemAt(viewIndex);
-                    if (view == null || view.getVisibility() == View.GONE) {
+                    NewFlexItem view = mFlexContainer.getReorderedNewFlexItemAt(viewIndex);
+                    if (view == null || view.isGone()) {
                         continue;
                     }
                     FlexItem flexItem = (FlexItem) view.getLayoutParams();
@@ -1659,7 +1651,7 @@ class FlexboxHelper {
         } else {
             for (FlexLine flexLine : mFlexContainer.getFlexLinesInternal()) {
                 for (Integer index : flexLine.mIndicesAlignSelfStretch) {
-                    View view = mFlexContainer.getReorderedFlexItemAt(index);
+                    NewFlexItem view = mFlexContainer.getReorderedNewFlexItemAt(index);
                     switch (flexDirection) {
                         case FlexDirection.ROW: // Intentional fall through
                         case FlexDirection.ROW_REVERSE:
@@ -1685,10 +1677,10 @@ class FlexboxHelper {
      * @param crossSize the cross size
      * @param index     the index of the view
      */
-    private void stretchViewVertically(View view, int crossSize, int index) {
+    private void stretchViewVertically(NewFlexItem view, int crossSize, int index) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
-        int newHeight = crossSize - flexItem.getMarginTop() - flexItem.getMarginBottom() -
-                mFlexContainer.getDecorationLengthCrossAxis(view);
+        int newHeight = crossSize - flexItem.getMarginTop() - flexItem.getMarginBottom();
+//                mFlexContainer.getDecorationLengthCrossAxis(view);
         newHeight = Math.max(newHeight, flexItem.getMinHeight());
         newHeight = Math.min(newHeight, flexItem.getMaxHeight());
         int childWidthSpec;
@@ -1703,14 +1695,13 @@ class FlexboxHelper {
         } else {
             measuredWidth = view.getMeasuredWidth();
         }
-        childWidthSpec = View.MeasureSpec.makeMeasureSpec(measuredWidth,
-                View.MeasureSpec.EXACTLY);
+        childWidthSpec = makeExactlyMeasureSpec(measuredWidth);
 
-        int childHeightSpec = View.MeasureSpec.makeMeasureSpec(newHeight, View.MeasureSpec.EXACTLY);
+        int childHeightSpec = makeExactlyMeasureSpec(newHeight);
         view.measure(childWidthSpec, childHeightSpec);
 
         updateMeasureCache(index, childWidthSpec, childHeightSpec, view);
-        mFlexContainer.updateViewCache(index, view);
+//        mFlexContainer.updateViewCache(index, view);
     }
 
     /**
@@ -1720,10 +1711,10 @@ class FlexboxHelper {
      * @param crossSize the cross size
      * @param index     the index of the view
      */
-    private void stretchViewHorizontally(View view, int crossSize, int index) {
+    private void stretchViewHorizontally(NewFlexItem view, int crossSize, int index) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
-        int newWidth = crossSize - flexItem.getMarginLeft() - flexItem.getMarginRight()
-                - mFlexContainer.getDecorationLengthCrossAxis(view);
+        int newWidth = crossSize - flexItem.getMarginLeft() - flexItem.getMarginRight();
+//                - mFlexContainer.getDecorationLengthCrossAxis(view);
         newWidth = Math.max(newWidth, flexItem.getMinWidth());
         newWidth = Math.min(newWidth, flexItem.getMaxWidth());
         int childHeightSpec;
@@ -1738,13 +1729,12 @@ class FlexboxHelper {
         } else {
             measuredHeight = view.getMeasuredHeight();
         }
-        childHeightSpec = View.MeasureSpec.makeMeasureSpec(measuredHeight,
-                View.MeasureSpec.EXACTLY);
-        int childWidthSpec = View.MeasureSpec.makeMeasureSpec(newWidth, View.MeasureSpec.EXACTLY);
+        childHeightSpec = makeExactlyMeasureSpec(measuredHeight);
+        int childWidthSpec = makeExactlyMeasureSpec(newWidth);
         view.measure(childWidthSpec, childHeightSpec);
 
         updateMeasureCache(index, childWidthSpec, childHeightSpec, view);
-        mFlexContainer.updateViewCache(index, view);
+//        mFlexContainer.updateViewCache(index, view);
     }
 
     /**
@@ -1768,7 +1758,8 @@ class FlexboxHelper {
      * @see FlexContainer#setAlignItems(int)
      * @see FlexItem#getAlignSelf()
      */
-    void layoutSingleChildHorizontal(View view, FlexLine flexLine, int left, int top, int right,
+    void layoutSingleChildHorizontal(NewFlexItem view, FlexLine flexLine, int left, int top,
+                                          int right,
             int bottom) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         int alignItems = mFlexContainer.getAlignItems();
@@ -1852,7 +1843,7 @@ class FlexboxHelper {
      * @see FlexContainer#setAlignItems(int)
      * @see FlexItem#getAlignSelf()
      */
-    void layoutSingleChildVertical(View view, FlexLine flexLine, boolean isRtl,
+    void layoutSingleChildVertical(NewFlexItem view, FlexLine flexLine, boolean isRtl,
             int left, int top, int right, int bottom) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         int alignItems = mFlexContainer.getAlignItems();
@@ -1892,11 +1883,9 @@ class FlexboxHelper {
                 }
                 break;
             case AlignItems.CENTER:
-                ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams)
-                        view.getLayoutParams();
                 int leftFromCrossAxis = (crossSize - view.getMeasuredWidth()
-                        + MarginLayoutParamsCompat.getMarginStart(lp)
-                        - MarginLayoutParamsCompat.getMarginEnd(lp)) / 2;
+                        + view.getMarginStart()
+                        - view.getMarginEnd()) / 2;
                 if (!isRtl) {
                     view.layout(left + leftFromCrossAxis, top, right + leftFromCrossAxis, bottom);
                 } else {
@@ -1962,7 +1951,7 @@ class FlexboxHelper {
     }
 
     private void updateMeasureCache(int index, int widthMeasureSpec, int heightMeasureSpec,
-            View view) {
+            NewFlexItem view) {
         if (mMeasureSpecCache != null) {
             mMeasureSpecCache[index] = makeCombinedLong(
                     widthMeasureSpec,
@@ -2061,5 +2050,18 @@ class FlexboxHelper {
             mFlexLines = null;
             mChildState = 0;
         }
+    }
+
+    static int getMeasureSpecSize(int spec) {
+        return MeasureRequestUtils.getMeasureSpecSize(spec);
+    }
+    static int getMeasureSpecMode(int spec) {
+        return MeasureRequestUtils.getMeasureSpecMode(spec);
+    }
+    static int makeExactlyMeasureSpec(int size) {
+        return MeasureRequestUtils.generateExactlyMeasureSpec(size);
+    }
+    static int makeMeasureSpec(int size, int mode) {
+        return MeasureRequestUtils.generateMeasureSpec(size, mode);
     }
 }

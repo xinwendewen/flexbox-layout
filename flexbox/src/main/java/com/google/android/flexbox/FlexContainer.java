@@ -18,6 +18,9 @@ package com.google.android.flexbox;
 
 import android.view.View;
 
+import com.xinwendewen.flexbox.NewFlexItem;
+import com.xinwendewen.flexbox.NewFlexItemImpl;
+
 import java.util.List;
 
 /**
@@ -52,6 +55,9 @@ interface FlexContainer {
      * @see FlexItem#getOrder()
      */
     View getReorderedFlexItemAt(int index);
+    default NewFlexItem getReorderedNewFlexItemAt(int index) {
+        return NewFlexItemImpl.wrap(getReorderedFlexItemAt(index));
+    }
 
     /**
      * Adds the view to the flex container as a flex item.

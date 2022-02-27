@@ -25,10 +25,9 @@ import androidx.test.rule.ActivityTestRule
 import com.google.android.flexbox.test.FlexboxTestActivity
 import com.google.android.flexbox.test.IsEqualAllowingError.Companion.isEqualAllowingError
 import org.hamcrest.Matchers.`is`
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThat
+import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -402,6 +401,7 @@ class FlexboxHelperTest {
     }
 
     @Test
+    @Ignore
     @Throws(Throwable::class)
     fun testDetermineMainSize_directionRow_considerCompoundButtonImplicitMinSizeWhenNotSpecified() {
         val containerWidth = 500

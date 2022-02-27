@@ -29,14 +29,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+
+import com.xinwendewen.flexbox.NewFlexItem;
+import com.xinwendewen.flexbox.NewFlexItemImpl;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
 
 /**
  * A layout that arranges its children in a way its attributes can be specified like the
@@ -185,7 +188,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * Holds reordered indices, which {@link FlexItem#getOrder()} parameters are taken
      * into account
      */
-    private int[] mReorderedIndices;
+//    private int[] mReorderedIndices;
 
     /**
      * Caches the {@link FlexItem#getOrder()} attributes for children views.
@@ -264,9 +267,9 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (mOrderCache == null) {
             mOrderCache = new SparseIntArray(getChildCount());
         }
-        if (mFlexboxHelper.isOrderChangedFromLastMeasurement(mOrderCache)) {
-            mReorderedIndices = mFlexboxHelper.createReorderedIndices(mOrderCache);
-        }
+//        if (mFlexboxHelper.isOrderChangedFromLastMeasurement(mOrderCache)) {
+//            mReorderedIndices = mFlexboxHelper.createReorderedIndices(mOrderCache);
+//        }
 
         // TODO: Only calculate the children views which are affected from the last measure.
 
@@ -305,15 +308,21 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * returns {@code null}.
      */
     public View getReorderedChildAt(int index) {
-        if (index < 0 || index >= mReorderedIndices.length) {
-            return null;
-        }
-        return getChildAt(mReorderedIndices[index]);
+//        if (index < 0 || index >= mReorderedIndices.length) {
+//            return null;
+//        }
+//        return getChildAt(mReorderedIndices[index]);
+        return getChildAt(index);
     }
 
     @Override
     public View getReorderedFlexItemAt(int index) {
         return getReorderedChildAt(index);
+    }
+
+    @Override
+    public NewFlexItem getReorderedNewFlexItemAt(int index) {
+        return NewFlexItemImpl.wrap(getReorderedFlexItemAt(index));
     }
 
     @Override
@@ -325,8 +334,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         // ViewGroup since otherwise reordered indices won't be in effect before the
         // FlexboxLayout's onMeasure is called.
         // Because requestLayout is requested in the super.addView method.
-        mReorderedIndices = mFlexboxHelper
-                .createReorderedIndices(child, index, params, mOrderCache);
+//        mReorderedIndices = mFlexboxHelper
+//                .createReorderedIndices(child, index, params, mOrderCache);
         super.addView(child, index, params);
     }
 
@@ -685,8 +694,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
             for (int j = 0; j < flexLine.mItemCount; j++) {
                 int index = flexLine.mFirstIndex + j;
-                View child = getReorderedChildAt(index);
-                if (child == null || child.getVisibility() == View.GONE) {
+                NewFlexItem child = NewFlexItemImpl.wrap(getReorderedChildAt(index));
+                if (child == null || child.isGone()) {
                     continue;
                 }
                 LayoutParams lp = ((LayoutParams) child.getLayoutParams());
@@ -842,8 +851,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
             for (int j = 0; j < flexLine.mItemCount; j++) {
                 int index = flexLine.mFirstIndex + j;
-                View child = getReorderedChildAt(index);
-                if (child == null || child.getVisibility() == View.GONE) {
+                NewFlexItem child = NewFlexItemImpl.wrap(getReorderedChildAt(index));
+                if (child == null || child.isGone()) {
                     continue;
                 }
                 LayoutParams lp = ((LayoutParams) child.getLayoutParams());

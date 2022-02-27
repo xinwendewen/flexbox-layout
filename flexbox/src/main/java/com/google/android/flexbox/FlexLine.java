@@ -16,7 +16,7 @@
 
 package com.google.android.flexbox;
 
-import android.view.View;
+import com.xinwendewen.flexbox.NewFlexItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,8 +165,8 @@ public class FlexLine {
      * @param rightDecoration  the length of the decoration on the right of the view
      * @param bottomDecoration the length of the decoration on the bottom of the view
      */
-    void updatePositionFromView(View view, int leftDecoration, int topDecoration,
-            int rightDecoration, int bottomDecoration) {
+    void updatePositionFromView(NewFlexItem view, int leftDecoration, int topDecoration,
+                                int rightDecoration, int bottomDecoration) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         mLeft = Math.min(mLeft, view.getLeft() - flexItem.getMarginLeft() - leftDecoration);
         mTop = Math.min(mTop, view.getTop() - flexItem.getMarginTop() - topDecoration);

@@ -24,7 +24,7 @@ import android.view.View;
  * Known classes that implement this interface are {@link FlexboxLayout.LayoutParams} and
  * {@link FlexboxLayoutManager.LayoutParams}.
  */
-interface FlexItem extends Parcelable {
+public interface FlexItem extends Parcelable {
 
     /** The default value for the order attribute */
     int ORDER_DEFAULT = 1;
