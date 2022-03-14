@@ -5,6 +5,8 @@ import com.google.android.flexbox.FlexItem;
 public interface NewFlexItem {
     boolean isGone();
 
+    int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal);
+
     int getMeasuredWidth();
     int getMeasuredHeight();
     void measure(MeasureRequest widthMeasureRequest, MeasureRequest heightMeasureRequest);

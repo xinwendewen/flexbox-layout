@@ -18,7 +18,6 @@ package com.google.android.flexbox;
 
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
-import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 
@@ -26,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.xinwendewen.flexbox.MeasureRequest;
+import com.xinwendewen.flexbox.MeasureRequestImpl;
 import com.xinwendewen.flexbox.MeasureRequestUtils;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.NewFlexItemImpl;
@@ -387,7 +388,7 @@ class FlexboxHelper {
 
         int mainMode = MeasureRequestUtils.getMeasureSpecMode(mainMeasureSpec);
         int mainSize = MeasureRequestUtils.getMeasureSpecSize(mainMeasureSpec);
-
+        MeasureRequest containerMainMeasureRequest = MeasureRequestImpl.createFrom(mainMeasureSpec);
         int childState = 0;
 
         List<FlexLine> flexLines;
@@ -399,7 +400,7 @@ class FlexboxHelper {
 
         result.mFlexLines = flexLines;
 
-        boolean reachedToIndex = toIndex == NO_POSITION;
+//        boolean reachedToIndex = toIndex == NO_POSITION;
 
         int mainPaddingStart = getPaddingStartMain(isMainHorizontal);
         int mainPaddingEnd = getPaddingEndMain(isMainHorizontal);
@@ -444,16 +445,17 @@ class FlexboxHelper {
                 flexLine.mIndicesAlignSelfStretch.add(i);
             }
 
-            int childMainSize = getFlexItemSizeMain(flexItem, isMainHorizontal);
+            int childMainSize = child.getFlexBasis(containerMainMeasureRequest, isMainHorizontal);
+//            int childMainSize = getFlexItemSizeMain(flexItem, isMainHorizontal);
 
-            if (flexItem.getFlexBasisPercent() != FLEX_BASIS_PERCENT_DEFAULT
+//            if (flexItem.getFlexBasisPercent() != FLEX_BASIS_PERCENT_DEFAULT
 //                    && mainMode == View.MeasureSpec.EXACTLY) {
-                    && MeasureRequestUtils.isExactliyMode(mainMode)) {
-                childMainSize = Math.round(mainSize * flexItem.getFlexBasisPercent());
+//                    && MeasureRequestUtils.isTight(mainMode)) {
+//                childMainSize = Math.round(mainSize * flexItem.getFlexBasisPercent());
                 // Use the dimension from the layout if the mainMode is not
                 // MeasureSpec.EXACTLY even if any fraction value is set to
                 // layout_flexBasisPercent.
-            }
+//            }
 
             int childMainMeasureSpec;
             int childCrossMeasureSpec;
@@ -599,20 +601,20 @@ class FlexboxHelper {
                 sumCrossSize += flexLine.mCrossSize;
             }
 
-            if (toIndex != NO_POSITION
-                    && flexLines.size() > 0
-                    && flexLines.get(flexLines.size() - 1).mLastIndex >= toIndex
-                    && i >= toIndex
-                    && !reachedToIndex) {
+//            if (toIndex != NO_POSITION
+//                    && flexLines.size() > 0
+//                    && flexLines.get(flexLines.size() - 1).mLastIndex >= toIndex
+//                    && i >= toIndex
+//                    && !reachedToIndex) {
                 // Calculated to include a flex line which includes the flex item having the
                 // toIndex.
                 // Let the sumCrossSize start from the negative value of the last flex line's
                 // cross size because otherwise flex lines aren't calculated enough to fill the
                 // visible area.
-                sumCrossSize = -flexLine.getCrossSize();
-                reachedToIndex = true;
-            }
-            if (sumCrossSize > needsCalcAmount && reachedToIndex) {
+//                sumCrossSize = -flexLine.getCrossSize();
+//                reachedToIndex = true;
+//            }
+//            if (sumCrossSize > needsCalcAmount && reachedToIndex) {
                 // Stop the calculation if the sum of cross size calculated reached to the point
                 // beyond the needsCalcAmount value to avoid unneeded calculation in a
                 // RecyclerView.
@@ -620,8 +622,8 @@ class FlexboxHelper {
                 // but we omit adding the decoration length because even without the decorator
                 // length, it's guaranteed that calculation is done at least beyond the
                 // needsCalcAmount
-                break;
-            }
+//                break;
+//            }
         }
 
         result.mChildState = childState;
@@ -968,7 +970,7 @@ class FlexboxHelper {
                 int widthMode = MeasureRequestUtils.getMeasureSpecMode(widthMeasureSpec);
                 int widthSize = MeasureRequestUtils.getMeasureSpecSize(widthMeasureSpec);
                 int largestMainSize = mFlexContainer.getLargestMainSize();
-                if (MeasureRequestUtils.isExactliyMode(widthMode)) {
+                if (MeasureRequestUtils.isTight(widthMode)) {
                     mainSize = widthSize;
                 } else {
                     mainSize = Math.min(largestMainSize, widthSize);
@@ -980,7 +982,7 @@ class FlexboxHelper {
             case FlexDirection.COLUMN_REVERSE:
                 int heightMode = MeasureRequestUtils.getMeasureSpecMode(heightMeasureSpec);
                 int heightSize = MeasureRequestUtils.getMeasureSpecSize(heightMeasureSpec);
-                if (MeasureRequestUtils.isExactliyMode(heightMode)) {
+                if (MeasureRequestUtils.isTight(heightMode)) {
                     mainSize = heightSize;
                 } else {
                     mainSize = mFlexContainer.getLargestMainSize();
@@ -1449,7 +1451,7 @@ class FlexboxHelper {
                 throw new IllegalArgumentException("Invalid flex direction: " + flexDirection);
         }
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
-        if (MeasureRequestUtils.isExactliyMode(mode)) {
+        if (MeasureRequestUtils.isTight(mode)) {
             int totalCrossSize = mFlexContainer.getSumOfCrossSize() + paddingAlongCrossAxis;
             if (flexLines.size() == 1) {
                 flexLines.get(0).mCrossSize = size - paddingAlongCrossAxis;

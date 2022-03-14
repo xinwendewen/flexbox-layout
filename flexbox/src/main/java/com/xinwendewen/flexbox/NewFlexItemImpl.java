@@ -1,5 +1,7 @@
 package com.xinwendewen.flexbox;
 
+import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
+
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -21,6 +23,20 @@ public class NewFlexItemImpl implements NewFlexItem {
     @Override
     public boolean isGone() {
         return view.getVisibility() == View.GONE;
+    }
+
+    @Override
+    public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
+        FlexItem flexItem = (FlexItem) view.getLayoutParams();
+        float flexBasisPercent = flexItem.getFlexBasisPercent();
+        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && containerMainMeasureRequest.isTight()) {
+            return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
+        } else {
+            if (isMainHorizontal) {
+                return flexItem.getWidth();
+            }
+            return flexItem.getHeight();
+        }
     }
 
     @Override

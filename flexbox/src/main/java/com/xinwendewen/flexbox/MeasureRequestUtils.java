@@ -14,7 +14,7 @@ public class MeasureRequestUtils {
     public static boolean isUnspecifiedMode(int measureSpec) {
         return getMeasureSpecMode(measureSpec) == View.MeasureSpec.UNSPECIFIED;
     }
-    public static boolean isExactliyMode(int measureSpec) {
+    public static boolean isTight(int measureSpec) {
         return getMeasureSpecMode(measureSpec) == View.MeasureSpec.EXACTLY;
     }
 
