@@ -1,6 +1,7 @@
 package com.xinwendewen.flexbox;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
 
@@ -153,6 +154,22 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
+    public void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize,
+                                     int occupiedCrossSize) {
+        int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
+        int intentCrossSize = getIntentCrossSize(containerProps.isMainAxisHorizontal);
+        int containerCrossMeasureSpec = containerProps.getCrossAxisMeasureSpec();
+        int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
+                occupiedCrossSize + crossAxisMargin(containerProps.isMainAxisHorizontal),
+                intentCrossSize);
+        if (containerProps.isMainAxisHorizontal) {
+            view.measure(mainMeasureSpec, crossMeasureSpec);
+        } else {
+            view.measure(crossMeasureSpec, mainMeasureSpec);
+        }
+    }
+
+    @Override
     public void clampByMinMaxConstraints() {
         boolean violated = false;
         int width = view.getMeasuredWidth();
@@ -201,6 +218,11 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
+    public boolean isFlexible() {
+        return getFlexShrink() != NOT_SET || getFlexGrow() != NOT_SET;
+    }
+
+    @Override
     public int getOuterCrossSize(boolean isMainAxisHorizontal) {
         return getMeasureCrossSize(isMainAxisHorizontal) + crossAxisMargin(isMainAxisHorizontal);
     }
@@ -209,6 +231,34 @@ public class NewFlexItemImpl implements NewFlexItem {
     public int getAlignSelf() {
         return getLayoutParams().getAlignSelf();
     }
+
+    @Override
+    public int getMeasureMainSize(boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            return view.getMeasuredWidth();
+        } else {
+            return view.getMeasuredHeight();
+        }
+    }
+
+    @Override
+    public int minMainSize(boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            return getLayoutParams().getMinWidth();
+        } else {
+            return getLayoutParams().getMinHeight();
+        }
+    }
+
+    @Override
+    public float maxMainSize(boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            return getLayoutParams().getMaxWidth();
+        } else {
+            return getLayoutParams().getMaxHeight();
+        }
+    }
+
 
     private int getMeasureCrossSize(boolean isMainAxisHorizontal) {
         return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();

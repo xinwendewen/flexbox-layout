@@ -24,14 +24,7 @@ import androidx.annotation.LayoutRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.assertion.PositionAssertions.isBottomAlignedWith
-import androidx.test.espresso.assertion.PositionAssertions.isCompletelyAbove
-import androidx.test.espresso.assertion.PositionAssertions.isCompletelyBelow
-import androidx.test.espresso.assertion.PositionAssertions.isCompletelyLeftOf
-import androidx.test.espresso.assertion.PositionAssertions.isCompletelyRightOf
-import androidx.test.espresso.assertion.PositionAssertions.isLeftAlignedWith
-import androidx.test.espresso.assertion.PositionAssertions.isRightAlignedWith
-import androidx.test.espresso.assertion.PositionAssertions.isTopAlignedWith
+import androidx.test.espresso.assertion.PositionAssertions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -39,21 +32,13 @@ import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import com.google.android.flexbox.AlignContent
-import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayout
-import com.google.android.flexbox.JustifyContent
+import com.google.android.flexbox.*
 import com.google.android.flexbox.test.IsEqualAllowingError.Companion.isEqualAllowingError
 import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.core.Is.`is`
 import org.hamcrest.core.IsNot.not
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -374,26 +359,6 @@ class FlexboxAndroidTest {
     @Test
     @FlakyTest
     @Throws(Throwable::class)
-    fun testMinWidth_works_as_lower_bound_shrink_to() {
-        val activity = activityRule.activity
-
-        // This test case verifies if the minWidth attribute works as a lower bound
-        // when the view would shrink less than the minWidth if the minWidth weren't set
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_minwidth_lower_bound_test)
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val textView4 = activity.findViewById<TextView>(R.id.text4)
-        val minWidth = (textView1.layoutParams as FlexboxLayout.LayoutParams).minWidth
-
-        onView(withId(R.id.text1)).check(hasWidth(minWidth))
-        assertEquals(flexboxLayout.width, textView1.width + textView2.width + textView3.width +
-                textView4.width)
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
     fun testMinHeight_initial_height_less_than_minHeight() {
         val activity = activityRule.activity
 
@@ -407,26 +372,6 @@ class FlexboxAndroidTest {
 
         onView(withId(R.id.text1)).check(hasHeight(minHeight))
         onView(withId(R.id.text2)).check(hasHeight(flexboxLayout.height - minHeight))
-    }
-
-    @Test
-    @FlakyTest
-    @Throws(Throwable::class)
-    fun testMinHeight_works_as_lower_bound_shrink_to() {
-        val activity = activityRule.activity
-
-        // This test case verifies if the minHeight attribute works as a lower bound
-        // when the view would shrink less than the minHeight if the minHeight weren't set
-        val flexboxLayout = createFlexboxLayout(R.layout.activity_minheight_lower_bound_test)
-        val textView1 = activity.findViewById<TextView>(R.id.text1)
-        val textView2 = activity.findViewById<TextView>(R.id.text2)
-        val textView3 = activity.findViewById<TextView>(R.id.text3)
-        val textView4 = activity.findViewById<TextView>(R.id.text4)
-        val minHeight = (textView1.layoutParams as FlexboxLayout.LayoutParams).minHeight
-
-        onView(withId(R.id.text1)).check(hasHeight(minHeight))
-        assertEquals(flexboxLayout.height, textView1.height + textView2.height + textView3.height +
-                textView4.height)
     }
 
     @Test

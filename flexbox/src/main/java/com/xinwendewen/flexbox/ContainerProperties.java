@@ -113,4 +113,12 @@ public class ContainerProperties {
             return isTight(heightMeasureSpec);
         }
     }
+
+    public int getCrossAxisMeasureSpec() {
+        if (isMainAxisHorizontal) {
+            return heightMeasureSpec;
+        } else {
+            return widthMeasureSpec;
+        }
+    }
 }
