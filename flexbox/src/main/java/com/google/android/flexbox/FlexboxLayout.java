@@ -355,12 +355,12 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         mFlexLines.clear();
 
         mFlexLinesResult.reset();
-        mFlexboxHelper
-                .calculateHorizontalFlexLines(mFlexLinesResult, widthMeasureSpec,
-                        heightMeasureSpec);
+        mFlexboxHelper.fillFlexLines(mFlexLinesResult, widthMeasureSpec, heightMeasureSpec);
         mFlexLines = mFlexLinesResult.mFlexLines;
 
-        mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec);
+        int mainSize = mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
+                mFlexLinesResult);
+        mFlexboxHelper.calculateFlexibleLength(mainSize, widthMeasureSpec, heightMeasureSpec);
 
         // TODO: Consider the case any individual child's mAlignSelf is set to ALIGN_SELF_BASELINE
         if (mAlignItems == AlignItems.BASELINE) {
@@ -419,7 +419,9 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
                 heightMeasureSpec);
         mFlexLines = mFlexLinesResult.mFlexLines;
 
-        mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec);
+        int mainSize = mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
+                mFlexLinesResult);
+        mFlexboxHelper.calculateFlexibleLength(mainSize, widthMeasureSpec, heightMeasureSpec);
         mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
                 getPaddingLeft() + getPaddingRight());
         // Now cross size for each flex line is determined.

@@ -987,7 +987,7 @@ public class FlexboxLayoutManager extends RecyclerView.LayoutManager implements 
             }
             mFlexLines = mFlexLinesResult.mFlexLines;
             mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
-                    fromIndex);
+                    null);
             // Unlike the FlexboxLayout not calling FlexboxHelper#determineCrossSize because
             // the align content attribute (which is used to determine the cross size) is only
             // effective
@@ -2125,7 +2125,7 @@ public class FlexboxLayoutManager extends RecyclerView.LayoutManager implements 
                                 mLayoutState.mPosition, mFlexLines);
                     }
                     mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
-                            mLayoutState.mPosition);
+                            null);
                     mFlexboxHelper.stretchViews(mLayoutState.mPosition);
                 }
             }

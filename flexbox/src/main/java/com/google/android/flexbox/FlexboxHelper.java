@@ -218,14 +218,13 @@ class FlexboxHelper {
     void calculateHorizontalFlexLines(FlexLinesResult result, int widthMeasureSpec,
             int heightMeasureSpec) {
         fillFlexLines(result, widthMeasureSpec, heightMeasureSpec);
-//        calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, Integer.MAX_VALUE,
-//                0, NO_POSITION, null);
     }
 
 
     void fillFlexLines(FlexLinesResult result, int widthMeasureSpec,
                                  int heightMeasureSpec) {
-        ContainerProperties containerProperties = new ContainerProperties(mFlexContainer);
+        ContainerProperties containerProperties = new ContainerProperties(mFlexContainer,
+                widthMeasureSpec, heightMeasureSpec);
         boolean isMainAxisHorizontal = containerProperties.isMainAxisHorizontal();
         int mainMeasureSpec;
         int crossMeasureSpec;
@@ -977,7 +976,17 @@ class FlexboxHelper {
      * @see #determineMainSize(int, int, int)
      */
     void determineMainSize(int widthMeasureSpec, int heightMeasureSpec) {
-        determineMainSize(widthMeasureSpec, heightMeasureSpec, 0);
+        determineMainSize(widthMeasureSpec, heightMeasureSpec, null);
+    }
+
+    int determineMainSize(ContainerProperties properties, FlexLinesResult flexLines) {
+        int largestFlexLineMainSize = flexLines.getLargestMainSize();
+        int expectedMainSize = properties.getExpectedMainSize();
+        if (properties.requestFixedMainSize()) {
+            return expectedMainSize;
+        } else {
+            return Math.min(largestFlexLineMainSize, expectedMainSize);
+        }
     }
 
     /**
@@ -991,50 +1000,19 @@ class FlexboxHelper {
      * @see FlexContainer#setFlexDirection(int)
      * @see FlexContainer#getFlexDirection()
      */
-    void determineMainSize(int widthMeasureSpec, int heightMeasureSpec, int fromIndex) {
-        ensureChildrenFrozen(mFlexContainer.getFlexItemCount());
-        if (fromIndex >= mFlexContainer.getFlexItemCount()) {
-            return;
-        }
-        int mainSize;
-        int paddingAlongMainAxis;
-        int flexDirection = mFlexContainer.getFlexDirection();
-        switch (mFlexContainer.getFlexDirection()) {
-            case FlexDirection.ROW: // Intentional fall through
-            case FlexDirection.ROW_REVERSE:
-                int widthMode = MeasureRequestUtils.getMeasureSpecMode(widthMeasureSpec);
-                int widthSize = MeasureRequestUtils.getMeasureSpecSize(widthMeasureSpec);
-                int largestMainSize = mFlexContainer.getLargestMainSize();
-                if (MeasureRequestUtils.isTight(widthMode)) {
-                    mainSize = widthSize;
-                } else {
-                    mainSize = Math.min(largestMainSize, widthSize);
-                }
-                paddingAlongMainAxis = mFlexContainer.getPaddingLeft()
-                        + mFlexContainer.getPaddingRight();
-                break;
-            case FlexDirection.COLUMN: // Intentional fall through
-            case FlexDirection.COLUMN_REVERSE:
-                int heightMode = MeasureRequestUtils.getMeasureSpecMode(heightMeasureSpec);
-                int heightSize = MeasureRequestUtils.getMeasureSpecSize(heightMeasureSpec);
-                if (MeasureRequestUtils.isTight(heightMode)) {
-                    mainSize = heightSize;
-                } else {
-                    mainSize = mFlexContainer.getLargestMainSize();
-                }
-                paddingAlongMainAxis = mFlexContainer.getPaddingTop()
-                        + mFlexContainer.getPaddingBottom();
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid flex direction: " + flexDirection);
-        }
+    int determineMainSize(int widthMeasureSpec, int heightMeasureSpec, FlexLinesResult flexLinesResult) {
+        ContainerProperties containerProps = new ContainerProperties(mFlexContainer,
+                widthMeasureSpec, heightMeasureSpec);
+        return determineMainSize(containerProps, flexLinesResult);
+    }
 
-        int flexLineIndex = 0;
-        if (mIndexToFlexLine != null) {
-            flexLineIndex = mIndexToFlexLine[fromIndex];
-        }
+    void calculateFlexibleLength(int mainSize, int widthMeasureSpec, int heightMeasureSpec) {
+        ContainerProperties containerProps = new ContainerProperties(mFlexContainer,
+                widthMeasureSpec, heightMeasureSpec);
+        int paddingAlongMainAxis = containerProps.getMainPaddings();
+        ensureChildrenFrozen(mFlexContainer.getFlexItemCount());
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
-        for (int i = flexLineIndex, size = flexLines.size(); i < size; i++) {
+        for (int i = 0, size = flexLines.size(); i < size; i++) {
             FlexLine flexLine = flexLines.get(i);
             if (flexLine.mMainSize < mainSize && flexLine.mAnyItemsHaveFlexGrow) {
                 expandFlexItems(widthMeasureSpec, heightMeasureSpec, flexLine,
@@ -2086,6 +2064,14 @@ class FlexboxHelper {
         void reset() {
             mFlexLines = null;
             mChildState = 0;
+        }
+
+        int getLargestMainSize() {
+            int largestMainSize = 0;
+            for (FlexLine flexLine : mFlexLines) {
+                largestMainSize = Math.max(largestMainSize, flexLine.mMainSize);
+            }
+            return largestMainSize;
         }
     }
 

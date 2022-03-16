@@ -1,5 +1,8 @@
 package com.xinwendewen.flexbox;
 
+import static com.xinwendewen.flexbox.MeasureRequestUtils.getMeasureSpecSize;
+import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
+
 import com.google.android.flexbox.FlexContainer;
 import com.google.android.flexbox.FlexDirection;
 
@@ -11,8 +14,10 @@ public class ContainerProperties {
     final int alignContent;
     final int alignItems;
     final boolean isMainAxisHorizontal;
+    final int widthMeasureSpec;
+    final int heightMeasureSpec;
 
-    public ContainerProperties(FlexContainer container) {
+    public ContainerProperties(FlexContainer container, int widthMeasureSpec, int heightMeasureSpec) {
         this.container = container;
         this.flexDirection = container.getFlexDirection();
         this.justifyContent = container.getJustifyContent();
@@ -20,6 +25,8 @@ public class ContainerProperties {
         this.alignContent = container.getAlignContent();
         this.alignItems = container.getAlignItems();
         this.isMainAxisHorizontal = isMainAxisHorizontal(flexDirection);
+        this.widthMeasureSpec = widthMeasureSpec;
+        this.heightMeasureSpec = heightMeasureSpec;
     }
 
     public int getFlexDirection() {
@@ -88,6 +95,22 @@ public class ContainerProperties {
             return container.getPaddingEnd();
         } else {
             return container.getPaddingBottom();
+        }
+    }
+
+    public int getExpectedMainSize() {
+        if (isMainAxisHorizontal) {
+            return getMeasureSpecSize(widthMeasureSpec);
+        } else {
+            return getMeasureSpecSize(heightMeasureSpec);
+        }
+    }
+
+    public boolean requestFixedMainSize() {
+        if (isMainAxisHorizontal) {
+            return isTight(widthMeasureSpec);
+        } else {
+            return isTight(heightMeasureSpec);
         }
     }
 }
