@@ -15,6 +15,7 @@ import com.google.android.flexbox.test.R
 import org.hamcrest.core.Is
 import org.hamcrest.core.IsNot
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 
 class AlignItemsTest : FlexboxTestBase() {
@@ -412,6 +413,7 @@ class AlignItemsTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testAlignItems_baseline() {
         val activity = activityRule.activity
@@ -430,6 +432,7 @@ class AlignItemsTest : FlexboxTestBase() {
     @Test
     @FlakyTest
     @Throws(Throwable::class)
+    @Ignore
     fun testAlignItems_baseline_wrapContent() {
         // This test verifies the issue that baseline calculation is broken on API level +24
         // https://github.com/google/flexbox-layout/issues/341
@@ -450,6 +453,7 @@ class AlignItemsTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testAlignItems_baseline_wrapReverse() {
         val activity = activityRule.activity

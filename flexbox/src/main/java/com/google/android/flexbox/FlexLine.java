@@ -16,6 +16,9 @@
 
 package com.google.android.flexbox;
 
+import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
+import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
+
 import com.xinwendewen.flexbox.NewFlexItem;
 
 import java.util.ArrayList;
@@ -31,6 +34,25 @@ public class FlexLine {
     FlexLine() {
     }
 
+    FlexLine(int containerPaddings, int firstIndex) {
+        mMainSize = containerPaddings;
+        mFirstIndex = firstIndex;
+    }
+
+    // TODO: 2022/3/16 remove index , move isMainHorizontal to constructor
+    public void addItem(NewFlexItem item, int index, boolean isMainAxisHorizontal) {
+        mItemCount++;
+        if (item.getAlignSelf() == AlignItems.STRETCH) {
+            mIndicesAlignSelfStretch.add(index);
+        }
+        mAnyItemsHaveFlexGrow |= item.getFlexGrow() != FLEX_GROW_DEFAULT;
+        mAnyItemsHaveFlexShrink |= item.getFlexShrink() != FLEX_SHRINK_NOT_SET;
+        mMainSize += item.getOuterMainSize(isMainAxisHorizontal);
+        mTotalFlexGrow += item.getFlexGrow();
+        mTotalFlexShrink += item.getFlexShrink();
+        mCrossSize = Math.max(mCrossSize, item.getOuterCrossSize(isMainAxisHorizontal));
+    }
+
     int mLeft = Integer.MAX_VALUE;
 
     int mTop = Integer.MAX_VALUE;
@@ -40,7 +62,7 @@ public class FlexLine {
     int mBottom = Integer.MIN_VALUE;
 
     /** @see #getMainSize() */
-    int mMainSize;
+    int mMainSize; // TODO: 2022/3/16 flexline should not include container's paddings
 
     /**
      * The sum of the lengths of dividers along the main axis. This value should be lower

@@ -6,6 +6,7 @@ public interface NewFlexItem {
     boolean isGone();
 
     int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal);
+    int getFlexBasis(int containerMainMeasureRequest, boolean isMainHorizontal);
 
     int getMeasuredWidth();
     int getMeasuredHeight();
@@ -29,4 +30,20 @@ public interface NewFlexItem {
 
     int getMarginStart();
     int getMarginEnd();
+
+    void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec, int occupiedCrossSize, boolean isMainAxisHorizontal);
+
+    void clampByMinMaxConstraints();
+
+    int getOuterMainSize(boolean isMainAxisHorizontal);
+
+    boolean requireCrossSizeMatchParent(boolean isMainAxisHorizontal);
+
+    float getFlexGrow();
+
+    float getFlexShrink();
+
+    int getOuterCrossSize(boolean isMainAxisHorizontal);
+
+    int getAlignSelf();
 }

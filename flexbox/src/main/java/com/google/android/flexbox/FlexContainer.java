@@ -27,7 +27,7 @@ import java.util.List;
  * An interface that has the common behavior as the flex container such as {@link FlexboxLayout}
  * and {@link FlexboxLayoutManager}.
  */
-interface FlexContainer {
+public interface FlexContainer {
 
     int NOT_SET = -1;
 

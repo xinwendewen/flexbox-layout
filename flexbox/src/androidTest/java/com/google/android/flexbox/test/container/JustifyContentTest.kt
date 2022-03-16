@@ -14,6 +14,7 @@ import com.google.android.flexbox.test.LayoutConfiguration
 import com.google.android.flexbox.test.R
 import org.hamcrest.core.Is
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 
 class JustifyContentTest : FlexboxTestBase() {
@@ -576,6 +577,7 @@ class JustifyContentTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testJustifyContent_spaceAround_including_gone_views() {
         val activity = activityRule.activity
@@ -602,6 +604,7 @@ class JustifyContentTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testJustifyContent_spaceBetween_including_gone_views() {
         val activity = activityRule.activity

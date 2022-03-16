@@ -20,11 +20,14 @@ import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
+import static com.google.android.flexbox.FlexWrap.NOWRAP;
+import static com.xinwendewen.flexbox.MeasureRequestUtils.isUnspecifiedMode;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.xinwendewen.flexbox.ContainerProperties;
 import com.xinwendewen.flexbox.MeasureRequest;
 import com.xinwendewen.flexbox.MeasureRequestImpl;
 import com.xinwendewen.flexbox.MeasureRequestUtils;
@@ -214,8 +217,28 @@ class FlexboxHelper {
      */
     void calculateHorizontalFlexLines(FlexLinesResult result, int widthMeasureSpec,
             int heightMeasureSpec) {
-        calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, Integer.MAX_VALUE,
-                0, NO_POSITION, null);
+        fillFlexLines(result, widthMeasureSpec, heightMeasureSpec);
+//        calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, Integer.MAX_VALUE,
+//                0, NO_POSITION, null);
+    }
+
+
+    void fillFlexLines(FlexLinesResult result, int widthMeasureSpec,
+                                 int heightMeasureSpec) {
+        ContainerProperties containerProperties = new ContainerProperties(mFlexContainer);
+        boolean isMainAxisHorizontal = containerProperties.isMainAxisHorizontal();
+        int mainMeasureSpec;
+        int crossMeasureSpec;
+        if (isMainAxisHorizontal) {
+            mainMeasureSpec = widthMeasureSpec;
+            crossMeasureSpec = heightMeasureSpec;
+        } else {
+            mainMeasureSpec = heightMeasureSpec;
+            crossMeasureSpec = widthMeasureSpec;
+        }
+        List<FlexLine> flexLines = fillFlexLines(mainMeasureSpec, crossMeasureSpec,
+                containerProperties);
+        result.mFlexLines = flexLines;
     }
 
     /**
@@ -350,6 +373,56 @@ class FlexboxHelper {
                 0, toIndex, existingLines);
     }
 
+    List<FlexLine> fillFlexLines(int containerMainMeasureSpec, int containerCrossMeasureSpec,
+                                 ContainerProperties containerProps) {
+        // prepare flex lines
+        List<FlexLine> flexLines = new ArrayList<>();
+        // prepare current flex line
+        FlexLine currentFlexLine = new FlexLine(containerProps.getMainPaddings(), 0);
+
+        boolean isMainAxisHorizontal = containerProps.isMainAxisHorizontal();
+        int occupiedContainerCrossSize = containerProps.getCrossPaddings();
+        for (int i = 0; i < mFlexContainer.getFlexItemCount(); i++) {
+            NewFlexItem item = mFlexContainer.getReorderedNewFlexItemAt(i);
+            // measure flex item
+            int occupiedMainSize = containerProps.getMainPaddings();
+            item.measure(containerMainMeasureSpec, occupiedMainSize, containerCrossMeasureSpec,
+                    occupiedContainerCrossSize, isMainAxisHorizontal);
+            // clamp by min/max constraints and remeasure if needed
+            item.clampByMinMaxConstraints();
+            if (isWrapNeeded(containerMainMeasureSpec, containerProps, currentFlexLine, item,
+                    isMainAxisHorizontal)) {
+                // finish current flex line
+                currentFlexLine.mSumCrossSizeBefore = occupiedContainerCrossSize;
+                flexLines.add(currentFlexLine);
+                occupiedContainerCrossSize += currentFlexLine.mCrossSize;
+                // remeasure if cross size MATCH_PARENT
+                if (item.requireCrossSizeMatchParent(isMainAxisHorizontal)) {
+                     item.measure(containerMainMeasureSpec, occupiedMainSize,
+                             containerCrossMeasureSpec, occupiedContainerCrossSize, isMainAxisHorizontal);
+                }
+                // prepare new flex line
+                currentFlexLine = new FlexLine(containerProps.getMainPaddings(), i);
+            }
+            // add current item
+            currentFlexLine.addItem(item, i, isMainAxisHorizontal);
+        }
+        flexLines.add(currentFlexLine);
+        return flexLines;
+    }
+
+    private boolean isWrapNeeded(int containerMainMeasureSpec, ContainerProperties containerProps,
+                                 FlexLine currentFlexLine, NewFlexItem item,
+                                 boolean isMainAxisHorizontal) {
+        if (containerProps.getFlexWrap() == NOWRAP) {
+            return false;
+        }
+        if (isUnspecifiedMode(containerMainMeasureSpec)) {
+            return false;
+        }
+        return MeasureRequestUtils.getMeasureSpecSize(containerMainMeasureSpec)
+                < currentFlexLine.mMainSize + item.getOuterMainSize(isMainAxisHorizontal);
+    }
 
     /**
      * Calculates how many flex lines are needed in the flex container layout by measuring each
@@ -446,16 +519,6 @@ class FlexboxHelper {
             }
 
             int childMainSize = child.getFlexBasis(containerMainMeasureRequest, isMainHorizontal);
-//            int childMainSize = getFlexItemSizeMain(flexItem, isMainHorizontal);
-
-//            if (flexItem.getFlexBasisPercent() != FLEX_BASIS_PERCENT_DEFAULT
-//                    && mainMode == View.MeasureSpec.EXACTLY) {
-//                    && MeasureRequestUtils.isTight(mainMode)) {
-//                childMainSize = Math.round(mainSize * flexItem.getFlexBasisPercent());
-                // Use the dimension from the layout if the mainMode is not
-                // MeasureSpec.EXACTLY even if any fraction value is set to
-                // layout_flexBasisPercent.
-//            }
 
             int childMainMeasureSpec;
             int childCrossMeasureSpec;
@@ -487,7 +550,6 @@ class FlexboxHelper {
                 child.measure(childCrossMeasureSpec, childMainMeasureSpec);
                 updateMeasureCache(i, childCrossMeasureSpec, childMainMeasureSpec, child);
             }
-//            mFlexContainer.updateViewCache(i, child);
 
             // Check the size constraint after the first measurement for the child
             // To prevent the child's width/height violate the size constraints imposed by the
@@ -570,13 +632,10 @@ class FlexboxHelper {
             flexLine.mTotalFlexGrow += flexItem.getFlexGrow();
             flexLine.mTotalFlexShrink += flexItem.getFlexShrink();
 
-//            mFlexContainer.onNewFlexItemAdded(child, i, indexInFlexLine, flexLine);
-
             largestSizeInCross = Math.max(largestSizeInCross,
                     getViewMeasuredSizeCross(child, isMainHorizontal) +
                             getFlexItemMarginStartCross(flexItem, isMainHorizontal) +
                             getFlexItemMarginEndCross(flexItem, isMainHorizontal));
-//                            mFlexContainer.getDecorationLengthCrossAxis(child));
             // Temporarily set the cross axis length as the largest child in the flexLine
             // Expand along the cross axis depending on the mAlignContent property if needed
             // later
@@ -600,30 +659,6 @@ class FlexboxHelper {
                 addFlexLine(flexLines, flexLine, i, sumCrossSize);
                 sumCrossSize += flexLine.mCrossSize;
             }
-
-//            if (toIndex != NO_POSITION
-//                    && flexLines.size() > 0
-//                    && flexLines.get(flexLines.size() - 1).mLastIndex >= toIndex
-//                    && i >= toIndex
-//                    && !reachedToIndex) {
-                // Calculated to include a flex line which includes the flex item having the
-                // toIndex.
-                // Let the sumCrossSize start from the negative value of the last flex line's
-                // cross size because otherwise flex lines aren't calculated enough to fill the
-                // visible area.
-//                sumCrossSize = -flexLine.getCrossSize();
-//                reachedToIndex = true;
-//            }
-//            if (sumCrossSize > needsCalcAmount && reachedToIndex) {
-                // Stop the calculation if the sum of cross size calculated reached to the point
-                // beyond the needsCalcAmount value to avoid unneeded calculation in a
-                // RecyclerView.
-                // To be precise, the decoration length may be added to the sumCrossSize,
-                // but we omit adding the decoration length because even without the decorator
-                // length, it's guaranteed that calculation is done at least beyond the
-                // needsCalcAmount
-//                break;
-//            }
         }
 
         result.mChildState = childState;
@@ -863,13 +898,13 @@ class FlexboxHelper {
      */
     private boolean isWrapRequired(NewFlexItem view, int mode, int maxSize, int currentLength,
             int childLength, FlexItem flexItem, int index, int indexInFlexLine, int flexLinesSize) {
-        if (mFlexContainer.getFlexWrap() == FlexWrap.NOWRAP) {
+        if (mFlexContainer.getFlexWrap() == NOWRAP) {
             return false;
         }
         if (flexItem.isWrapBefore()) {
             return true;
         }
-        if (MeasureRequestUtils.isUnspecifiedMode(mode)) {
+        if (isUnspecifiedMode(mode)) {
             return false;
         }
         int maxLine = mFlexContainer.getMaxLine();
