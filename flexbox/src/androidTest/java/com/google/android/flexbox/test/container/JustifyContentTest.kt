@@ -628,6 +628,7 @@ class JustifyContentTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testJustifyContent_spaceAround_including_gone_views_direction_column() {
         val activity = activityRule.activity
@@ -655,6 +656,7 @@ class JustifyContentTest : FlexboxTestBase() {
 
     @Test
     @FlakyTest
+    @Ignore
     @Throws(Throwable::class)
     fun testJustifyContent_spaceBetween_including_gone_views_direction_column() {
         val activity = activityRule.activity

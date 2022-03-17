@@ -42,12 +42,15 @@ public class FlexLine {
         mFirstIndex = firstIndex;
     }
 
-    NewFlexItem getItemAt(int index, FlexContainer flexContainer) {
-       return flexContainer.getReorderedNewFlexItemAt(mFirstIndex + index);
+    NewFlexItem getItemAt(int index) {
+       return items.get(index);
     }
+
+    List<NewFlexItem> items = new ArrayList<>();
 
     // TODO: 2022/3/16 remove index , move isMainHorizontal to constructor
     public void addItem(NewFlexItem item, int index, boolean isMainAxisHorizontal) {
+        items.add(item);
         mItemCount++;
         if (item.getAlignSelf() == AlignItems.STRETCH) {
             mIndicesAlignSelfStretch.add(index);
@@ -151,7 +154,7 @@ public class FlexLine {
      */
     @SuppressWarnings("WeakerAccess")
     public int getItemCount() {
-        return mItemCount;
+        return items.size();
     }
 
     /**
@@ -204,10 +207,9 @@ public class FlexLine {
                 .max(mBottom, view.getBottom() + flexItem.getMarginBottom() + bottomDecoration);
     }
 
-    public boolean isFrozen(FlexContainer flexContainer) {
+    public boolean isFrozen() {
         for (int i = 0; i < mItemCount; i++) {
-            int index = mFirstIndex + i;
-            NewFlexItem item = getItemAt(index, flexContainer);
+            NewFlexItem item = items.get(i);
             boolean isItemFrozen = !item.isFlexible() || violatedIndices.contains(i);
             if (!isItemFrozen) {
                 return false;
@@ -216,14 +218,14 @@ public class FlexLine {
         return true;
     }
 
-    Set<Integer> violatedIndices = new HashSet<Integer>();
+    Set<Integer> violatedIndices = new HashSet<>();
 
 
-    public boolean isItemShrinkFrozen(int index, FlexContainer mFlexContainer) {
+    public boolean isItemShrinkFrozen(int index) {
         if (violatedIndices.contains(index)) {
             return true;
         }
-        NewFlexItem item = getItemAt(index, mFlexContainer);
+        NewFlexItem item = items.get(index);
         float flexShrink = item.getFlexShrink();
         if (flexShrink <= 0) {
             return true;
@@ -231,20 +233,21 @@ public class FlexLine {
         return false;
     }
 
-    public boolean isItemGrowFrozen(int index, FlexContainer mFlexContainer) {
+    public boolean isItemGrowFrozen(int index) {
         if (violatedIndices.contains(index)) {
             return true;
         }
-        NewFlexItem item = getItemAt(index, mFlexContainer);
+        NewFlexItem item = items.get(index);
         float flexGrow = item.getFlexGrow();
         if (flexGrow <= 0) {
             return true;
         }
         return false;
     }
-    public void frozeItemAt(int index, FlexContainer flexContainer) {
+
+    public void freezeItemAt(int index) {
         violatedIndices.add(index);
-        NewFlexItem item = getItemAt(index, flexContainer);
+        NewFlexItem item = items.get(index);
         float growFactor = item.getFlexGrow();
         if (growFactor != NOT_SET) {
             mTotalFlexGrow -= growFactor;
@@ -255,13 +258,10 @@ public class FlexLine {
         }
     }
 
-    public void refreshCrossSize(FlexContainer flexContainer, boolean isMainAxisHorizontal) {
+    public void refreshCrossSize(boolean isMainAxisHorizontal) {
         int crossSize = 0;
-        for (int i = 0; i < mItemCount; i++) {
-            int index = mFirstIndex + i;
-            NewFlexItem item = getItemAt(index, flexContainer);
+        for (NewFlexItem item : items) {
             crossSize = Math.max(crossSize, item.getOuterCrossSize(isMainAxisHorizontal));
         }
     }
-
 }

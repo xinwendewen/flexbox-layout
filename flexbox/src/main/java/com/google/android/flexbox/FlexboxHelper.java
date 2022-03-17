@@ -52,12 +52,6 @@ class FlexboxHelper {
     private final FlexContainer mFlexContainer;
 
     /**
-     * Holds the 'frozen' state of children during measure. If a view is frozen it will no longer
-     * expand or shrink regardless of flex grow/flex shrink attributes.
-     */
-    private boolean[] mChildrenFrozen;
-
-    /**
      * Map the view index to the flex line which contains the view represented by the index to
      * look for a flex line from a given view index in a constant time.
      * Key: index of the view
@@ -1009,7 +1003,7 @@ class FlexboxHelper {
     void calculateFlexibleLength(int mainSize, int widthMeasureSpec, int heightMeasureSpec) {
         ContainerProperties containerProps = new ContainerProperties(mFlexContainer,
                 widthMeasureSpec, heightMeasureSpec);
-        ensureChildrenFrozen(mFlexContainer.getFlexItemCount());
+//        ensureChildrenFrozen(mFlexContainer.getFlexItemCount());
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
         for (int i = 0, size = flexLines.size(); i < size; i++) {
             FlexLine flexLine = flexLines.get(i);
@@ -1025,16 +1019,16 @@ class FlexboxHelper {
                                          ContainerProperties containerProps) {
         RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
         boolean isMainAxisHorizontal = containerProps.isMainAxisHorizontal();
-        while (!flexLine.isFrozen(mFlexContainer) && flexLine.mMainSize != containerMainSize) {
+        while (!flexLine.isFrozen() && flexLine.mMainSize != containerMainSize) {
             int available = containerMainSize - flexLine.mMainSize;
             float spaceUnit = available / (available > 0 ? flexLine.mTotalFlexGrow : flexLine.mTotalFlexShrink);
             boolean hasViolation = false;
             for (int i = 0; i < flexLine.mItemCount; i++) {
-                NewFlexItem item = flexLine.getItemAt(i, mFlexContainer);
-                if (available < 0 && flexLine.isItemShrinkFrozen(i, mFlexContainer)) {
+                NewFlexItem item = flexLine.getItemAt(i);
+                if (available < 0 && flexLine.isItemShrinkFrozen(i)) {
                     continue;
                 }
-                if (available > 0 && flexLine.isItemGrowFrozen(i, mFlexContainer)) {
+                if (available > 0 && flexLine.isItemGrowFrozen(i)) {
                     continue;
                 }
                 flexLine.mMainSize -= item.getOuterMainSize(isMainAxisHorizontal);
@@ -1045,11 +1039,11 @@ class FlexboxHelper {
                 if (newMainSize < item.minMainSize(isMainAxisHorizontal)) {
                     hasViolation = true;
                     newMainSize = item.minMainSize(isMainAxisHorizontal);
-                    flexLine.frozeItemAt(i, mFlexContainer);
+                    flexLine.freezeItemAt(i);
                 } else if (newMainSize > item.maxMainSize(isMainAxisHorizontal)) {
                     hasViolation = true;
                     newMainSize = item.maxMainSize(isMainAxisHorizontal);
-                    flexLine.frozeItemAt(i, mFlexContainer);
+                    flexLine.freezeItemAt(i);
                 }
                 int roundedNewMainSize = errorAccumulator.round(newMainSize);
                 roundedNewMainSize += errorAccumulator.compensate();
@@ -1062,412 +1056,7 @@ class FlexboxHelper {
                 break;
             }
         }
-        flexLine.refreshCrossSize(mFlexContainer, isMainAxisHorizontal);
-    }
-
-    private void ensureChildrenFrozen(int size) {
-        if (mChildrenFrozen == null) {
-            mChildrenFrozen = new boolean[Math.max(size, INITIAL_CAPACITY)];
-        } else if (mChildrenFrozen.length < size) {
-            int newCapacity = mChildrenFrozen.length * 2;
-            mChildrenFrozen = new boolean[Math.max(newCapacity, size)];
-        } else {
-            Arrays.fill(mChildrenFrozen, false);
-        }
-    }
-
-    /**
-     * Expand the flex items along the main axis based on the individual mFlexGrow attribute.
-     *
-     * @param widthMeasureSpec     the horizontal space requirements as imposed by the parent
-     * @param heightMeasureSpec    the vertical space requirements as imposed by the parent
-     * @param flexLine             the flex line to which flex items belong
-     * @param maxMainSize          the maximum main size. Expanded main size will be this size
-     * @param paddingAlongMainAxis the padding value along the main axis
-     * @param calledRecursively    true if this method is called recursively, false otherwise
-     * @see FlexContainer#getFlexDirection()
-     * @see FlexContainer#setFlexDirection(int)
-     * @see FlexItem#getFlexGrow()
-     */
-    private void expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
-                                 int maxMainSize, int paddingAlongMainAxis, boolean calledRecursively) {
-        if (flexLine.mTotalFlexGrow <= 0 || maxMainSize < flexLine.mMainSize) {
-            return;
-        }
-        int sizeBeforeExpand = flexLine.mMainSize;
-        boolean needsReexpand = false;
-        float unitSpace = (maxMainSize - flexLine.mMainSize) / flexLine.mTotalFlexGrow;
-        flexLine.mMainSize = paddingAlongMainAxis + flexLine.mDividerLengthInMainSize;
-
-        // Setting the cross size of the flex line as the temporal value since the cross size of
-        // each flex item may be changed from the initial calculation
-        // (in the measureHorizontal/measureVertical method) even this method is part of the main
-        // size determination.
-        // E.g. If a TextView's layout_width is set to 0dp, layout_height is set to wrap_content,
-        // and layout_flexGrow is set to 1, the TextView is trying to expand to the vertical
-        // direction to enclose its content (in the measureHorizontal method), but
-        // the width will be expanded in this method. In that case, the height needs to be measured
-        // again with the expanded width.
-        int largestCrossSize = 0;
-        if (!calledRecursively) {
-            flexLine.mCrossSize = Integer.MIN_VALUE;
-        }
-        float accumulatedRoundError = 0;
-        for (int i = 0; i < flexLine.mItemCount; i++) {
-            int index = flexLine.mFirstIndex + i;
-            NewFlexItem child = mFlexContainer.getReorderedNewFlexItemAt(index);
-            if (child == null || child.isGone()) {
-                continue;
-            }
-            FlexItem flexItem = (FlexItem) child.getLayoutParams();
-            int flexDirection = mFlexContainer.getFlexDirection();
-            if (flexDirection == FlexDirection.ROW || flexDirection == FlexDirection.ROW_REVERSE) {
-                // The direction of the main axis is horizontal
-
-                int childMeasuredWidth = child.getMeasuredWidth();
-                if (mMeasuredSizeCache != null) {
-                    // Retrieve the measured width from the cache because there
-                    // are some cases that the view is re-created from the last measure, thus
-                    // View#getMeasuredWidth returns 0.
-                    // E.g. if the flex container is FlexboxLayoutManager, the case happens
-                    // frequently
-                    childMeasuredWidth = extractLowerInt(mMeasuredSizeCache[index]);
-                }
-                int childMeasuredHeight = child.getMeasuredHeight();
-                if (mMeasuredSizeCache != null) {
-                    // Extract the measured height from the cache
-                    childMeasuredHeight = extractHigherInt(mMeasuredSizeCache[index]);
-                }
-                if (!mChildrenFrozen[index] && flexItem.getFlexGrow() > 0f) {
-                    float rawCalculatedWidth = childMeasuredWidth
-                            + unitSpace * flexItem.getFlexGrow();
-                    if (i == flexLine.mItemCount - 1) {
-                        rawCalculatedWidth += accumulatedRoundError;
-                        accumulatedRoundError = 0;
-                    }
-                    int newWidth = Math.round(rawCalculatedWidth);
-                    if (newWidth > flexItem.getMaxWidth()) {
-                        // This means the child can't expand beyond the value of the mMaxWidth
-                        // attribute.
-                        // To adjust the flex line length to the size of maxMainSize, remaining
-                        // positive free space needs to be re-distributed to other flex items
-                        // (children views). In that case, invoke this method again with the same
-                        // fromIndex.
-                        needsReexpand = true;
-                        newWidth = flexItem.getMaxWidth();
-                        mChildrenFrozen[index] = true;
-                        flexLine.mTotalFlexGrow -= flexItem.getFlexGrow();
-                    } else {
-                        accumulatedRoundError += (rawCalculatedWidth - newWidth);
-                        if (accumulatedRoundError > 1.0) {
-                            newWidth += 1;
-                            accumulatedRoundError -= 1.0;
-                        } else if (accumulatedRoundError < -1.0) {
-                            newWidth -= 1;
-                            accumulatedRoundError += 1.0;
-                        }
-                    }
-                    int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
-                            heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
-                    int childWidthMeasureSpec = MeasureRequestUtils.generateExactlyMeasureSpec(newWidth);
-                    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-                    childMeasuredWidth = child.getMeasuredWidth();
-                    childMeasuredHeight = child.getMeasuredHeight();
-                    updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
-                            child);
-//                    mFlexContainer.updateViewCache(index, child);
-                }
-                largestCrossSize = Math.max(largestCrossSize, childMeasuredHeight
-                        + flexItem.getMarginTop() + flexItem.getMarginBottom());
-//                        + mFlexContainer.getDecorationLengthCrossAxis(child));
-                flexLine.mMainSize += childMeasuredWidth + flexItem.getMarginLeft()
-                        + flexItem.getMarginRight();
-            } else {
-                // The direction of the main axis is vertical
-
-                int childMeasuredHeight = child.getMeasuredHeight();
-                if (mMeasuredSizeCache != null) {
-                    // Retrieve the measured height from the cache because there
-                    // are some cases that the view is re-created from the last measure, thus
-                    // View#getMeasuredHeight returns 0.
-                    // E.g. if the flex container is FlexboxLayoutManager, that case happens
-                    // frequently
-                    childMeasuredHeight =
-                            extractHigherInt(mMeasuredSizeCache[index]);
-                }
-                int childMeasuredWidth = child.getMeasuredWidth();
-                if (mMeasuredSizeCache != null) {
-                    // Extract the measured width from the cache
-                    childMeasuredWidth =
-                            extractLowerInt(mMeasuredSizeCache[index]);
-                }
-                if (!mChildrenFrozen[index] && flexItem.getFlexGrow() > 0f) {
-                    float rawCalculatedHeight = childMeasuredHeight
-                            + unitSpace * flexItem.getFlexGrow();
-                    if (i == flexLine.mItemCount - 1) {
-                        rawCalculatedHeight += accumulatedRoundError;
-                        accumulatedRoundError = 0;
-                    }
-                    int newHeight = Math.round(rawCalculatedHeight);
-                    if (newHeight > flexItem.getMaxHeight()) {
-                        // This means the child can't expand beyond the value of the mMaxHeight
-                        // attribute.
-                        // To adjust the flex line length to the size of maxMainSize, remaining
-                        // positive free space needs to be re-distributed to other flex items
-                        // (children views). In that case, invoke this method again with the same
-                        // fromIndex.
-                        needsReexpand = true;
-                        newHeight = flexItem.getMaxHeight();
-                        mChildrenFrozen[index] = true;
-                        flexLine.mTotalFlexGrow -= flexItem.getFlexGrow();
-                    } else {
-                        accumulatedRoundError += (rawCalculatedHeight - newHeight);
-                        if (accumulatedRoundError > 1.0) {
-                            newHeight += 1;
-                            accumulatedRoundError -= 1.0;
-                        } else if (accumulatedRoundError < -1.0) {
-                            newHeight -= 1;
-                            accumulatedRoundError += 1.0;
-                        }
-                    }
-                    int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
-                            flexItem, flexLine.mSumCrossSizeBefore);
-                    int childHeightMeasureSpec =
-                            MeasureRequestUtils.generateExactlyMeasureSpec(newHeight);
-                    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-                    childMeasuredWidth = child.getMeasuredWidth();
-                    childMeasuredHeight = child.getMeasuredHeight();
-                    updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
-                            child);
-//                    mFlexContainer.updateViewCache(index, child);
-                }
-                largestCrossSize = Math.max(largestCrossSize, childMeasuredWidth
-                        + flexItem.getMarginLeft() + flexItem.getMarginRight());
-//                        + mFlexContainer.getDecorationLengthCrossAxis(child));
-                flexLine.mMainSize += childMeasuredHeight + flexItem.getMarginTop()
-                        + flexItem.getMarginBottom();
-            }
-            flexLine.mCrossSize = Math.max(flexLine.mCrossSize, largestCrossSize);
-        }
-
-        if (needsReexpand && sizeBeforeExpand != flexLine.mMainSize) {
-            // Re-invoke the method with the same flex line to distribute the positive free space
-            // that wasn't fully distributed (because of maximum length constraint)
-            expandFlexItems(widthMeasureSpec, heightMeasureSpec, flexLine, maxMainSize,
-                    paddingAlongMainAxis, true);
-        }
-    }
-
-    /**
-     * Shrink the flex items along the main axis based on the individual mFlexShrink attribute.
-     *
-     * @param widthMeasureSpec     the horizontal space requirements as imposed by the parent
-     * @param heightMeasureSpec    the vertical space requirements as imposed by the parent
-     * @param flexLine             the flex line to which flex items belong
-     * @param maxMainSize          the maximum main size. Shrank main size will be this size
-     * @param paddingAlongMainAxis the padding value along the main axis
-     * @param calledRecursively    true if this method is called recursively, false otherwise
-     * @see FlexContainer#getFlexDirection()
-     * @see FlexContainer#setFlexDirection(int)
-     * @see FlexItem#getFlexShrink()
-     */
-    private void shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
-                                 int maxMainSize, int paddingAlongMainAxis, boolean calledRecursively) {
-        int sizeBeforeShrink = flexLine.mMainSize;
-        if (flexLine.mTotalFlexShrink <= 0 || maxMainSize > flexLine.mMainSize) {
-            return;
-        }
-        boolean needsReshrink = false;
-        float unitShrink = (flexLine.mMainSize - maxMainSize) / flexLine.mTotalFlexShrink;
-        float accumulatedRoundError = 0;
-        flexLine.mMainSize = paddingAlongMainAxis + flexLine.mDividerLengthInMainSize;
-
-        // Setting the cross size of the flex line as the temporal value since the cross size of
-        // each flex item may be changed from the initial calculation
-        // (in the measureHorizontal/measureVertical method) even this method is part of the main
-        // size determination.
-        // E.g. If a TextView's layout_width is set to 0dp, layout_height is set to wrap_content,
-        // and layout_flexGrow is set to 1, the TextView is trying to expand to the vertical
-        // direction to enclose its content (in the measureHorizontal method), but
-        // the width will be expanded in this method. In that case, the height needs to be measured
-        // again with the expanded width.
-        int largestCrossSize = 0;
-        if (!calledRecursively) {
-            flexLine.mCrossSize = Integer.MIN_VALUE;
-        }
-        for (int i = 0; i < flexLine.mItemCount; i++) {
-            int index = flexLine.mFirstIndex + i;
-            NewFlexItem child = mFlexContainer.getReorderedNewFlexItemAt(index);
-            if (child == null || child.isGone()) {
-                continue;
-            }
-            FlexItem flexItem = (FlexItem) child.getLayoutParams();
-            int flexDirection = mFlexContainer.getFlexDirection();
-            if (flexDirection == FlexDirection.ROW || flexDirection == FlexDirection.ROW_REVERSE) {
-                // The direction of main axis is horizontal
-
-                int childMeasuredWidth = child.getMeasuredWidth();
-                if (mMeasuredSizeCache != null) {
-                    // Retrieve the measured width from the cache because there
-                    // are some cases that the view is re-created from the last measure, thus
-                    // View#getMeasuredWidth returns 0.
-                    // E.g. if the flex container is FlexboxLayoutManager, the case happens
-                    // frequently
-                    childMeasuredWidth = extractLowerInt(mMeasuredSizeCache[index]);
-                }
-                int childMeasuredHeight = child.getMeasuredHeight();
-                if (mMeasuredSizeCache != null) {
-                    // Extract the measured height from the cache
-                    childMeasuredHeight = extractHigherInt(mMeasuredSizeCache[index]);
-                }
-                if (!mChildrenFrozen[index] && flexItem.getFlexShrink() > 0f) {
-                    float rawCalculatedWidth = childMeasuredWidth
-                            - unitShrink * flexItem.getFlexShrink();
-                    if (i == flexLine.mItemCount - 1) {
-                        rawCalculatedWidth += accumulatedRoundError;
-                        accumulatedRoundError = 0;
-                    }
-                    int newWidth = Math.round(rawCalculatedWidth);
-                    if (newWidth < flexItem.getMinWidth()) {
-                        // This means the child doesn't have enough space to distribute the negative
-                        // free space. To adjust the flex line length down to the maxMainSize,
-                        // remaining
-                        // negative free space needs to be re-distributed to other flex items
-                        // (children views). In that case, invoke this method again with the same
-                        // fromIndex.
-                        needsReshrink = true;
-                        newWidth = flexItem.getMinWidth();
-                        mChildrenFrozen[index] = true;
-                        flexLine.mTotalFlexShrink -= flexItem.getFlexShrink();
-                    } else {
-                        accumulatedRoundError += (rawCalculatedWidth - newWidth);
-                        if (accumulatedRoundError > 1.0) {
-                            newWidth += 1;
-                            accumulatedRoundError -= 1;
-                        } else if (accumulatedRoundError < -1.0) {
-                            newWidth -= 1;
-                            accumulatedRoundError += 1;
-                        }
-                    }
-                    int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
-                            heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
-                    int childWidthMeasureSpec =
-                            MeasureRequestUtils.generateExactlyMeasureSpec(newWidth);
-                    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-
-                    childMeasuredWidth = child.getMeasuredWidth();
-                    childMeasuredHeight = child.getMeasuredHeight();
-                    updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
-                            child);
-//                    mFlexContainer.updateViewCache(index, child);
-                }
-                largestCrossSize = Math.max(largestCrossSize, childMeasuredHeight +
-                        flexItem.getMarginTop() + flexItem.getMarginBottom());
-//                        mFlexContainer.getDecorationLengthCrossAxis(child));
-                flexLine.mMainSize += childMeasuredWidth + flexItem.getMarginLeft()
-                        + flexItem.getMarginRight();
-            } else {
-                // The direction of main axis is vertical
-
-                int childMeasuredHeight = child.getMeasuredHeight();
-                if (mMeasuredSizeCache != null) {
-                    // Retrieve the measured height from the cache because there
-                    // are some cases that the view is re-created from the last measure, thus
-                    // View#getMeasuredHeight returns 0.
-                    // E.g. if the flex container is FlexboxLayoutManager, that case happens
-                    // frequently
-                    childMeasuredHeight =
-                            extractHigherInt(mMeasuredSizeCache[index]);
-                }
-                int childMeasuredWidth = child.getMeasuredWidth();
-                if (mMeasuredSizeCache != null) {
-                    // Extract the measured width from the cache
-                    childMeasuredWidth =
-                            extractLowerInt(mMeasuredSizeCache[index]);
-                }
-                if (!mChildrenFrozen[index] && flexItem.getFlexShrink() > 0f) {
-                    float rawCalculatedHeight = childMeasuredHeight
-                            - unitShrink * flexItem.getFlexShrink();
-                    if (i == flexLine.mItemCount - 1) {
-                        rawCalculatedHeight += accumulatedRoundError;
-                        accumulatedRoundError = 0;
-                    }
-                    int newHeight = Math.round(rawCalculatedHeight);
-                    if (newHeight < flexItem.getMinHeight()) {
-                        // Need to invoke this method again like the case flex direction is vertical
-                        needsReshrink = true;
-                        newHeight = flexItem.getMinHeight();
-                        mChildrenFrozen[index] = true;
-                        flexLine.mTotalFlexShrink -= flexItem.getFlexShrink();
-                    } else {
-                        accumulatedRoundError += (rawCalculatedHeight - newHeight);
-                        if (accumulatedRoundError > 1.0) {
-                            newHeight += 1;
-                            accumulatedRoundError -= 1;
-                        } else if (accumulatedRoundError < -1.0) {
-                            newHeight -= 1;
-                            accumulatedRoundError += 1;
-                        }
-                    }
-                    int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
-                            flexItem, flexLine.mSumCrossSizeBefore);
-                    int childHeightMeasureSpec =
-                            MeasureRequestUtils.generateExactlyMeasureSpec(newHeight);
-                    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-
-                    childMeasuredWidth = child.getMeasuredWidth();
-                    childMeasuredHeight = child.getMeasuredHeight();
-                    updateMeasureCache(index, childWidthMeasureSpec, childHeightMeasureSpec,
-                            child);
-//                    mFlexContainer.updateViewCache(index, child);
-                }
-                largestCrossSize = Math.max(largestCrossSize, childMeasuredWidth +
-                        flexItem.getMarginLeft() + flexItem.getMarginRight());
-//                        mFlexContainer.getDecorationLengthCrossAxis(child));
-                flexLine.mMainSize += childMeasuredHeight + flexItem.getMarginTop()
-                        + flexItem.getMarginBottom();
-            }
-            flexLine.mCrossSize = Math.max(flexLine.mCrossSize, largestCrossSize);
-        }
-
-        if (needsReshrink && sizeBeforeShrink != flexLine.mMainSize) {
-            // Re-invoke the method with the same fromIndex to distribute the negative free space
-            // that wasn't fully distributed (because some views length were not enough)
-            shrinkFlexItems(widthMeasureSpec, heightMeasureSpec, flexLine,
-                    maxMainSize, paddingAlongMainAxis, true);
-        }
-    }
-
-    private int getChildWidthMeasureSpecInternal(int widthMeasureSpec, FlexItem flexItem,
-                                                 int padding) {
-        int childWidthMeasureSpec = mFlexContainer.getChildWidthMeasureSpec(widthMeasureSpec,
-                mFlexContainer.getPaddingLeft() + mFlexContainer.getPaddingRight() +
-                        flexItem.getMarginLeft() + flexItem.getMarginRight() + padding,
-                flexItem.getWidth());
-        int childWidth = getMeasureSpecSize(childWidthMeasureSpec);
-        if (childWidth > flexItem.getMaxWidth()) {
-            childWidthMeasureSpec = makeMeasureSpec(flexItem.getMaxWidth(), childWidthMeasureSpec);
-        } else if (childWidth < flexItem.getMinWidth()) {
-            childWidthMeasureSpec = makeMeasureSpec(flexItem.getMinWidth(), childWidthMeasureSpec);
-        }
-        return childWidthMeasureSpec;
-    }
-
-    private int getChildHeightMeasureSpecInternal(int heightMeasureSpec, FlexItem flexItem,
-                                                  int padding) {
-        int childHeightMeasureSpec = mFlexContainer.getChildHeightMeasureSpec(heightMeasureSpec,
-                mFlexContainer.getPaddingTop() + mFlexContainer.getPaddingBottom()
-                        + flexItem.getMarginTop() + flexItem.getMarginBottom() + padding,
-                flexItem.getHeight());
-        int childHeight = getMeasureSpecSize(childHeightMeasureSpec);
-        if (childHeight > flexItem.getMaxHeight()) {
-            childHeightMeasureSpec = makeMeasureSpec(flexItem.getMaxHeight(),
-                    childHeightMeasureSpec);
-        } else if (childHeight < flexItem.getMinHeight()) {
-            childHeightMeasureSpec = makeMeasureSpec(flexItem.getMinHeight(),
-                    childHeightMeasureSpec);
-        }
-        return childHeightMeasureSpec;
+        flexLine.refreshCrossSize(isMainAxisHorizontal);
     }
 
     /**

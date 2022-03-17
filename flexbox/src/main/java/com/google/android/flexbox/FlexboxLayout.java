@@ -415,8 +415,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     private void measureVertical(int widthMeasureSpec, int heightMeasureSpec) {
         mFlexLines.clear();
         mFlexLinesResult.reset();
-        mFlexboxHelper.calculateVerticalFlexLines(mFlexLinesResult, widthMeasureSpec,
-                heightMeasureSpec);
+        mFlexboxHelper.fillFlexLines(mFlexLinesResult, widthMeasureSpec, heightMeasureSpec);
         mFlexLines = mFlexLinesResult.mFlexLines;
 
         int mainSize = mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
