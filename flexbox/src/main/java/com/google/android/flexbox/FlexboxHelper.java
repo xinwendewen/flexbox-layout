@@ -21,6 +21,8 @@ import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 import static com.google.android.flexbox.FlexWrap.NOWRAP;
+import static com.xinwendewen.flexbox.ContainerProperties.isMainAxisHorizontal;
+import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.isUnspecifiedMode;
 
 import androidx.annotation.NonNull;
@@ -976,7 +978,7 @@ class FlexboxHelper {
     int determineMainSize(ContainerProperties properties, FlexLinesResult flexLines) {
         int largestFlexLineMainSize = flexLines.getLargestMainSize();
         int expectedMainSize = properties.getExpectedMainSize();
-        if (properties.requestFixedMainSize()) {
+        if (properties.requireFixedMainSize()) {
             return expectedMainSize;
         } else {
             return Math.min(largestFlexLineMainSize, expectedMainSize);
@@ -1655,6 +1657,27 @@ class FlexboxHelper {
         }
     }
 
+    public boolean isCrossAlignmentNeeded(int widthMeasureSpec, int heightMeasureSpec,
+                                    FlexLinesResult flexLinesResult) {
+        if (flexLinesResult.mFlexLines.size() == 1) {
+            return false;
+        }
+        if (isMainAxisHorizontal(mFlexContainer.getFlexDirection())) {
+            return isTight(heightMeasureSpec);
+        } else {
+            return isTight(widthMeasureSpec);
+        }
+    }
+
+    public void crossAlignment(int expectedCrossSize, FlexLinesResult mFlexLinesResult) {
+
+
+    }
+
+    public int getExpectedContainerCrossSize(ContainerProperties containerProps) {
+        return containerProps.getExpectedCrossSize();
+    }
+
     /**
      * A class that is used for calculating the view order which view's indices and order
      * properties from Flexbox are taken into account.
@@ -1706,6 +1729,10 @@ class FlexboxHelper {
                 largestMainSize = Math.max(largestMainSize, flexLine.mMainSize);
             }
             return largestMainSize;
+        }
+
+        public boolean isSingleLine() {
+            return mFlexLines.size() == 1;
         }
     }
 

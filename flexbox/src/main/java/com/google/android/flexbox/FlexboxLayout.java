@@ -33,6 +33,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 
+import com.xinwendewen.flexbox.ContainerProperties;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.NewFlexItemImpl;
 
@@ -352,6 +353,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * @see #setAlignContent(int)
      */
     private void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec) {
+        ContainerProperties containerProps = new ContainerProperties(this, widthMeasureSpec, heightMeasureSpec);
         mFlexLines.clear();
 
         mFlexLinesResult.reset();
@@ -391,6 +393,15 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
             }
         }
 
+        if (containerProps.requireFixedCrossSize()) {
+           if (mFlexLinesResult.isSingleLine()) {
+                mFlexLinesResult.mFlexLines.get(0).mCrossSize =
+                        containerProps.getExpectedCrossSize() - containerProps.getCrossPaddings();
+           } else {
+               int determinedCrossSize = mFlexboxHelper.getExpectedContainerCrossSize(containerProps);
+               mFlexboxHelper.crossAlignment(determinedCrossSize, mFlexLinesResult);
+           }
+        }
         mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
                 getPaddingTop() + getPaddingBottom());
         // Now cross size for each flex line is determined.

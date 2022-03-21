@@ -106,11 +106,26 @@ public class ContainerProperties {
         }
     }
 
-    public boolean requestFixedMainSize() {
+    public int getExpectedCrossSize() {
+        if (isMainAxisHorizontal) {
+            return getMeasureSpecSize(heightMeasureSpec);
+        } else {
+            return getMeasureSpecSize(widthMeasureSpec);
+        }
+    }
+
+    public boolean requireFixedMainSize() {
         if (isMainAxisHorizontal) {
             return isTight(widthMeasureSpec);
         } else {
             return isTight(heightMeasureSpec);
+        }
+    }
+    public boolean requireFixedCrossSize() {
+        if (isMainAxisHorizontal) {
+            return isTight(heightMeasureSpec);
+        } else {
+            return isTight(widthMeasureSpec);
         }
     }
 
@@ -121,4 +136,5 @@ public class ContainerProperties {
             return widthMeasureSpec;
         }
     }
+
 }
