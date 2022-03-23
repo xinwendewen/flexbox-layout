@@ -50,9 +50,30 @@ public interface NewFlexItem {
 
     int getAlignSelf();
 
-    int getMeasureMainSize(boolean mainAxisHorizontal);
+    int getMainSize(boolean mainAxisHorizontal);
+
+    LayoutPositions generateLayoutPosition(int mainStart, int mainEnd, int crossStart,
+                                           int crossEnd, boolean isMainAxisHorizontal);
 
     int minMainSize(boolean isMainAxisHorizontal);
 
     float maxMainSize(boolean isMainAxisHorizontal);
+
+    int mainAxisMargin(boolean isMainAxisHorizontal);
+
+    int mainAxisMarginStart(boolean isMainAxisHorizontal);
+
+    int mainAxisMarginEnd(boolean isMainAxisHorizontal);
+
+    int crossAxisMargin(boolean isMainAxisHorizontal);
+
+    int crossAxisMarginStart(boolean isMainAxisHorizontal);
+
+    int crossAxisMarginEnd(boolean isMainAxisHorizontal);
+
+    int getCrossSize(boolean isMainAxisHorizontal);
+
+    void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
+                boolean isMainAxisHorizontal, int leftPadding, int topPadding,
+                int parentLeft, int parentTop);
 }

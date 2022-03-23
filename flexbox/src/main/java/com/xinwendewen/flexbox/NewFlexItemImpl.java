@@ -233,12 +233,60 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
-    public int getMeasureMainSize(boolean isMainAxisHorizontal) {
+    public int getMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return view.getMeasuredWidth();
         } else {
             return view.getMeasuredHeight();
         }
+    }
+
+    @Override
+    public int getCrossSize(boolean isMainAxisHorizontal) {
+        return isMainAxisHorizontal ? view.getMeasuredHeight() : view.getMeasuredWidth();
+    }
+
+    @Override
+    public void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
+                       boolean isMainAxisHorizontal, int leftPadding, int topPadding,
+                       int parentLeft, int parentTop) {
+        int left = leftPadding;
+        int top =  topPadding;
+        int right = leftPadding;
+        int bottom = topPadding;
+        if (isMainAxisHorizontal) {
+            left += mainStart;
+            right += mainEnd;
+            top += crossStart;
+            bottom += crossEnd;
+        } else {
+            left += crossStart;
+            right += crossEnd;
+            top += mainStart;
+            bottom += mainEnd;
+        }
+        view.layout(left, top, right, bottom);
+    }
+
+    @Override
+    public LayoutPositions generateLayoutPosition(int mainStart, int mainEnd, int crossStart,
+                                                  int crossEnd, boolean isMainAxisHorizontal) {
+        int left;
+        int top;
+        int right;
+        int bottom;
+        if (isMainAxisHorizontal) {
+            left = mainStart;
+            right = mainEnd;
+            top = crossStart;
+            bottom = crossEnd;
+        } else {
+            left = crossStart;
+            right = crossEnd;
+            top = mainStart;
+            bottom = mainEnd;
+        }
+        return new LayoutPositions(left, top, right, bottom);
     }
 
     @Override
@@ -296,16 +344,19 @@ public class NewFlexItemImpl implements NewFlexItem {
         return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
     }
 
-    int mainAxisMargin(boolean isMainAxisHorizontal) {
+    @Override
+    public int mainAxisMargin(boolean isMainAxisHorizontal) {
        return mainAxisMarginStart(isMainAxisHorizontal) + mainAxisMarginEnd(isMainAxisHorizontal);
     }
-    int mainAxisMarginStart(boolean isMainAxisHorizontal) {
+    @Override
+    public int mainAxisMarginStart(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginStart();
         }
         return getMarginTop();
     }
-    int mainAxisMarginEnd(boolean isMainAxisHorizontal) {
+    @Override
+    public int mainAxisMarginEnd(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginEnd();
         }
@@ -320,12 +371,14 @@ public class NewFlexItemImpl implements NewFlexItem {
         return getMarginLayoutParams().topMargin;
     }
 
-    private int crossAxisMargin(boolean isMainAxisHorizontal) {
+    @Override
+    public int crossAxisMargin(boolean isMainAxisHorizontal) {
         return crossAxisMarginStart(isMainAxisHorizontal) +
                 crossAxisMarginEnd(isMainAxisHorizontal);
     }
 
-    private int crossAxisMarginStart(boolean isMainAxisHorizontal) {
+    @Override
+    public int crossAxisMarginStart(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginTop();
         } else {
@@ -333,7 +386,8 @@ public class NewFlexItemImpl implements NewFlexItem {
         }
     }
 
-    private int crossAxisMarginEnd(boolean isMainAxisHorizontal) {
+    @Override
+    public int crossAxisMarginEnd(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginBottom();
         } else {

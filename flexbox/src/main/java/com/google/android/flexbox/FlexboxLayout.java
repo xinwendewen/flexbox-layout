@@ -16,6 +16,10 @@
 
 package com.google.android.flexbox;
 
+import static com.google.android.flexbox.FlexDirection.COLUMN;
+import static com.google.android.flexbox.FlexDirection.ROW;
+import static com.google.android.flexbox.FlexDirection.ROW_REVERSE;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -223,7 +227,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         TypedArray a = context.obtainStyledAttributes(
                 attrs, R.styleable.FlexboxLayout, defStyleAttr, 0);
         mFlexDirection = a
-                .getInt(R.styleable.FlexboxLayout_flexDirection, FlexDirection.ROW);
+                .getInt(R.styleable.FlexboxLayout_flexDirection, ROW);
         mFlexWrap = a.getInt(R.styleable.FlexboxLayout_flexWrap, FlexWrap.NOWRAP);
         mJustifyContent = a
                 .getInt(R.styleable.FlexboxLayout_justifyContent, JustifyContent.FLEX_START);
@@ -275,11 +279,11 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         // TODO: Only calculate the children views which are affected from the last measure.
 
         switch (mFlexDirection) {
-            case FlexDirection.ROW: // Intentional fall through
-            case FlexDirection.ROW_REVERSE:
+            case ROW: // Intentional fall through
+            case ROW_REVERSE:
                 measureHorizontal(widthMeasureSpec, heightMeasureSpec);
                 break;
-            case FlexDirection.COLUMN: // Intentional fall through
+            case COLUMN: // Intentional fall through
             case FlexDirection.COLUMN_REVERSE:
                 measureVertical(widthMeasureSpec, heightMeasureSpec);
                 break;
@@ -461,13 +465,13 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         int calculatedMaxHeight;
         int calculatedMaxWidth;
         switch (flexDirection) {
-            case FlexDirection.ROW: // Intentional fall through
-            case FlexDirection.ROW_REVERSE:
+            case ROW: // Intentional fall through
+            case ROW_REVERSE:
                 calculatedMaxHeight = getSumOfCrossSize() + getPaddingTop()
                         + getPaddingBottom();
                 calculatedMaxWidth = getLargestMainSize();
                 break;
-            case FlexDirection.COLUMN: // Intentional fall through
+            case COLUMN: // Intentional fall through
             case FlexDirection.COLUMN_REVERSE:
                 calculatedMaxHeight = getLargestMainSize();
                 calculatedMaxWidth = getSumOfCrossSize() + getPaddingLeft() + getPaddingRight();
@@ -578,39 +582,42 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     @Override
     public boolean isMainAxisDirectionHorizontal() {
-        return mFlexDirection == FlexDirection.ROW || mFlexDirection == FlexDirection.ROW_REVERSE;
+        return mFlexDirection == ROW || mFlexDirection == ROW_REVERSE;
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        int layoutDirection = ViewCompat.getLayoutDirection(this);
-        boolean isRtl;
-        switch (mFlexDirection) {
-            case FlexDirection.ROW:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                layoutHorizontal(isRtl, left, top, right, bottom);
-                break;
-            case FlexDirection.ROW_REVERSE:
-                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
-                layoutHorizontal(isRtl, left, top, right, bottom);
-                break;
-            case FlexDirection.COLUMN:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    isRtl = !isRtl;
-                }
-                layoutVertical(isRtl, false, left, top, right, bottom);
-                break;
-            case FlexDirection.COLUMN_REVERSE:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    isRtl = !isRtl;
-                }
-                layoutVertical(isRtl, true, left, top, right, bottom);
-                break;
-            default:
-                throw new IllegalStateException("Invalid flex direction is set: " + mFlexDirection);
-        }
+        boolean isRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+        mFlexboxHelper.layout(left, top, right, bottom, isRtl, getPaddingLeft(), getPaddingTop(),
+                getPaddingRight(), getPaddingBottom());
+//        int layoutDirection = ViewCompat.getLayoutDirection(this);
+//        boolean isRtl;
+//        switch (mFlexDirection) {
+//            case ROW:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                layoutHorizontal(isRtl, left, top, right, bottom);
+//                break;
+//            case ROW_REVERSE:
+//                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
+//                layoutHorizontal(isRtl, left, top, right, bottom);
+//                break;
+//            case COLUMN:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    isRtl = !isRtl;
+//                }
+//                layoutVertical(isRtl, false, left, top, right, bottom);
+//                break;
+//            case FlexDirection.COLUMN_REVERSE:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    isRtl = !isRtl;
+//                }
+//                layoutVertical(isRtl, true, left, top, right, bottom);
+//                break;
+//            default:
+//                throw new IllegalStateException("Invalid flex direction is set: " + mFlexDirection);
+//        }
     }
 
     /**
@@ -935,21 +942,21 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         boolean isRtl;
         boolean fromBottomToTop = false;
         switch (mFlexDirection) {
-            case FlexDirection.ROW:
+            case ROW:
                 isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
                 if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
                     fromBottomToTop = true;
                 }
                 drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
                 break;
-            case FlexDirection.ROW_REVERSE:
+            case ROW_REVERSE:
                 isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
                 if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
                     fromBottomToTop = true;
                 }
                 drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
                 break;
-            case FlexDirection.COLUMN:
+            case COLUMN:
                 isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
                 if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
                     isRtl = !isRtl;

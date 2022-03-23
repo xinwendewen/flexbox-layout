@@ -17,7 +17,15 @@
 package com.google.android.flexbox;
 
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
+import static com.google.android.flexbox.AlignItems.CENTER;
+import static com.google.android.flexbox.AlignItems.FLEX_END;
+import static com.google.android.flexbox.AlignItems.FLEX_START;
+import static com.google.android.flexbox.AlignItems.STRETCH;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
+import static com.google.android.flexbox.FlexDirection.COLUMN;
+import static com.google.android.flexbox.FlexDirection.COLUMN_REVERSE;
+import static com.google.android.flexbox.FlexDirection.ROW;
+import static com.google.android.flexbox.FlexDirection.ROW_REVERSE;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 import static com.google.android.flexbox.FlexWrap.NOWRAP;
@@ -510,7 +518,7 @@ class FlexboxHelper {
 
             FlexItem flexItem = (FlexItem) child.getLayoutParams();
 
-            if (flexItem.getAlignSelf() == AlignItems.STRETCH) {
+            if (flexItem.getAlignSelf() == STRETCH) {
                 flexLine.mIndicesAlignSelfStretch.add(i);
             }
 
@@ -1035,7 +1043,7 @@ class FlexboxHelper {
                 }
                 flexLine.mMainSize -= item.getOuterMainSize(isMainAxisHorizontal);
                 int measuredMainSize =
-                        item.getMeasureMainSize(isMainAxisHorizontal);
+                        item.getMainSize(isMainAxisHorizontal);
                 float newMainSize = measuredMainSize + spaceUnit * (available > 0 ?
                         item.getFlexGrow() : item.getFlexShrink());
                 if (newMainSize < item.minMainSize(isMainAxisHorizontal)) {
@@ -1258,7 +1266,7 @@ class FlexboxHelper {
             return;
         }
         int flexDirection = mFlexContainer.getFlexDirection();
-        if (mFlexContainer.getAlignItems() == AlignItems.STRETCH) {
+        if (mFlexContainer.getAlignItems() == STRETCH) {
             int flexLineIndex = 0;
             if (mIndexToFlexLine != null) {
                 flexLineIndex = mIndexToFlexLine[fromIndex];
@@ -1277,7 +1285,7 @@ class FlexboxHelper {
                     }
                     FlexItem flexItem = (FlexItem) view.getLayoutParams();
                     if (flexItem.getAlignSelf() != AlignSelf.AUTO &&
-                            flexItem.getAlignSelf() != AlignItems.STRETCH) {
+                            flexItem.getAlignSelf() != STRETCH) {
                         continue;
                     }
                     switch (flexDirection) {
@@ -1417,8 +1425,8 @@ class FlexboxHelper {
         }
         int crossSize = flexLine.mCrossSize;
         switch (alignItems) {
-            case AlignItems.FLEX_START: // Intentional fall through
-            case AlignItems.STRETCH:
+            case FLEX_START: // Intentional fall through
+            case STRETCH:
                 if (mFlexContainer.getFlexWrap() != FlexWrap.WRAP_REVERSE) {
                     view.layout(left, top + flexItem.getMarginTop(), right,
                             bottom + flexItem.getMarginTop());
@@ -1439,7 +1447,7 @@ class FlexboxHelper {
                     view.layout(left, top - marginBottom, right, bottom - marginBottom);
                 }
                 break;
-            case AlignItems.FLEX_END:
+            case FLEX_END:
                 if (mFlexContainer.getFlexWrap() != FlexWrap.WRAP_REVERSE) {
                     view.layout(left,
                             top + crossSize - view.getMeasuredHeight() - flexItem.getMarginBottom(),
@@ -1453,7 +1461,7 @@ class FlexboxHelper {
                                     .getMarginTop());
                 }
                 break;
-            case AlignItems.CENTER:
+            case CENTER:
                 int topFromCrossAxis = (crossSize - view.getMeasuredHeight()
                         + flexItem.getMarginTop() - flexItem.getMarginBottom()) / 2;
                 if (mFlexContainer.getFlexWrap() != FlexWrap.WRAP_REVERSE) {
@@ -1501,8 +1509,8 @@ class FlexboxHelper {
         }
         int crossSize = flexLine.mCrossSize;
         switch (alignItems) {
-            case AlignItems.FLEX_START: // Intentional fall through
-            case AlignItems.STRETCH: // Intentional fall through
+            case FLEX_START: // Intentional fall through
+            case STRETCH: // Intentional fall through
             case AlignItems.BASELINE:
                 if (!isRtl) {
                     view.layout(left + flexItem.getMarginLeft(), top,
@@ -1512,7 +1520,7 @@ class FlexboxHelper {
                             right - flexItem.getMarginRight(), bottom);
                 }
                 break;
-            case AlignItems.FLEX_END:
+            case FLEX_END:
                 if (!isRtl) {
                     view.layout(
                             left + crossSize - view.getMeasuredWidth() - flexItem.getMarginRight(),
@@ -1529,7 +1537,7 @@ class FlexboxHelper {
                             bottom);
                 }
                 break;
-            case AlignItems.CENTER:
+            case CENTER:
                 int leftFromCrossAxis = (crossSize - view.getMeasuredWidth()
                         + view.getMarginStart()
                         - view.getMarginEnd()) / 2;
@@ -1750,5 +1758,191 @@ class FlexboxHelper {
 
     static int makeMeasureSpec(int size, int mode) {
         return MeasureRequestUtils.generateMeasureSpec(size, mode);
+    }
+
+    void layout(int left, int top, int right, int bottom, boolean isRtl, int paddingLeft,
+                int paddingTop, int paddingRight, int paddingBottom) {
+        int width = right - left;
+        int innerWidth = width - paddingLeft - paddingRight;
+        int height = bottom - top;
+        int innerHeight = height - paddingTop - paddingBottom;
+        int containerInnerMainSize;
+        int containerInnerCrossSize;
+        boolean isMainAxisHorizontal = mFlexContainer.isMainAxisDirectionHorizontal();
+        if (isMainAxisHorizontal) {
+            containerInnerMainSize = innerWidth;
+            containerInnerCrossSize = innerHeight;
+        } else {
+            containerInnerMainSize = innerHeight;
+            containerInnerCrossSize = innerWidth;
+        }
+        boolean isMainAxisReversed = false;
+        boolean isCrossAxisReversed = false;
+        int flexDirection = mFlexContainer.getFlexDirection();
+        int flexWrap = mFlexContainer.getFlexWrap();
+        switch (flexDirection) {
+            case ROW:
+                if (isRtl) {
+                    isMainAxisReversed = true;
+                }
+                if (flexWrap == FlexWrap.WRAP_REVERSE) {
+                    isCrossAxisReversed = true;
+                }
+                break;
+            case ROW_REVERSE:
+                if (!isRtl) {
+                    isMainAxisReversed = true;
+                }
+                if (flexWrap == FlexWrap.WRAP_REVERSE) {
+                    isCrossAxisReversed = true;
+                }
+                break;
+            case COLUMN:
+                if (!isRtl && flexWrap == FlexWrap.WRAP_REVERSE) {
+                    isCrossAxisReversed = true;
+                }
+                if (isRtl && flexWrap == FlexWrap.WRAP) {
+                    isCrossAxisReversed = true;
+                }
+                break;
+            case COLUMN_REVERSE:
+                if (!isRtl && flexWrap == FlexWrap.WRAP_REVERSE) {
+                    isCrossAxisReversed = true;
+                }
+                if (isRtl && flexWrap == FlexWrap.WRAP) {
+                    isCrossAxisReversed = true;
+                }
+                isMainAxisReversed = true;
+        }
+        int crossAxisAnchor = isCrossAxisReversed ? containerInnerCrossSize : 0;
+        List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
+        for (FlexLine flexLine : flexLines) {
+            int justifyContent = mFlexContainer.getJustifyContent();
+            int flexLineMainSize = flexLine.mMainSize - paddingRight - paddingRight; // TODO: 2022/3/23 remove padding
+            int mainAxisAnchor = 0;
+            float spaceBetweenItems = 0;
+            switch (justifyContent) {
+                case JustifyContent.FLEX_START:
+                    mainAxisAnchor = isMainAxisReversed ? containerInnerMainSize : 0;
+                    break;
+                case JustifyContent.FLEX_END:
+                    mainAxisAnchor = isMainAxisReversed ? flexLineMainSize :
+                            containerInnerMainSize - flexLineMainSize;
+                    break;
+                case JustifyContent.CENTER:
+                    mainAxisAnchor = isMainAxisReversed ?
+                            (containerInnerMainSize + flexLineMainSize) / 2 :
+                            (containerInnerMainSize - flexLineMainSize) / 2;
+                    break;
+                case JustifyContent.SPACE_AROUND:
+                    spaceBetweenItems =
+                            (float) (containerInnerMainSize - flexLineMainSize) / flexLine.getItemCount();
+                    mainAxisAnchor = isMainAxisReversed ?
+                            containerInnerMainSize - Math.round(spaceBetweenItems) / 2 :
+                            Math.round(spaceBetweenItems) / 2;
+                    break;
+                case JustifyContent.SPACE_BETWEEN:
+                    spaceBetweenItems = flexLine.getItemCount() > 1 ?
+                            (float) (containerInnerMainSize - flexLineMainSize) / (flexLine.getItemCount() - 1) : 0;
+                    mainAxisAnchor = isMainAxisReversed ? containerInnerMainSize : 0;
+                    break;
+                case JustifyContent.SPACE_EVENLY:
+                    spaceBetweenItems =
+                            (float) (containerInnerMainSize - flexLineMainSize) / (flexLine.getItemCount() + 1);
+                    mainAxisAnchor = isMainAxisReversed ?
+                            Math.round(containerInnerMainSize - spaceBetweenItems) :
+                            Math.round(spaceBetweenItems);
+                    break;
+            }
+            RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
+            for (int i = 0; i < flexLine.getItemCount(); i++) {
+                NewFlexItem item = flexLine.getItemAt(i);
+                layoutItem(item, isMainAxisReversed, mainAxisAnchor, isCrossAxisReversed,
+                        crossAxisAnchor, isMainAxisHorizontal, mFlexContainer.getAlignItems(),
+                        flexLine, paddingLeft, paddingTop, left, top);
+                mainAxisAnchor = forwardMainAxisAnchor(mainAxisAnchor, isMainAxisReversed, item,
+                        errorAccumulator.round(spaceBetweenItems) + errorAccumulator.compensate(),
+                        isMainAxisHorizontal);
+            }
+            crossAxisAnchor = forwardCrossAxisAnchor(crossAxisAnchor, isCrossAxisReversed, flexLine);
+        }
+    }
+
+    private int forwardCrossAxisAnchor(int crossAxisAnchor, boolean isCrossAxisReversed, FlexLine flexLine) {
+        return isCrossAxisReversed ? crossAxisAnchor - flexLine.getCrossSize() : crossAxisAnchor + flexLine.getCrossSize();
+    }
+
+    private int forwardMainAxisAnchor(int mainAxisAnchor, boolean isMainAxisReversed,
+                                      NewFlexItem item, int spaceBetweenItems,
+                                      boolean isMainAxisHorizontal) {
+        return isMainAxisReversed ?
+                mainAxisAnchor - (item.mainAxisMarginStart(isMainAxisHorizontal) + item.getMainSize(isMainAxisHorizontal) + spaceBetweenItems) :
+                mainAxisAnchor + (item.mainAxisMarginEnd(isMainAxisHorizontal) + item.getMainSize(isMainAxisHorizontal) + spaceBetweenItems);
+    }
+
+    void layoutItem(NewFlexItem item, boolean isMainAxisReversed, int mainAxisAnchor,
+                               boolean isCrossAxisReversed, int crossAxisAnchor,
+                               boolean isMainAxisHorizontal, int alignItems, FlexLine flexLine,
+                               int leftPadding, int topPadding, int parentLeft, int parentTop) {
+        int mainStart;
+        int mainEnd;
+        int crossStart;
+        int crossEnd;
+        if (isMainAxisReversed) {
+            mainEnd = mainAxisAnchor - item.mainAxisMarginEnd(isMainAxisHorizontal);
+            mainStart = mainEnd - item.getMainSize(isMainAxisHorizontal);
+        } else {
+            mainStart = mainAxisAnchor + item.mainAxisMarginStart(isMainAxisHorizontal);
+            mainEnd = mainStart + item.getMainSize(isMainAxisHorizontal);
+        }
+        int crossAlignment = alignItems;
+        int alignSelf = item.getAlignSelf();
+        if (alignSelf != AlignSelf.AUTO) {
+            crossAlignment = alignSelf;
+        } else {
+            crossAlignment = alignItems;
+        }
+        switch (crossAlignment) {
+            case STRETCH:
+            case FLEX_START:
+                if (isCrossAxisReversed) {
+                    crossEnd = crossAxisAnchor - item.crossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                } else {
+                    crossStart = crossAxisAnchor + item.crossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                }
+                break;
+            case FLEX_END:
+                if (isCrossAxisReversed) {
+                    crossStart =
+                            crossAxisAnchor - flexLine.mCrossSize + item.crossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                } else {
+                    crossEnd =
+                            crossAxisAnchor + flexLine.mCrossSize - item.crossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                }
+                break;
+            case CENTER:
+                if (isCrossAxisReversed) {
+                    crossEnd =
+                            crossAxisAnchor - (flexLine.mCrossSize / 2 -
+                                    item.getOuterCrossSize(isMainAxisHorizontal) / 2) -
+                                    item.crossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                } else {
+                    crossStart =
+                            crossAxisAnchor + flexLine.mCrossSize / 2 -
+                                    item.getOuterCrossSize(isMainAxisHorizontal) / 2 +
+                                    item.crossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                }
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+        item.layout(mainStart, mainEnd, crossStart, crossEnd, isMainAxisHorizontal, leftPadding,
+                topPadding, parentLeft, parentTop);
     }
 }
