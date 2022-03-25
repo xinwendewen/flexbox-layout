@@ -412,7 +412,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 //                getPaddingTop() + getPaddingBottom());
         // Now cross size for each flex line is determined.
         // Expand the views if alignItems (or mAlignSelf in each child view) is set to stretch
-        mFlexboxHelper.stretchViews();
+//        mFlexboxHelper.stretchViews();
+        mFlexboxHelper.stretchItems();
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec,
                 mFlexLinesResult.mChildState);
     }
@@ -455,7 +456,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
                 getPaddingLeft() + getPaddingRight());
         // Now cross size for each flex line is determined.
         // Expand the views if alignItems (or mAlignSelf in each child view) is set to stretch
-        mFlexboxHelper.stretchViews();
+        mFlexboxHelper.stretchItems();
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec,
                 mFlexLinesResult.mChildState);
     }

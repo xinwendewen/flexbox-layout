@@ -170,7 +170,7 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
-    public void clampByMinMaxConstraints() {
+    public void clampByMinMaxCrossSize() {
         boolean violated = false;
         int width = view.getMeasuredWidth();
         if (width < getMinWidth()) {
@@ -266,6 +266,39 @@ public class NewFlexItemImpl implements NewFlexItem {
             bottom += mainEnd;
         }
         view.layout(left, top, right, bottom);
+    }
+
+    @Override
+    public int clampByMinMaxCrossSize(int crossSize, boolean isMainAxisHorizontal) {
+        crossSize = Math.max(crossSize, getMinCrossSize(isMainAxisHorizontal));
+        crossSize = Math.min(crossSize, getMaxCrossSize(isMainAxisHorizontal));
+        return crossSize;
+    }
+
+    @Override
+    public void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            view.measure(generateExactlyMeasureSpec(mainSize), generateExactlyMeasureSpec(crossSize));
+        } else {
+            view.measure(generateExactlyMeasureSpec(crossSize),
+                    generateExactlyMeasureSpec(mainSize));
+        }
+    }
+
+    private int getMaxCrossSize(boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            return getMaxHeight();
+        } else {
+            return getMaxWidth();
+        }
+    }
+
+    private int getMinCrossSize(boolean isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
+            return getMinHeight();
+        } else {
+            return getMinWidth();
+        }
     }
 
     @Override

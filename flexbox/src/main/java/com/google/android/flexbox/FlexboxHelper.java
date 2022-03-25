@@ -393,7 +393,7 @@ class FlexboxHelper {
             item.measure(containerMainMeasureSpec, occupiedMainSize, containerCrossMeasureSpec,
                     occupiedContainerCrossSize, isMainAxisHorizontal);
             // clamp by min/max constraints and remeasure if needed
-            item.clampByMinMaxConstraints();
+            item.clampByMinMaxCrossSize();
             if (isWrapNeeded(containerMainMeasureSpec, containerProps, currentFlexLine, item,
                     isMainAxisHorizontal)) {
                 // finish current flex line
@@ -1059,7 +1059,7 @@ class FlexboxHelper {
                 roundedNewMainSize += errorAccumulator.compensate();
                 item.fixedMainSizeMeasure(containerProps, roundedNewMainSize,
                         flexLine.mSumCrossSizeBefore);
-                item.clampByMinMaxConstraints();
+                item.clampByMinMaxCrossSize();
                 flexLine.mMainSize += item.getOuterMainSize(isMainAxisHorizontal);
             }
             if (!hasViolation) {
@@ -1247,6 +1247,38 @@ class FlexboxHelper {
 
     void stretchViews() {
         stretchViews(0);
+    }
+
+    void stretchItems() {
+        List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
+        for (FlexLine flexLine : flexLines) {
+            for (NewFlexItem item : flexLine.items) {
+                if (needStretch(item, mFlexContainer.getAlignItems(), flexLine.mCrossSize,
+                        mFlexContainer.isMainAxisDirectionHorizontal())) {
+                   stretchItem(item, flexLine, mFlexContainer.isMainAxisDirectionHorizontal());
+                }
+            }
+        }
+    }
+
+    private void stretchItem(NewFlexItem item, FlexLine flexLine, boolean isMainAxisHorizontal) {
+        int newCrossSize = flexLine.mCrossSize - item.crossAxisMargin(isMainAxisHorizontal);
+        newCrossSize = item.clampByMinMaxCrossSize(newCrossSize, isMainAxisHorizontal);
+        item.fixedSizeMeasure(item.getMainSize(isMainAxisHorizontal), newCrossSize, isMainAxisHorizontal);
+    }
+
+    private boolean needStretch(NewFlexItem item, int containerAlignItems, int flexLineCrossSize,
+                                boolean isMainAxisHorizontal) {
+        if (item.getOuterCrossSize(isMainAxisHorizontal) >= flexLineCrossSize) {
+            return false;
+        }
+        if (item.getAlignSelf() == AlignSelf.STRETCH) {
+            return true;
+        }
+        if (item.getAlignSelf() == AlignSelf.AUTO && containerAlignItems == STRETCH) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1736,7 +1768,6 @@ class FlexboxHelper {
             mFlexLinesResult.insertBetweenFlexLines(unitSpace);
         }
     }
-
 
     public int getExpectedContainerCrossSize(ContainerProperties containerProps) {
         return containerProps.getExpectedCrossSize();

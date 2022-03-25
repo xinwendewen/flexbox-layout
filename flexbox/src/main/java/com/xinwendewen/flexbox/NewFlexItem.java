@@ -34,7 +34,7 @@ public interface NewFlexItem {
     void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec, int occupiedCrossSize, boolean isMainAxisHorizontal);
 
     void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize, int mSumCrossSizeBefore);
-    void clampByMinMaxConstraints();
+    void clampByMinMaxCrossSize();
 
     int getOuterMainSize(boolean isMainAxisHorizontal);
 
@@ -76,4 +76,8 @@ public interface NewFlexItem {
     void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
                 boolean isMainAxisHorizontal, int leftPadding, int topPadding,
                 int parentLeft, int parentTop);
+
+    int clampByMinMaxCrossSize(int crossSize, boolean isMainAxisHorizontal);
+
+    void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal);
 }
