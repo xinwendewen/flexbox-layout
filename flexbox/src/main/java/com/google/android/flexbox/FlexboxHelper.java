@@ -1677,10 +1677,66 @@ class FlexboxHelper {
         }
     }
 
-    public void crossAlignment(int expectedCrossSize, FlexLinesResult mFlexLinesResult) {
-
-
+    public void crossAlignment(int containerInnerCrossSize, FlexLinesResult mFlexLinesResult) {
+        int flexLinesCrossSize = mFlexLinesResult.getCrossSize();
+        int freeSpace = containerInnerCrossSize - flexLinesCrossSize;
+        switch (mFlexContainer.getAlignContent()) {
+            case AlignContent.FLEX_START:
+                // do nothing
+                break;
+            case AlignContent.FLEX_END:
+                alignContentFlexEnd(mFlexLinesResult, freeSpace);
+                break;
+            case AlignContent.STRETCH:
+                alignContentStretch(mFlexLinesResult, freeSpace);
+                break;
+            case AlignContent.CENTER:
+                alignContentCenter(mFlexLinesResult, freeSpace);
+                break;
+            case AlignContent.SPACE_AROUND:
+                alignContentSpaceAround(mFlexLinesResult, freeSpace);
+                break;
+            case AlignContent.SPACE_BETWEEN:
+                alignContentSpaceBetween(mFlexLinesResult, freeSpace);
+                break;
+        }
     }
+
+    private void alignContentSpaceAround(FlexLinesResult mFlexLinesResult, int freeSpace) {
+        if (freeSpace > 0) {
+            float unitSpace = (float) freeSpace / (mFlexLinesResult.size() * 2);
+            mFlexLinesResult.insertAround(unitSpace);
+        } else {
+            alignContentCenter(mFlexLinesResult, freeSpace);
+        }
+    }
+
+    private void alignContentCenter(FlexLinesResult mFlexLinesResult, int freeSpace) {
+        int unitSpace = freeSpace / 2;
+        mFlexLinesResult.addTop(FlexLine.createDummyWithCrossSize(unitSpace));
+        mFlexLinesResult.addBottom(FlexLine.createDummyWithCrossSize(unitSpace));
+    }
+
+    private void alignContentStretch(FlexLinesResult mFlexLinesResult, int freeSpace) {
+        if (freeSpace > 0) {
+            int unitSpace = freeSpace / mFlexLinesResult.size();
+            for (FlexLine flexLine : mFlexLinesResult.mFlexLines) {
+               flexLine.mCrossSize += unitSpace;
+            }
+        }
+    }
+
+    private void alignContentFlexEnd(FlexLinesResult mFlexLinesResult, int freeSpace) {
+        mFlexLinesResult.addTop(FlexLine.createDummyWithCrossSize(freeSpace));
+    }
+
+    private void alignContentSpaceBetween(FlexLinesResult mFlexLinesResult, int freeSpace) {
+        if (freeSpace > 0) {
+            float unitSpace = (float) freeSpace / (mFlexLinesResult.size() - 1);
+            mFlexLinesResult.insertBetweenFlexLines(unitSpace);
+        }
+    }
+
 
     public int getExpectedContainerCrossSize(ContainerProperties containerProps) {
         return containerProps.getExpectedCrossSize();
@@ -1720,7 +1776,7 @@ class FlexboxHelper {
         }
     }
 
-    static class FlexLinesResult {
+    static class FlexLinesResult { // TODO: 2022/3/24 rename to FlexLines
 
         List<FlexLine> mFlexLines;
 
@@ -1741,6 +1797,77 @@ class FlexboxHelper {
 
         public boolean isSingleLine() {
             return mFlexLines.size() == 1;
+        }
+
+        public int getCrossSize() {
+            int crossSize = 0;
+            for (FlexLine flexLine : mFlexLines) {
+                crossSize += flexLine.mCrossSize;
+            }
+            return crossSize;
+        }
+
+        public void addTop(FlexLine flexLine) {
+            mFlexLines.add(0, flexLine);
+        }
+
+        public int size() {
+            return mFlexLines.size();
+        }
+
+        public void addBottom(FlexLine flexLine) {
+            mFlexLines.add(mFlexLines.size(), flexLine);
+        }
+
+        public void insertBetweenFlexLines(float unitSpace) {
+            RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
+            List<FlexLine> newFlexLines = new ArrayList<>();
+            for (int i = 0; i < mFlexLines.size(); i++) {
+                FlexLine flexLine = mFlexLines.get(i);
+                if (i != 0) {
+                    FlexLine dummyFlexLine =
+                            FlexLine.createDummyWithCrossSize(errorAccumulator.round(unitSpace) + errorAccumulator.compensate());
+                    newFlexLines.add(dummyFlexLine);
+                }
+                newFlexLines.add(flexLine);
+            }
+            mFlexLines = newFlexLines;
+        }
+        public void insertBetweenFlexLines(FlexLine dummyWithCrossSize) {
+            List<FlexLine> newFlexLines = new ArrayList<>();
+            for (int i = 0; i < mFlexLines.size(); i++) {
+                FlexLine flexLine = mFlexLines.get(i);
+                if (i != 0) {
+                    newFlexLines.add(dummyWithCrossSize);
+                }
+                newFlexLines.add(flexLine);
+            }
+            mFlexLines = newFlexLines;
+        }
+
+        public void insertAround(float space) {
+            RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
+            List<FlexLine> newFlexLines = new ArrayList<>();
+            for (FlexLine currentFlexLine : mFlexLines) {
+                FlexLine dummyFlexLine =
+                        FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
+                newFlexLines.add(dummyFlexLine);
+                newFlexLines.add(currentFlexLine);
+                dummyFlexLine =
+                        FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
+                newFlexLines.add(dummyFlexLine);
+            }
+            mFlexLines = newFlexLines;
+        }
+
+        public void insertAround(FlexLine flexLine) {
+            List<FlexLine> newFlexLines = new ArrayList<>();
+            for (FlexLine currentFlexLine : mFlexLines) {
+                newFlexLines.add(flexLine);
+                newFlexLines.add(currentFlexLine);
+                newFlexLines.add(flexLine);
+            }
+            mFlexLines = newFlexLines;
         }
     }
 

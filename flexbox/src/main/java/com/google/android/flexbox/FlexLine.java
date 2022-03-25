@@ -42,6 +42,12 @@ public class FlexLine {
         mFirstIndex = firstIndex;
     }
 
+    public static FlexLine createDummyWithCrossSize(int crossSize) {
+        FlexLine flexLine = new FlexLine();
+        flexLine.mCrossSize = crossSize;
+        return flexLine;
+    }
+
     NewFlexItem getItemAt(int index) {
        return items.get(index);
     }

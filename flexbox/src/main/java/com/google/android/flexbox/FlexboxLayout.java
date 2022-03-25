@@ -403,16 +403,31 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
                         containerProps.getExpectedCrossSize() - containerProps.getCrossPaddings();
            } else {
                int determinedCrossSize = mFlexboxHelper.getExpectedContainerCrossSize(containerProps);
-               mFlexboxHelper.crossAlignment(determinedCrossSize, mFlexLinesResult);
+               int containerCrossAxisPadding = getContainerCrossAxisPadding();
+               mFlexboxHelper.crossAlignment(determinedCrossSize - containerCrossAxisPadding, mFlexLinesResult);
            }
         }
-        mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
-                getPaddingTop() + getPaddingBottom());
+        setFlexLines(mFlexLinesResult.mFlexLines);
+//        mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
+//                getPaddingTop() + getPaddingBottom());
         // Now cross size for each flex line is determined.
         // Expand the views if alignItems (or mAlignSelf in each child view) is set to stretch
         mFlexboxHelper.stretchViews();
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec,
                 mFlexLinesResult.mChildState);
+    }
+
+    private int getContainerCrossAxisPadding() {
+        boolean isMainAxisHorizontal = isMainAxisHorizontal(mFlexDirection);
+        if (isMainAxisHorizontal) {
+            return getPaddingTop() + getPaddingBottom();
+        } else {
+            return getPaddingStart() + getPaddingEnd();
+        }
+    }
+
+    public static boolean isMainAxisHorizontal(int flexDirection) {
+        return flexDirection == FlexDirection.ROW || flexDirection == FlexDirection.ROW_REVERSE;
     }
 
     /**
