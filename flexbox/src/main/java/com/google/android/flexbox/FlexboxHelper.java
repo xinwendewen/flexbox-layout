@@ -42,7 +42,6 @@ import java.util.List;
  * {@link FlexboxLayout}.
  */
 class FlexboxHelper {
-
     private final FlexContainer mFlexContainer;
 
     FlexboxHelper(FlexContainer flexContainer) {
@@ -149,7 +148,6 @@ class FlexboxHelper {
     void calculateFlexibleLength(int mainSize, int widthMeasureSpec, int heightMeasureSpec) {
         ContainerProperties containerProps = new ContainerProperties(mFlexContainer,
                 widthMeasureSpec, heightMeasureSpec);
-//        ensureChildrenFrozen(mFlexContainer.getFlexItemCount());
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
         for (int i = 0, size = flexLines.size(); i < size; i++) {
             FlexLine flexLine = flexLines.get(i);
