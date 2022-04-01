@@ -195,7 +195,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * Holds reordered indices, which {@link FlexItem#getOrder()} parameters are taken
      * into account
      */
-//    private int[] mReorderedIndices;
+    private int[] mReorderedIndices;
 
     /**
      * Caches the {@link FlexItem#getOrder()} attributes for children views.
@@ -274,25 +274,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (mOrderCache == null) {
             mOrderCache = new SparseIntArray(getChildCount());
         }
-//        if (mFlexboxHelper.isOrderChangedFromLastMeasurement(mOrderCache)) {
-//            mReorderedIndices = mFlexboxHelper.createReorderedIndices(mOrderCache);
-//        }
-
-        // TODO: Only calculate the children views which are affected from the last measure.
-
-        switch (mFlexDirection) {
-            case ROW: // Intentional fall through
-            case ROW_REVERSE:
-                measureHorizontal(widthMeasureSpec, heightMeasureSpec);
-                break;
-            case COLUMN: // Intentional fall through
-            case FlexDirection.COLUMN_REVERSE:
-                measureVertical(widthMeasureSpec, heightMeasureSpec);
-                break;
-            default:
-                throw new IllegalStateException(
-                        "Invalid value for the flex direction is set: " + mFlexDirection);
-        }
+        doMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -358,7 +340,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * @see #setAlignItems(int)
      * @see #setAlignContent(int)
      */
-    private void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec) {
+    private void doMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         ContainerProperties containerProps = new ContainerProperties(this, widthMeasureSpec, heightMeasureSpec);
         mFlexLines.clear();
 
@@ -381,11 +363,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
            }
         }
         setFlexLines(mFlexLinesResult.mFlexLines);
-//        mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
-//                getPaddingTop() + getPaddingBottom());
-        // Now cross size for each flex line is determined.
-        // Expand the views if alignItems (or mAlignSelf in each child view) is set to stretch
-//        mFlexboxHelper.stretchViews();
         mFlexboxHelper.stretchItems();
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec,
                 mFlexLinesResult.mChildState);
@@ -402,36 +379,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     public static boolean isMainAxisHorizontal(int flexDirection) {
         return flexDirection == FlexDirection.ROW || flexDirection == FlexDirection.ROW_REVERSE;
-    }
-
-    /**
-     * Sub method for {@link #onMeasure(int, int)} when the main axis direction is vertical
-     * (either from top to bottom or bottom to top).
-     *
-     * @param widthMeasureSpec  horizontal space requirements as imposed by the parent
-     * @param heightMeasureSpec vertical space requirements as imposed by the parent
-     * @see #onMeasure(int, int)
-     * @see #setFlexDirection(int)
-     * @see #setFlexWrap(int)
-     * @see #setAlignItems(int)
-     * @see #setAlignContent(int)
-     */
-    private void measureVertical(int widthMeasureSpec, int heightMeasureSpec) {
-        mFlexLines.clear();
-        mFlexLinesResult.reset();
-        mFlexboxHelper.fillFlexLines(mFlexLinesResult, widthMeasureSpec, heightMeasureSpec);
-        mFlexLines = mFlexLinesResult.mFlexLines;
-
-        int mainSize = mFlexboxHelper.determineMainSize(widthMeasureSpec, heightMeasureSpec,
-                mFlexLinesResult);
-        mFlexboxHelper.calculateFlexibleLength(mainSize, widthMeasureSpec, heightMeasureSpec);
-        mFlexboxHelper.determineCrossSize(widthMeasureSpec, heightMeasureSpec,
-                getPaddingLeft() + getPaddingRight());
-        // Now cross size for each flex line is determined.
-        // Expand the views if alignItems (or mAlignSelf in each child view) is set to stretch
-        mFlexboxHelper.stretchItems();
-        setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec,
-                mFlexLinesResult.mChildState);
     }
 
     /**
