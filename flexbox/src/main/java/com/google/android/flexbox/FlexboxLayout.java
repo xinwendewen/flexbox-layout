@@ -275,6 +275,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         }
         paddings.endPadding = getPaddingEnd();
         paddings.startPadding = getPaddingStart();
+        paddings.leftPadding = getPaddingLeft();
+        paddings.rightPadding = getPaddingRight();
         paddings.topPadding = getPaddingTop();
         paddings.bottomPadding = getPaddingBottom();
         flexContainer.setPaddings(paddings);
@@ -497,38 +499,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         boolean isRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
-        mFlexboxHelper.layout(left, top, right, bottom, isRtl, getPaddingLeft(), getPaddingTop(),
-                getPaddingRight(), getPaddingBottom());
-//        int layoutDirection = ViewCompat.getLayoutDirection(this);
-//        boolean isRtl;
-//        switch (mFlexDirection) {
-//            case ROW:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                layoutHorizontal(isRtl, left, top, right, bottom);
-//                break;
-//            case ROW_REVERSE:
-//                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
-//                layoutHorizontal(isRtl, left, top, right, bottom);
-//                break;
-//            case COLUMN:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    isRtl = !isRtl;
-//                }
-//                layoutVertical(isRtl, false, left, top, right, bottom);
-//                break;
-//            case FlexDirection.COLUMN_REVERSE:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    isRtl = !isRtl;
-//                }
-//                layoutVertical(isRtl, true, left, top, right, bottom);
-//                break;
-//            default:
-//                throw new IllegalStateException("Invalid flex direction is set: " + mFlexDirection);
-//        }
+        flexContainer.layout(left, top, right, bottom, isRtl);
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {

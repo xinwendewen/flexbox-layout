@@ -54,6 +54,8 @@ public interface NewFlexItem {
 
     int getAlignSelf();
 
+    AlignSelf getAlignSelfNew();
+
     int getMainSize(boolean mainAxisHorizontal);
 
     LayoutPositions generateLayoutPosition(int mainStart, int mainEnd, int crossStart,
@@ -78,8 +80,7 @@ public interface NewFlexItem {
     int getCrossSize(boolean isMainAxisHorizontal);
 
     void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
-                boolean isMainAxisHorizontal, int leftPadding, int topPadding,
-                int parentLeft, int parentTop);
+                boolean isMainAxisHorizontal, int leftPadding, int topPadding);
 
     int clampByMinMaxCrossSize(int crossSize, boolean isMainAxisHorizontal);
 

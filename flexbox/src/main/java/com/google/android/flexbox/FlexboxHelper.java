@@ -398,7 +398,7 @@ class FlexboxHelper {
                 NewFlexItem item = flexLine.getItemAt(i);
                 layoutItem(item, isMainAxisReversed, mainAxisAnchor, isCrossAxisReversed,
                         crossAxisAnchor, isMainAxisHorizontal, mFlexContainer.getAlignItems(),
-                        flexLine, paddingLeft, paddingTop, left, top);
+                        flexLine, paddingLeft, paddingTop);
                 mainAxisAnchor = forwardMainAxisAnchor(mainAxisAnchor, isMainAxisReversed, item,
                         errorAccumulator.round(spaceBetweenItems) + errorAccumulator.compensate(),
                         isMainAxisHorizontal);
@@ -420,9 +420,9 @@ class FlexboxHelper {
     }
 
     void layoutItem(NewFlexItem item, boolean isMainAxisReversed, int mainAxisAnchor,
-                               boolean isCrossAxisReversed, int crossAxisAnchor,
-                               boolean isMainAxisHorizontal, int alignItems, FlexLine flexLine,
-                               int leftPadding, int topPadding, int parentLeft, int parentTop) {
+                    boolean isCrossAxisReversed, int crossAxisAnchor,
+                    boolean isMainAxisHorizontal, int alignItems, FlexLine flexLine,
+                    int leftPadding, int topPadding) {
         int mainStart;
         int mainEnd;
         int crossStart;
@@ -438,8 +438,6 @@ class FlexboxHelper {
         int alignSelf = item.getAlignSelf();
         if (alignSelf != AlignSelf.AUTO) {
             crossAlignment = alignSelf;
-        } else {
-            crossAlignment = alignItems;
         }
         switch (crossAlignment) {
             case STRETCH:
@@ -482,6 +480,6 @@ class FlexboxHelper {
                 throw new IllegalStateException();
         }
         item.layout(mainStart, mainEnd, crossStart, crossEnd, isMainAxisHorizontal, leftPadding,
-                topPadding, parentLeft, parentTop);
+                topPadding);
     }
 }

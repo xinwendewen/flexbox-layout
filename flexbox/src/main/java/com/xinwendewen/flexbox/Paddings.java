@@ -3,12 +3,16 @@ package com.xinwendewen.flexbox;
 public class Paddings {
     public int startPadding;
     public int endPadding;
+    public int leftPadding;
+    public int rightPadding;
     public int topPadding;
     public int bottomPadding;
 
     public void update(Paddings other) {
         startPadding = other.startPadding;
         endPadding = other.endPadding;
+        leftPadding = other.leftPadding;
+        rightPadding = other.rightPadding;
         topPadding = other.topPadding;
         bottomPadding = other.bottomPadding;
     }

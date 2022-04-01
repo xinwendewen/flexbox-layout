@@ -9,7 +9,5 @@ public enum AlignSelf {
 
     CENTER,
 
-    BASELINE,
-
     STRETCH
 }

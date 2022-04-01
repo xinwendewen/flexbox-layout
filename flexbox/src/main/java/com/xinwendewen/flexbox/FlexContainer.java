@@ -11,6 +11,6 @@ public interface FlexContainer {
     void setPaddings(Paddings paddings);
     void setFlexItems(List<NewFlexItem> flexItems);
     void measure(MeasureRequest mainAxisMeasureRequest, MeasureRequest crossAxisMeasureRequest);
-    void layout();
+    void layout(int left, int top, int right, int bottom, boolean isRtl);
     List<FlexLine> getFlexLines();
 }

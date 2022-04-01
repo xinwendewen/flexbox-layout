@@ -3,6 +3,11 @@ package com.xinwendewen.flexbox;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
+import static com.xinwendewen.flexbox.AlignSelf.AUTO;
+import static com.xinwendewen.flexbox.AlignSelf.CENTER;
+import static com.xinwendewen.flexbox.AlignSelf.FLEX_END;
+import static com.xinwendewen.flexbox.AlignSelf.FLEX_START;
+import static com.xinwendewen.flexbox.AlignSelf.STRETCH;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.getMeasureSpecSize;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
@@ -266,6 +271,22 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
+    public AlignSelf getAlignSelfNew() {
+        switch (getAlignSelf()) {
+            case com.google.android.flexbox.AlignSelf.FLEX_START:
+                return FLEX_START;
+            case com.google.android.flexbox.AlignSelf.FLEX_END:
+                return FLEX_END;
+            case com.google.android.flexbox.AlignSelf.CENTER:
+                return CENTER;
+            case com.google.android.flexbox.AlignSelf.STRETCH:
+                return STRETCH;
+            default:
+                return AUTO;
+        }
+    }
+
+    @Override
     public int getMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return view.getMeasuredWidth();
@@ -281,8 +302,7 @@ public class NewFlexItemImpl implements NewFlexItem {
 
     @Override
     public void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
-                       boolean isMainAxisHorizontal, int leftPadding, int topPadding,
-                       int parentLeft, int parentTop) {
+                       boolean isMainAxisHorizontal, int leftPadding, int topPadding) {
         int left = leftPadding;
         int top =  topPadding;
         int right = leftPadding;

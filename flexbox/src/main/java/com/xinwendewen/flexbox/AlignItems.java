@@ -7,7 +7,5 @@ public enum AlignItems {
 
     CENTER,
 
-    BASELINE,
-
-    STRETCH;
+    STRETCH
 }
