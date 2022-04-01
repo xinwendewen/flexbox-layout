@@ -206,8 +206,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      */
     private SparseIntArray mOrderCache;
 
-    private FlexboxHelper mFlexboxHelper = new FlexboxHelper(this);
-
     private List<FlexLine> mFlexLines = new ArrayList<>();
 
     public FlexboxLayout(Context context) {
