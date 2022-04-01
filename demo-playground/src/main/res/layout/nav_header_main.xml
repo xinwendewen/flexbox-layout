@@ -56,11 +56,5 @@ limitations under the License.
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/viewgroup" />
-
-        <RadioButton
-            android:id="@+id/radiobutton_recyclerview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/recyclerview" />
     </RadioGroup>
 </LinearLayout>
