@@ -39,6 +39,7 @@ import androidx.core.view.ViewCompat;
 
 import com.xinwendewen.flexbox.ContainerProperties;
 import com.xinwendewen.flexbox.FlexLine;
+import com.xinwendewen.flexbox.FlexLines;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.NewFlexItemImpl;
 
@@ -212,7 +213,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * Used for receiving the calculation of the flex results to avoid creating a new instance
      * every time flex lines are calculated.
      */
-    private FlexboxHelper.FlexLinesResult mFlexLinesResult = new FlexboxHelper.FlexLinesResult();
+    private FlexLines mFlexLinesResult = new FlexLines();
 
     public FlexboxLayout(Context context) {
         this(context, null);

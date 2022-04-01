@@ -36,6 +36,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.xinwendewen.flexbox.ContainerProperties;
 import com.xinwendewen.flexbox.FlexLine;
+import com.xinwendewen.flexbox.FlexLines;
 import com.xinwendewen.flexbox.MeasureRequestUtils;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.RoundingErrorAccumulator;
@@ -213,15 +214,15 @@ class FlexboxHelper {
      * Calculate how many flex lines are needed in the flex container.
      * This method should calculate all the flex lines from the existing flex items.
      *
-     * @see #calculateFlexLines(FlexLinesResult, int, int, int, int, int, List)
+     * @see #calculateFlexLines(FlexLines, int, int, int, int, int, List)
      */
-    void calculateHorizontalFlexLines(FlexLinesResult result, int widthMeasureSpec,
+    void calculateHorizontalFlexLines(FlexLines result, int widthMeasureSpec,
                                       int heightMeasureSpec) {
         fillFlexLines(result, widthMeasureSpec, heightMeasureSpec);
     }
 
 
-    void fillFlexLines(FlexLinesResult result, int widthMeasureSpec,
+    void fillFlexLines(FlexLines result, int widthMeasureSpec,
                        int heightMeasureSpec) {
         ContainerProperties containerProperties = new ContainerProperties(mFlexContainer,
                 widthMeasureSpec, heightMeasureSpec);
@@ -244,14 +245,14 @@ class FlexboxHelper {
      * Calculate how many flex lines are needed in the flex container.
      * This method should calculate all the flex lines from the existing flex items.
      *
-     * @param result            an instance of {@link FlexLinesResult} that is going to contain a
+     * @param result            an instance of {@link FlexLines} that is going to contain a
      *                          list of flex lines and the child state used by
      *                          {@link View#setMeasuredDimension(int, int)}.
      * @param widthMeasureSpec  the width measure spec imposed by the flex container
      * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @see #calculateFlexLines(FlexLinesResult, int, int, int, int, int, List)
+     * @see #calculateFlexLines(FlexLines, int, int, int, int, int, List)
      */
-    void calculateVerticalFlexLines(FlexLinesResult result, int widthMeasureSpec, int heightMeasureSpec) {
+    void calculateVerticalFlexLines(FlexLines result, int widthMeasureSpec, int heightMeasureSpec) {
 //        calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, Integer.MAX_VALUE,
 //                0, NO_POSITION, null);
     }
@@ -427,7 +428,7 @@ class FlexboxHelper {
         determineMainSize(widthMeasureSpec, heightMeasureSpec, null);
     }
 
-    int determineMainSize(ContainerProperties properties, FlexLinesResult flexLines) {
+    int determineMainSize(ContainerProperties properties, FlexLines flexLines) {
         int largestFlexLineMainSize = flexLines.getLargestMainSize();
         int expectedMainSize = properties.getExpectedMainSize();
         if (properties.requireFixedMainSize()) {
@@ -448,7 +449,7 @@ class FlexboxHelper {
      * @see FlexContainer#setFlexDirection(int)
      * @see FlexContainer#getFlexDirection()
      */
-    int determineMainSize(int widthMeasureSpec, int heightMeasureSpec, FlexLinesResult flexLinesResult) {
+    int determineMainSize(int widthMeasureSpec, int heightMeasureSpec, FlexLines flexLinesResult) {
         ContainerProperties containerProps = new ContainerProperties(mFlexContainer,
                 widthMeasureSpec, heightMeasureSpec);
         return determineMainSize(containerProps, flexLinesResult);
@@ -841,7 +842,7 @@ class FlexboxHelper {
     }
 
     public boolean isCrossAlignmentNeeded(int widthMeasureSpec, int heightMeasureSpec,
-                                    FlexLinesResult flexLinesResult) {
+                                    FlexLines flexLinesResult) {
         if (flexLinesResult.mFlexLines.size() == 1) {
             return false;
         }
@@ -852,7 +853,7 @@ class FlexboxHelper {
         }
     }
 
-    public void crossAlignment(int containerInnerCrossSize, FlexLinesResult mFlexLinesResult) {
+    public void crossAlignment(int containerInnerCrossSize, FlexLines mFlexLinesResult) {
         int flexLinesCrossSize = mFlexLinesResult.getCrossSize();
         int freeSpace = containerInnerCrossSize - flexLinesCrossSize;
         switch (mFlexContainer.getAlignContent()) {
@@ -877,7 +878,7 @@ class FlexboxHelper {
         }
     }
 
-    private void alignContentSpaceAround(FlexLinesResult mFlexLinesResult, int freeSpace) {
+    private void alignContentSpaceAround(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             float unitSpace = (float) freeSpace / (mFlexLinesResult.size() * 2);
             mFlexLinesResult.insertAround(unitSpace);
@@ -886,13 +887,13 @@ class FlexboxHelper {
         }
     }
 
-    private void alignContentCenter(FlexLinesResult mFlexLinesResult, int freeSpace) {
+    private void alignContentCenter(FlexLines mFlexLinesResult, int freeSpace) {
         int unitSpace = freeSpace / 2;
         mFlexLinesResult.addTop(FlexLine.createDummyWithCrossSize(unitSpace));
         mFlexLinesResult.addBottom(FlexLine.createDummyWithCrossSize(unitSpace));
     }
 
-    private void alignContentStretch(FlexLinesResult mFlexLinesResult, int freeSpace) {
+    private void alignContentStretch(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             int unitSpace = freeSpace / mFlexLinesResult.size();
             for (FlexLine flexLine : mFlexLinesResult.mFlexLines) {
@@ -901,11 +902,11 @@ class FlexboxHelper {
         }
     }
 
-    private void alignContentFlexEnd(FlexLinesResult mFlexLinesResult, int freeSpace) {
+    private void alignContentFlexEnd(FlexLines mFlexLinesResult, int freeSpace) {
         mFlexLinesResult.addTop(FlexLine.createDummyWithCrossSize(freeSpace));
     }
 
-    private void alignContentSpaceBetween(FlexLinesResult mFlexLinesResult, int freeSpace) {
+    private void alignContentSpaceBetween(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             float unitSpace = (float) freeSpace / (mFlexLinesResult.size() - 1);
             mFlexLinesResult.insertBetweenFlexLines(unitSpace);
@@ -947,101 +948,6 @@ class FlexboxHelper {
                     "order=" + order +
                     ", index=" + index +
                     '}';
-        }
-    }
-
-    static class FlexLinesResult { // TODO: 2022/3/24 rename to FlexLines
-
-        List<FlexLine> mFlexLines;
-
-        int mChildState;
-
-        void reset() {
-            mFlexLines = null;
-            mChildState = 0;
-        }
-
-        int getLargestMainSize() {
-            int largestMainSize = 0;
-            for (FlexLine flexLine : mFlexLines) {
-                largestMainSize = Math.max(largestMainSize, flexLine.mMainSize);
-            }
-            return largestMainSize;
-        }
-
-        public boolean isSingleLine() {
-            return mFlexLines.size() == 1;
-        }
-
-        public int getCrossSize() {
-            int crossSize = 0;
-            for (FlexLine flexLine : mFlexLines) {
-                crossSize += flexLine.mCrossSize;
-            }
-            return crossSize;
-        }
-
-        public void addTop(FlexLine flexLine) {
-            mFlexLines.add(0, flexLine);
-        }
-
-        public int size() {
-            return mFlexLines.size();
-        }
-
-        public void addBottom(FlexLine flexLine) {
-            mFlexLines.add(mFlexLines.size(), flexLine);
-        }
-
-        public void insertBetweenFlexLines(float unitSpace) {
-            RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
-            List<FlexLine> newFlexLines = new ArrayList<>();
-            for (int i = 0; i < mFlexLines.size(); i++) {
-                FlexLine flexLine = mFlexLines.get(i);
-                if (i != 0) {
-                    FlexLine dummyFlexLine =
-                            FlexLine.createDummyWithCrossSize(errorAccumulator.round(unitSpace) + errorAccumulator.compensate());
-                    newFlexLines.add(dummyFlexLine);
-                }
-                newFlexLines.add(flexLine);
-            }
-            mFlexLines = newFlexLines;
-        }
-        public void insertBetweenFlexLines(FlexLine dummyWithCrossSize) {
-            List<FlexLine> newFlexLines = new ArrayList<>();
-            for (int i = 0; i < mFlexLines.size(); i++) {
-                FlexLine flexLine = mFlexLines.get(i);
-                if (i != 0) {
-                    newFlexLines.add(dummyWithCrossSize);
-                }
-                newFlexLines.add(flexLine);
-            }
-            mFlexLines = newFlexLines;
-        }
-
-        public void insertAround(float space) {
-            RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
-            List<FlexLine> newFlexLines = new ArrayList<>();
-            for (FlexLine currentFlexLine : mFlexLines) {
-                FlexLine dummyFlexLine =
-                        FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
-                newFlexLines.add(dummyFlexLine);
-                newFlexLines.add(currentFlexLine);
-                dummyFlexLine =
-                        FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
-                newFlexLines.add(dummyFlexLine);
-            }
-            mFlexLines = newFlexLines;
-        }
-
-        public void insertAround(FlexLine flexLine) {
-            List<FlexLine> newFlexLines = new ArrayList<>();
-            for (FlexLine currentFlexLine : mFlexLines) {
-                newFlexLines.add(flexLine);
-                newFlexLines.add(currentFlexLine);
-                newFlexLines.add(flexLine);
-            }
-            mFlexLines = newFlexLines;
         }
     }
 
