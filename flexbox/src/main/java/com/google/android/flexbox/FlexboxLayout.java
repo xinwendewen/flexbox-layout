@@ -451,7 +451,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
             case ROW_REVERSE:
                 calculatedMaxHeight = getSumOfCrossSize() + getPaddingTop()
                         + getPaddingBottom();
-                calculatedMaxWidth = getLargestMainSize();
+                calculatedMaxWidth = getLargestMainSize() + getPaddingStart() + getPaddingEnd();
                 break;
             case COLUMN: // Intentional fall through
             case FlexDirection.COLUMN_REVERSE:

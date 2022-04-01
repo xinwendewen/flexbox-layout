@@ -31,10 +31,6 @@ public class FlexLine {
     public FlexLine() {
     }
 
-    public FlexLine(int containerPaddings) {
-        mMainSize = containerPaddings;
-    }
-
     public static FlexLine createDummyWithCrossSize(int crossSize) {
         FlexLine flexLine = new FlexLine();
         flexLine.mCrossSize = crossSize;
@@ -58,7 +54,7 @@ public class FlexLine {
         mCrossSize = Math.max(mCrossSize, item.getOuterCrossSize(isMainAxisHorizontal));
     }
 
-    public int mMainSize; // TODO: 2022/3/16 flexline should not include container's paddings
+    public int mMainSize;
 
     public int mCrossSize;
 

@@ -233,7 +233,7 @@ public class FlexContainerImpl implements FlexContainer {
         // prepare flex lines
         List<FlexLine> flexLines = new ArrayList<>();
         // prepare current flex line
-        FlexLine currentFlexLine = new FlexLine(paddings.getMainPaddings(isMainAxisHorizontal));
+        FlexLine currentFlexLine = new FlexLine();
 
         int occupiedContainerCrossSize = paddings.getCrossPaddings(isMainAxisHorizontal);
         for (NewFlexItem item : items) {
@@ -255,7 +255,7 @@ public class FlexContainerImpl implements FlexContainer {
                             crossAxisMeasureRequest, occupiedContainerCrossSize, isMainAxisHorizontal);
                 }
                 // prepare new flex line
-                currentFlexLine = new FlexLine(paddings.getMainPaddings(isMainAxisHorizontal));
+                currentFlexLine = new FlexLine();
             }
             // add current item
             currentFlexLine.addItem(item, isMainAxisHorizontal);
@@ -339,9 +339,7 @@ public class FlexContainerImpl implements FlexContainer {
         int crossAxisAnchor = isCrossAxisReversed ? containerInnerCrossSize : 0;
         for (FlexLine flexLine : flexLines.mFlexLines) {
             JustifyContent justifyContent = flexProperties.justifyContent;
-            int flexLineMainSize =
-                    // TODO: 2022/3/23 remove padding
-                    flexLine.mMainSize - paddings.getMainPaddings(isMainAxisHorizontal);
+            int flexLineMainSize = flexLine.mMainSize;
             int mainAxisAnchor = 0;
             float spaceBetweenItems = 0;
             switch (justifyContent) {
