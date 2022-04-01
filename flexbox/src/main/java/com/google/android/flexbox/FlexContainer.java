@@ -25,7 +25,6 @@ import java.util.List;
 
 /**
  * An interface that has the common behavior as the flex container such as {@link FlexboxLayout}
- * and {@link FlexboxLayoutManager}.
  */
 public interface FlexContainer {
 

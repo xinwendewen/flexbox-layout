@@ -51,7 +51,7 @@ import java.util.List;
 
 /**
  * Offers various calculations for Flexbox to use the common logic between the classes such as
- * {@link FlexboxLayout} and {@link FlexboxLayoutManager}.
+ * {@link FlexboxLayout}.
  */
 class FlexboxHelper {
 
@@ -247,64 +247,6 @@ class FlexboxHelper {
 
     /**
      * Calculate how many flex lines are needed in the flex container.
-     * Stop calculating it if the calculated amount along the cross size reaches the argument
-     * as the needsCalcAmount.
-     *
-     * @param result            an instance of {@link FlexLinesResult} that is going to contain a
-     *                          list of flex lines and the child state used by
-     *                          {@link View#setMeasuredDimension(int, int)}.
-     * @param widthMeasureSpec  the width measure spec imposed by the flex container
-     * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @param needsCalcAmount   the amount of pixels where flex line calculation should be stopped
-     *                          this is needed to avoid the expensive calculation if the
-     *                          calculation is needed only the small part of the entire flex
-     *                          container. (E.g. If the flex container is the
-     *                          {@link FlexboxLayoutManager}, the calculation only needs the
-     *                          visible area, imposing the entire calculation may cause bad
-     *                          performance
-     * @param fromIndex         the index of the child from which the calculation starts
-     * @param existingLines     If not null, calculated flex lines will be added to this instance
-     */
-    void calculateHorizontalFlexLines(FlexLinesResult result, int widthMeasureSpec,
-                                      int heightMeasureSpec, int needsCalcAmount, int fromIndex,
-                                      @Nullable List<FlexLine> existingLines) {
-        calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, needsCalcAmount,
-                fromIndex, NO_POSITION, existingLines);
-    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
-     * This method calculates the amount of pixels as the {@code needsCalcAmount} in addition to
-     * the
-     * flex lines which includes the view who has the index as the {@code toIndex} argument.
-     * (First calculate to the toIndex, then calculate the amount of pixels as needsCalcAmount)
-     *
-     * @param result            an instance of {@link FlexLinesResult} that is going to contain a
-     *                          list of flex lines and the child state used by
-     *                          {@link View#setMeasuredDimension(int, int)}.
-     * @param widthMeasureSpec  the width measure spec imposed by the flex container
-     * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @param needsCalcAmount   the amount of pixels where flex line calculation should be stopped
-     *                          this is needed to avoid the expensive calculation if the
-     *                          calculation is needed only the small part of the entire flex
-     *                          container. (E.g. If the flex container is the
-     *                          {@link FlexboxLayoutManager}, the calculation only needs the
-     *                          visible area, imposing the entire calculation may cause bad
-     *                          performance
-     * @param toIndex           the index of the child to which the calculation ends (until the
-     *                          flex line which include the which who has that index). If this
-     *                          and needsCalcAmount are both set, first flex lines are calculated
-     *                          to the index, calculate the amount of pixels as the needsCalcAmount
-     *                          argument in addition to that
-     */
-    void calculateHorizontalFlexLinesToIndex(FlexLinesResult result, int widthMeasureSpec,
-                                             int heightMeasureSpec, int needsCalcAmount, int toIndex, List<FlexLine> existingLines) {
-        calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, needsCalcAmount,
-                0, toIndex, existingLines);
-    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
      * This method should calculate all the flex lines from the existing flex items.
      *
      * @param result            an instance of {@link FlexLinesResult} that is going to contain a
@@ -317,64 +259,6 @@ class FlexboxHelper {
     void calculateVerticalFlexLines(FlexLinesResult result, int widthMeasureSpec, int heightMeasureSpec) {
         calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, Integer.MAX_VALUE,
                 0, NO_POSITION, null);
-    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
-     * Stop calculating it if the calculated amount along the cross size reaches the argument
-     * as the needsCalcAmount.
-     *
-     * @param result            an instance of {@link FlexLinesResult} that is going to contain a
-     *                          list of flex lines and the child state used by
-     *                          {@link View#setMeasuredDimension(int, int)}.
-     * @param widthMeasureSpec  the width measure spec imposed by the flex container
-     * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @param needsCalcAmount   the amount of pixels where flex line calculation should be stopped
-     *                          this is needed to avoid the expensive calculation if the
-     *                          calculation is needed only the small part of the entire flex
-     *                          container. (E.g. If the flex container is the
-     *                          {@link FlexboxLayoutManager}, the calculation only needs the
-     *                          visible area, imposing the entire calculation may cause bad
-     *                          performance
-     * @param fromIndex         the index of the child from which the calculation starts
-     * @param existingLines     If not null, calculated flex lines will be added to this instance
-     */
-    void calculateVerticalFlexLines(FlexLinesResult result, int widthMeasureSpec,
-                                    int heightMeasureSpec, int needsCalcAmount, int fromIndex,
-                                    @Nullable List<FlexLine> existingLines) {
-        calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, needsCalcAmount,
-                fromIndex, NO_POSITION, existingLines);
-    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
-     * This method calculates the amount of pixels as the {@code needsCalcAmount} in addition to
-     * the
-     * flex lines which includes the view who has the index as the {@code toIndex} argument.
-     * (First calculate to the toIndex, then calculate the amount of pixels as needsCalcAmount)
-     *
-     * @param result            an instance of {@link FlexLinesResult} that is going to contain a
-     *                          list of flex lines and the child state used by
-     *                          {@link View#setMeasuredDimension(int, int)}.
-     * @param widthMeasureSpec  the width measure spec imposed by the flex container
-     * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @param needsCalcAmount   the amount of pixels where flex line calculation should be stopped
-     *                          this is needed to avoid the expensive calculation if the
-     *                          calculation is needed only the small part of the entire flex
-     *                          container. (E.g. If the flex container is the
-     *                          {@link FlexboxLayoutManager}, the calculation only needs the
-     *                          visible area, imposing the entire calculation may cause bad
-     *                          performance
-     * @param toIndex           the index of the child to which the calculation ends (until the
-     *                          flex line which include the which who has that index). If this
-     *                          and needsCalcAmount are both set, first flex lines are calculated
-     *                          to the index, calculate the amount of pixels as the needsCalcAmount
-     *                          argument in addition to that
-     */
-    void calculateVerticalFlexLinesToIndex(FlexLinesResult result, int widthMeasureSpec,
-                                           int heightMeasureSpec, int needsCalcAmount, int toIndex, List<FlexLine> existingLines) {
-        calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, needsCalcAmount,
-                0, toIndex, existingLines);
     }
 
     List<FlexLine> fillFlexLines(int containerMainMeasureSpec, int containerCrossMeasureSpec,

@@ -21,8 +21,7 @@ import android.view.View;
 
 /**
  * An interface that has the common behavior as a flex item contained in a flex container.
- * Known classes that implement this interface are {@link FlexboxLayout.LayoutParams} and
- * {@link FlexboxLayoutManager.LayoutParams}.
+ * Known classes that implement this interface are {@link FlexboxLayout.LayoutParams}
  */
 public interface FlexItem extends Parcelable {
 
