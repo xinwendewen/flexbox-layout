@@ -16,7 +16,6 @@
 
 package com.google.android.flexbox;
 
-import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static com.google.android.flexbox.AlignItems.CENTER;
 import static com.google.android.flexbox.AlignItems.FLEX_END;
 import static com.google.android.flexbox.AlignItems.FLEX_START;
@@ -26,13 +25,9 @@ import static com.google.android.flexbox.FlexDirection.COLUMN_REVERSE;
 import static com.google.android.flexbox.FlexDirection.ROW;
 import static com.google.android.flexbox.FlexDirection.ROW_REVERSE;
 import static com.google.android.flexbox.FlexWrap.NOWRAP;
-import static com.xinwendewen.flexbox.ContainerProperties.isMainAxisHorizontal;
-import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.isUnspecifiedMode;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.xinwendewen.flexbox.ContainerProperties;
 import com.xinwendewen.flexbox.FlexLine;
@@ -42,7 +37,6 @@ import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.RoundingErrorAccumulator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,176 +45,11 @@ import java.util.List;
  */
 class FlexboxHelper {
 
-    private static final int INITIAL_CAPACITY = 10;
-
-    private static final long MEASURE_SPEC_WIDTH_MASK = 0xffffffffL;
-
     private final FlexContainer mFlexContainer;
-
-    /**
-     * Map the view index to the flex line which contains the view represented by the index to
-     * look for a flex line from a given view index in a constant time.
-     * Key: index of the view
-     * Value: index of the flex line that contains the given view
-     * <p>
-     * E.g. if we have following flex lines,
-     * <p>
-     * FlexLine(0): itemCount 3
-     * FlexLine(1): itemCount 2
-     * </p>
-     * this instance should have following entries
-     * <p>
-     * [0, 0, 0, 1, 1, ...]
-     * </p>
-     */
-    @Nullable
-    int[] mIndexToFlexLine;
-
-    /**
-     * Cache the measured spec. The first 32 bit represents the height measure spec, the last
-     * 32 bit represents the width measure spec of each flex item.
-     * E.g. an entry is created like {@code (long) heightMeasureSpec << 32 | widthMeasureSpec}
-     * <p>
-     * To retrieve a widthMeasureSpec, call {@link #extractLowerInt(long)} or
-     * {@link #extractHigherInt(long)} for a heightMeasureSpec.
-     */
-    @Nullable
-    long[] mMeasureSpecCache;
-
-    /**
-     * Cache a flex item's measured width and height. The first 32 bit represents the height, the
-     * last 32 bit represents the width of each flex item.
-     * E.g. an entry is created like the following code.
-     * {@code (long) view.getMeasuredHeight() << 32 | view.getMeasuredWidth()}
-     * <p>
-     * To retrieve a width value, call {@link #extractLowerInt(long)} or
-     * {@link #extractHigherInt(long)} for a height value.
-     */
-    @Nullable
-    private long[] mMeasuredSizeCache;
 
     FlexboxHelper(FlexContainer flexContainer) {
         mFlexContainer = flexContainer;
     }
-
-    /**
-     * Create an array, which indicates the reordered indices that
-     * {@link FlexItem#getOrder()} attributes are taken into account.
-     * This method takes a View before that is added as the parent ViewGroup's children.
-     *
-     * @param viewBeforeAdded          the View instance before added to the array of children
-     *                                 Views of the parent ViewGroup
-     * @param indexForViewBeforeAdded  the index for the View before added to the array of the
-     *                                 parent ViewGroup
-     * @param paramsForViewBeforeAdded the layout parameters for the View before added to the array
-     *                                 of the parent ViewGroup
-     * @return an array which have the reordered indices
-     */
-//    int[] createReorderedIndices(View viewBeforeAdded, int indexForViewBeforeAdded,
-//            ViewGroup.LayoutParams paramsForViewBeforeAdded, SparseIntArray orderCache) {
-//        int childCount = mFlexContainer.getFlexItemCount();
-//        List<Order> orders = createOrders(childCount);
-//        Order orderForViewToBeAdded = new Order();
-//        if (viewBeforeAdded != null
-//                && paramsForViewBeforeAdded instanceof FlexItem) {
-//            orderForViewToBeAdded.order = ((FlexItem)
-//                    paramsForViewBeforeAdded).getOrder();
-//        } else {
-//            orderForViewToBeAdded.order = FlexItem.ORDER_DEFAULT;
-//        }
-//
-//        if (indexForViewBeforeAdded == -1 || indexForViewBeforeAdded == childCount) {
-//            orderForViewToBeAdded.index = childCount;
-//        } else if (indexForViewBeforeAdded < mFlexContainer.getFlexItemCount()) {
-//            orderForViewToBeAdded.index = indexForViewBeforeAdded;
-//            for (int i = indexForViewBeforeAdded; i < childCount; i++) {
-//                orders.get(i).index++;
-//            }
-//        } else {
-//            // This path is not expected since OutOfBoundException will be thrown in the ViewGroup
-//            // But setting the index for fail-safe
-//            orderForViewToBeAdded.index = childCount;
-//        }
-//        orders.add(orderForViewToBeAdded);
-//
-//        return sortOrdersIntoReorderedIndices(childCount + 1, orders, orderCache);
-//    }
-
-    /**
-     * Create an array, which indicates the reordered indices that
-     * {@link FlexItem#getOrder()} attributes are taken into account.
-     *
-     * @return @return an array which have the reordered indices
-     */
-//    int[] createReorderedIndices(SparseIntArray orderCache) {
-//        int childCount = mFlexContainer.getFlexItemCount();
-//        List<Order> orders = createOrders(childCount);
-//        return sortOrdersIntoReorderedIndices(childCount, orders, orderCache);
-//    }
-
-//    @NonNull
-//    private List<Order> createOrders(int childCount) {
-//        List<Order> orders = new ArrayList<>(childCount);
-//        for (int i = 0; i < childCount; i++) {
-//            View child = mFlexContainer.getFlexItemAt(i);
-//            FlexItem flexItem = (FlexItem) child.getLayoutParams();
-//            Order order = new Order();
-//            order.order = flexItem.getOrder();
-//            order.index = i;
-//            orders.add(order);
-//        }
-//        return orders;
-//    }
-
-    /**
-     * Returns if any of the children's {@link FlexItem#getOrder()} attributes are
-     * changed from the last measurement.
-     *
-     * @return {@code true} if changed from the last measurement, {@code false} otherwise.
-     */
-//    boolean isOrderChangedFromLastMeasurement(SparseIntArray orderCache) {
-//        int childCount = mFlexContainer.getFlexItemCount();
-//        if (orderCache.size() != childCount) {
-//            return true;
-//        }
-//        for (int i = 0; i < childCount; i++) {
-//            View view = mFlexContainer.getFlexItemAt(i);
-//            if (view == null) {
-//                continue;
-//            }
-//            FlexItem flexItem = (FlexItem) view.getLayoutParams();
-//            if (flexItem.getOrder() != orderCache.get(i)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
-//    private int[] sortOrdersIntoReorderedIndices(int childCount, List<Order> orders,
-//            SparseIntArray orderCache) {
-//        Collections.sort(orders);
-//        orderCache.clear();
-//        int[] reorderedIndices = new int[childCount];
-//        int i = 0;
-//        for (Order order : orders) {
-//            reorderedIndices[i] = order.index;
-//            orderCache.append(order.index, order.order);
-//            i++;
-//        }
-//        return reorderedIndices;
-//    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
-     * This method should calculate all the flex lines from the existing flex items.
-     *
-     * @see #calculateFlexLines(FlexLines, int, int, int, int, int, List)
-     */
-    void calculateHorizontalFlexLines(FlexLines result, int widthMeasureSpec,
-                                      int heightMeasureSpec) {
-        fillFlexLines(result, widthMeasureSpec, heightMeasureSpec);
-    }
-
 
     void fillFlexLines(FlexLines result, int widthMeasureSpec,
                        int heightMeasureSpec) {
@@ -239,22 +68,6 @@ class FlexboxHelper {
         List<FlexLine> flexLines = fillFlexLines(mainMeasureSpec, crossMeasureSpec,
                 containerProperties);
         result.mFlexLines = flexLines;
-    }
-
-    /**
-     * Calculate how many flex lines are needed in the flex container.
-     * This method should calculate all the flex lines from the existing flex items.
-     *
-     * @param result            an instance of {@link FlexLines} that is going to contain a
-     *                          list of flex lines and the child state used by
-     *                          {@link View#setMeasuredDimension(int, int)}.
-     * @param widthMeasureSpec  the width measure spec imposed by the flex container
-     * @param heightMeasureSpec the height measure spec imposed by the flex container
-     * @see #calculateFlexLines(FlexLines, int, int, int, int, int, List)
-     */
-    void calculateVerticalFlexLines(FlexLines result, int widthMeasureSpec, int heightMeasureSpec) {
-//        calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, Integer.MAX_VALUE,
-//                0, NO_POSITION, null);
     }
 
     List<FlexLine> fillFlexLines(int containerMainMeasureSpec, int containerCrossMeasureSpec,
@@ -306,126 +119,6 @@ class FlexboxHelper {
         }
         return MeasureRequestUtils.getMeasureSpecSize(containerMainMeasureSpec)
                 < currentFlexLine.mMainSize + item.getOuterMainSize(isMainAxisHorizontal);
-    }
-
-    /**
-     * Compound buttons (ex. {{@link android.widget.CheckBox}}, {@link android.widget.ToggleButton})
-     * have a button drawable with minimum height and width specified for them.
-     * To align the behavior with CSS Flexbox we want to respect these minimum measurement to avoid
-     * these drawables from being cut off during calculation. When the compound button has a minimum
-     * width or height already specified we will not make any change since we assume those were
-     * voluntarily set by the user.
-     *
-     * @param compoundButton the compound button that need to be evaluated
-     */
-//    private void evaluateMinimumSizeForCompoundButton(CompoundButton compoundButton) {
-//        FlexItem flexItem = (FlexItem) compoundButton.getLayoutParams();
-//        int minWidth = flexItem.getMinWidth();
-//        int minHeight = flexItem.getMinHeight();
-//
-//        Drawable drawable = CompoundButtonCompat.getButtonDrawable(compoundButton);
-//        int drawableMinWidth = drawable == null ? 0 : drawable.getMinimumWidth();
-//        int drawableMinHeight = drawable == null ? 0 : drawable.getMinimumHeight();
-//        flexItem.setMinWidth(minWidth == NOT_SET ? drawableMinWidth : minWidth);
-//        flexItem.setMinHeight(minHeight == NOT_SET ? drawableMinHeight : minHeight);
-//    }
-
-    /**
-     * Returns the flexItem's size in the main axis. Either width or height.
-     *
-     * @param flexItem         the flexItem
-     * @param isMainHorizontal is the main axis horizontal
-     * @return the flexItem's size in the main axis
-     */
-    private int getFlexItemSizeMain(FlexItem flexItem, boolean isMainHorizontal) {
-        if (isMainHorizontal) {
-            return flexItem.getWidth();
-        }
-
-        return flexItem.getHeight();
-    }
-
-    /**
-     * Returns the flexItem's start margin in the main axis. Either start or top.
-     * For the backward compatibility for API level < 17, the horizontal margin is returned using
-     * {@link FlexItem#getMarginLeft} (ViewGroup.MarginLayoutParams#getMarginStart isn't available
-     * in API level < 17). Thus this method needs to be used with {@link #getFlexItemMarginEndMain}
-     * not to misuse the margin in RTL.
-     *
-     * @param flexItem         the flexItem
-     * @param isMainHorizontal is the main axis horizontal
-     * @return the flexItem's start margin in the main axis
-     */
-    private int getFlexItemMarginStartMain(FlexItem flexItem, boolean isMainHorizontal) {
-        if (isMainHorizontal) {
-            return flexItem.getMarginLeft();
-        }
-
-        return flexItem.getMarginTop();
-    }
-
-    /**
-     * Returns the flexItem's end margin in the main axis. Either end or bottom.
-     * For the backward compatibility for API level < 17, the horizontal margin is returned using
-     * {@link FlexItem#getMarginRight} (ViewGroup.MarginLayoutParams#getMarginEnd isn't available
-     * in API level < 17). Thus this method needs to be used with
-     * {@link #getFlexItemMarginStartMain} not to misuse the margin in RTL.
-     *
-     * @param flexItem         the flexItem
-     * @param isMainHorizontal is the main axis horizontal
-     * @return the flexItem's end margin in the main axis
-     */
-    private int getFlexItemMarginEndMain(FlexItem flexItem, boolean isMainHorizontal) {
-        if (isMainHorizontal) {
-            return flexItem.getMarginRight();
-        }
-
-        return flexItem.getMarginBottom();
-    }
-
-    /**
-     * Returns the flexItem's start margin in the cross axis. Either start or top.
-     * For the backward compatibility for API level < 17, the horizontal margin is returned using
-     * {@link FlexItem#getMarginLeft} (ViewGroup.MarginLayoutParams#getMarginStart isn't available
-     * in API level < 17). Thus this method needs to be used with
-     * {@link #getFlexItemMarginEndCross} to not to misuse the margin in RTL.
-     *
-     * @param flexItem         the flexItem
-     * @param isMainHorizontal is the main axis horizontal
-     * @return the flexItem's start margin in the cross axis
-     */
-    private int getFlexItemMarginStartCross(FlexItem flexItem, boolean isMainHorizontal) {
-        if (isMainHorizontal) {
-            return flexItem.getMarginTop();
-        }
-
-        return flexItem.getMarginLeft();
-    }
-
-    /**
-     * Returns the flexItem's end margin in the cross axis. Either end or bottom.
-     * For the backward compatibility for API level < 17, the horizontal margin is returned using
-     * {@link FlexItem#getMarginRight} (ViewGroup.MarginLayoutParams#getMarginEnd isn't available
-     * in API level < 17). Thus this method needs to be used with
-     * {@link #getFlexItemMarginStartCross} to not to misuse the margin in RTL.
-     *
-     * @param flexItem         the flexItem
-     * @param isMainHorizontal is the main axis horizontal
-     * @return the flexItem's end margin in the cross axis
-     */
-    private int getFlexItemMarginEndCross(FlexItem flexItem, boolean isMainHorizontal) {
-        if (isMainHorizontal) {
-            return flexItem.getMarginBottom();
-        }
-
-        return flexItem.getMarginRight();
-    }
-
-    /**
-     * @see #determineMainSize(int, int, int)
-     */
-    void determineMainSize(int widthMeasureSpec, int heightMeasureSpec) {
-        determineMainSize(widthMeasureSpec, heightMeasureSpec, null);
     }
 
     int determineMainSize(ContainerProperties properties, FlexLines flexLines) {
@@ -690,10 +383,6 @@ class FlexboxHelper {
         return newFlexLines;
     }
 
-    void stretchViews() {
-//        stretchViews(0);
-    }
-
     void stretchItems() {
         List<FlexLine> flexLines = mFlexContainer.getFlexLinesInternal();
         for (FlexLine flexLine : flexLines) {
@@ -724,133 +413,6 @@ class FlexboxHelper {
             return true;
         }
         return false;
-    }
-
-    void ensureMeasuredSizeCache(int size) {
-        if (mMeasuredSizeCache == null) {
-            mMeasuredSizeCache = new long[Math.max(size, INITIAL_CAPACITY)];
-        } else if (mMeasuredSizeCache.length < size) {
-            int newCapacity = mMeasuredSizeCache.length * 2;
-            newCapacity = Math.max(newCapacity, size);
-            mMeasuredSizeCache = Arrays.copyOf(mMeasuredSizeCache, newCapacity);
-        }
-    }
-
-    void ensureMeasureSpecCache(int size) {
-        if (mMeasureSpecCache == null) {
-            mMeasureSpecCache = new long[Math.max(size, INITIAL_CAPACITY)];
-        } else if (mMeasureSpecCache.length < size) {
-            int newCapacity = mMeasureSpecCache.length * 2;
-            newCapacity = Math.max(newCapacity, size);
-            mMeasureSpecCache = Arrays.copyOf(mMeasureSpecCache, newCapacity);
-        }
-    }
-
-    /**
-     * @param longValue the long value that consists of width and height measure specs
-     * @return the int value which consists from the lower 8 bits
-     * @see #makeCombinedLong(int, int)
-     */
-    int extractLowerInt(long longValue) {
-        return (int) longValue;
-    }
-
-    /**
-     * @param longValue the long value that consists of width and height measure specs
-     * @return the int value which consists from the higher 8 bits
-     * @see #makeCombinedLong(int, int)
-     */
-    int extractHigherInt(long longValue) {
-        return (int) (longValue >> 32);
-    }
-
-    /**
-     * Make a long value from the a width measure spec and a height measure spec.
-     * The first 32 bit is used for the height measure spec and the last 32 bit is used for the
-     * width measure spec.
-     *
-     * @param widthMeasureSpec  the width measure spec to consist the result long value
-     * @param heightMeasureSpec the height measure spec to consist the result long value
-     * @return the combined long value
-     * @see #extractLowerInt(long)
-     * @see #extractHigherInt(long)
-     */
-    @VisibleForTesting
-    long makeCombinedLong(int widthMeasureSpec, int heightMeasureSpec) {
-        // Suppress sign extension for the low bytes
-        return (long) heightMeasureSpec << 32 | (long) widthMeasureSpec & MEASURE_SPEC_WIDTH_MASK;
-    }
-
-    private void updateMeasureCache(int index, int widthMeasureSpec, int heightMeasureSpec,
-                                    NewFlexItem view) {
-        if (mMeasureSpecCache != null) {
-            mMeasureSpecCache[index] = makeCombinedLong(
-                    widthMeasureSpec,
-                    heightMeasureSpec);
-        }
-        if (mMeasuredSizeCache != null) {
-            mMeasuredSizeCache[index] = makeCombinedLong(
-                    view.getMeasuredWidth(),
-                    view.getMeasuredHeight());
-        }
-    }
-
-    void ensureIndexToFlexLine(int size) {
-        if (mIndexToFlexLine == null) {
-            mIndexToFlexLine = new int[Math.max(size, INITIAL_CAPACITY)];
-        } else if (mIndexToFlexLine.length < size) {
-            int newCapacity = mIndexToFlexLine.length * 2;
-            newCapacity = Math.max(newCapacity, size);
-            mIndexToFlexLine = Arrays.copyOf(mIndexToFlexLine, newCapacity);
-        }
-    }
-
-    /**
-     * Clear the from flex lines and the caches from the index passed as an argument.
-     *
-     * @param flexLines    the flex lines to be cleared
-     * @param fromFlexItem the index from which, flex lines are cleared
-     */
-    void clearFlexLines(List<FlexLine> flexLines, int fromFlexItem) {
-        assert mIndexToFlexLine != null;
-        assert mMeasureSpecCache != null;
-
-        int fromFlexLine = mIndexToFlexLine[fromFlexItem];
-        if (fromFlexLine == NO_POSITION) {
-            fromFlexLine = 0;
-        }
-
-        // Deleting from the last to avoid unneeded copy it happens when deleting the middle of the
-        // item in the ArrayList
-        if (flexLines.size() > fromFlexLine) {
-            flexLines.subList(fromFlexLine, flexLines.size()).clear();
-        }
-
-        int fillTo = mIndexToFlexLine.length - 1;
-        if (fromFlexItem > fillTo) {
-            Arrays.fill(mIndexToFlexLine, NO_POSITION);
-        } else {
-            Arrays.fill(mIndexToFlexLine, fromFlexItem, fillTo, NO_POSITION);
-        }
-
-        fillTo = mMeasureSpecCache.length - 1;
-        if (fromFlexItem > fillTo) {
-            Arrays.fill(mMeasureSpecCache, 0);
-        } else {
-            Arrays.fill(mMeasureSpecCache, fromFlexItem, fillTo, 0);
-        }
-    }
-
-    public boolean isCrossAlignmentNeeded(int widthMeasureSpec, int heightMeasureSpec,
-                                    FlexLines flexLinesResult) {
-        if (flexLinesResult.mFlexLines.size() == 1) {
-            return false;
-        }
-        if (isMainAxisHorizontal(mFlexContainer.getFlexDirection())) {
-            return isTight(heightMeasureSpec);
-        } else {
-            return isTight(widthMeasureSpec);
-        }
     }
 
     public void crossAlignment(int containerInnerCrossSize, FlexLines mFlexLinesResult) {
@@ -917,54 +479,12 @@ class FlexboxHelper {
         return containerProps.getExpectedCrossSize();
     }
 
-    /**
-     * A class that is used for calculating the view order which view's indices and order
-     * properties from Flexbox are taken into account.
-     */
-    private static class Order implements Comparable<Order> {
-
-        /**
-         * {@link View}'s index
-         */
-        int index;
-
-        /**
-         * order property in the Flexbox
-         */
-        int order;
-
-        @Override
-        public int compareTo(@NonNull Order another) {
-            if (order != another.order) {
-                return order - another.order;
-            }
-            return index - another.index;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "Order{" +
-                    "order=" + order +
-                    ", index=" + index +
-                    '}';
-        }
-    }
-
     static int getMeasureSpecSize(int spec) {
         return MeasureRequestUtils.getMeasureSpecSize(spec);
     }
 
     static int getMeasureSpecMode(int spec) {
         return MeasureRequestUtils.getMeasureSpecMode(spec);
-    }
-
-    static int makeExactlyMeasureSpec(int size) {
-        return MeasureRequestUtils.generateExactlyMeasureSpec(size);
-    }
-
-    static int makeMeasureSpec(int size, int mode) {
-        return MeasureRequestUtils.generateMeasureSpec(size, mode);
     }
 
     void layout(int left, int top, int right, int bottom, boolean isRtl, int paddingLeft,
