@@ -4,6 +4,8 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
+import static com.xinwendewen.flexbox.MeasureRequestUtils.getMeasureSpecSize;
+import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
 
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,12 +30,11 @@ public class NewFlexItemImpl implements NewFlexItem {
         return view.getVisibility() == View.GONE;
     }
 
-    @Override
-    public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
+    public int getFlexBasis(int containerMainMeasureRequest, boolean isMainHorizontal) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         float flexBasisPercent = flexItem.getFlexBasisPercent();
-        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && containerMainMeasureRequest.isTight()) {
-            return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
+        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && isTight(containerMainMeasureRequest)) {
+            return Math.round(getMeasureSpecSize(containerMainMeasureRequest) * flexBasisPercent);
         } else {
             if (isMainHorizontal) {
                 return flexItem.getWidth();
@@ -41,13 +42,11 @@ public class NewFlexItemImpl implements NewFlexItem {
             return flexItem.getHeight();
         }
     }
-
-    @Override
-    public int getFlexBasis(int containerMainMeasureRequest, boolean isMainHorizontal) {
+    public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
         FlexItem flexItem = (FlexItem) view.getLayoutParams();
         float flexBasisPercent = flexItem.getFlexBasisPercent();
-        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && MeasureRequestUtils.isTight(containerMainMeasureRequest)) {
-            return Math.round(MeasureRequestUtils.getMeasureSpecSize(containerMainMeasureRequest) * flexBasisPercent);
+        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && containerMainMeasureRequest.isTight()) {
+            return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
         } else {
             if (isMainHorizontal) {
                 return flexItem.getWidth();
@@ -154,6 +153,23 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
+    public void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
+                        MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
+                        boolean isMainAxisHorizontal) {
+        int itemFlexBasis = getFlexBasis(mainAxisMeasureRequest, isMainAxisHorizontal);
+        int mainMeasureSpec = generateMeasureSpec(mainAxisMeasureRequest.getMeasureSpec(),
+                occupiedMainSize + mainAxisMargin(isMainAxisHorizontal), itemFlexBasis);
+        int intentCrossSize = getIntentCrossSize(isMainAxisHorizontal);
+        int crossMeasureSpec = generateMeasureSpec(crossAxisMeasureRequest.getMeasureSpec(),
+                occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal), intentCrossSize);
+        if (isMainAxisHorizontal) {
+            view.measure(mainMeasureSpec, crossMeasureSpec);
+        } else {
+            view.measure(crossMeasureSpec, mainMeasureSpec);
+        }
+    }
+
+    @Override
     public void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize,
                                      int occupiedCrossSize) {
         int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
@@ -163,6 +179,23 @@ public class NewFlexItemImpl implements NewFlexItem {
                 occupiedCrossSize + crossAxisMargin(containerProps.isMainAxisHorizontal),
                 intentCrossSize);
         if (containerProps.isMainAxisHorizontal) {
+            view.measure(mainMeasureSpec, crossMeasureSpec);
+        } else {
+            view.measure(crossMeasureSpec, mainMeasureSpec);
+        }
+    }
+
+    @Override
+    public void fixedMainSizeMeasure(int roundedNewMainSize,
+                                     MeasureRequest crossAxisMeasureRequest,
+                                     int occupiedCrossSize, boolean isMainAxisHorizontal) {
+        int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
+        int intentCrossSize = getIntentCrossSize(isMainAxisHorizontal);
+        int containerCrossMeasureSpec = crossAxisMeasureRequest.getMeasureSpec();
+        int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
+                occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal),
+                intentCrossSize);
+        if (isMainAxisHorizontal) {
             view.measure(mainMeasureSpec, crossMeasureSpec);
         } else {
             view.measure(crossMeasureSpec, mainMeasureSpec);

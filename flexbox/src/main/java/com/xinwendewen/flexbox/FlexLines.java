@@ -9,11 +9,8 @@ import java.util.List;
 public class FlexLines {
     public List<FlexLine> mFlexLines;
 
-    public int mChildState;
-
     public void reset() {
         mFlexLines = null;
-        mChildState = 0;
     }
 
     public int getLargestMainSize() {

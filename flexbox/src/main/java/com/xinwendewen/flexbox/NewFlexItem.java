@@ -5,9 +5,6 @@ import com.google.android.flexbox.FlexItem;
 public interface NewFlexItem {
     boolean isGone();
 
-    int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal);
-    int getFlexBasis(int containerMainMeasureRequest, boolean isMainHorizontal);
-
     int getMeasuredWidth();
     int getMeasuredHeight();
     void measure(MeasureRequest widthMeasureRequest, MeasureRequest heightMeasureRequest);
@@ -31,9 +28,16 @@ public interface NewFlexItem {
     int getMarginStart();
     int getMarginEnd();
 
-    void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec, int occupiedCrossSize, boolean isMainAxisHorizontal);
+    void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec,
+                 int occupiedCrossSize, boolean isMainAxisHorizontal);
+    void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
+                 MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
+                 boolean isMainAxisHorizontal);
 
     void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize, int mSumCrossSizeBefore);
+    void fixedMainSizeMeasure(int roundedNewMainSize,
+                                     MeasureRequest crossAxisMeasureRequest,
+                                     int occupiedCrossSize, boolean isMainAxisHorizontal);
     void clampByMinMaxCrossSize();
 
     int getOuterMainSize(boolean isMainAxisHorizontal);
