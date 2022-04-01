@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-package com.google.android.flexbox;
+package com.xinwendewen.flexbox;
 
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 
-import com.xinwendewen.flexbox.NewFlexItem;
+import com.google.android.flexbox.FlexItem;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Holds properties related to a single flex line. This class is not expected to be changed outside
- * of the {@link FlexboxLayout}, thus only exposing the getter methods that may be useful for
- * other classes using the {@link FlexboxLayout}.
- */
 public class FlexLine {
-
-    FlexLine() {
+    public FlexLine() {
     }
 
-    FlexLine(int containerPaddings, int firstIndex) {
+    public FlexLine(int containerPaddings) {
         mMainSize = containerPaddings;
-        mFirstIndex = firstIndex;
     }
 
     public static FlexLine createDummyWithCrossSize(int crossSize) {
@@ -48,19 +41,16 @@ public class FlexLine {
         return flexLine;
     }
 
-    NewFlexItem getItemAt(int index) {
+    public NewFlexItem getItemAt(int index) {
        return items.get(index);
     }
 
-    List<NewFlexItem> items = new ArrayList<>();
+    public List<NewFlexItem> items = new ArrayList<>();
 
     // TODO: 2022/3/16 remove index , move isMainHorizontal to constructor
-    public void addItem(NewFlexItem item, int index, boolean isMainAxisHorizontal) {
+    public void addItem(NewFlexItem item, boolean isMainAxisHorizontal) {
         items.add(item);
         mItemCount++;
-        if (item.getAlignSelf() == AlignItems.STRETCH) {
-            mIndicesAlignSelfStretch.add(index);
-        }
         mAnyItemsHaveFlexGrow |= item.getFlexGrow() != FLEX_GROW_DEFAULT;
         mAnyItemsHaveFlexShrink |= item.getFlexShrink() != FLEX_SHRINK_NOT_SET;
         mMainSize += item.getOuterMainSize(isMainAxisHorizontal);
@@ -69,76 +59,35 @@ public class FlexLine {
         mCrossSize = Math.max(mCrossSize, item.getOuterCrossSize(isMainAxisHorizontal));
     }
 
-    int mLeft = Integer.MAX_VALUE;
+    public int mMainSize; // TODO: 2022/3/16 flexline should not include container's paddings
 
-    int mTop = Integer.MAX_VALUE;
+    public int mCrossSize;
 
-    int mRight = Integer.MIN_VALUE;
-
-    int mBottom = Integer.MIN_VALUE;
-
-    /** @see #getMainSize() */
-    int mMainSize; // TODO: 2022/3/16 flexline should not include container's paddings
-
-    /**
-     * The sum of the lengths of dividers along the main axis. This value should be lower
-     * than the value of {@link #mMainSize}.
-     */
-    int mDividerLengthInMainSize;
-
-    /** @see #getCrossSize() */
-    int mCrossSize;
-
-    /** @see #getItemCount() */
-    int mItemCount;
+    public int mItemCount;
 
     /** Holds the count of the views whose visibilities are gone */
     int mGoneItemCount;
 
-    /** @see #getTotalFlexGrow() */
-    float mTotalFlexGrow;
+    public float mTotalFlexGrow;
 
-    /** @see #getTotalFlexShrink() */
-    float mTotalFlexShrink;
-
-    /**
-     * The largest value of the individual child's baseline (obtained by View#getBaseline()
-     * if the {@link FlexContainer#getAlignItems()} value is not {@link AlignItems#BASELINE}
-     * or the flex direction is vertical, this value is not used.
-     * If the alignment direction is from the bottom to top,
-     * (e.g. flexWrap == WRAP_REVERSE and flexDirection == ROW)
-     * store this value from the distance from the bottom of the view minus baseline.
-     * (Calculated as view.getMeasuredHeight() - view.getBaseline - LayoutParams.bottomMargin)
-     */
-    int mMaxBaseline;
+    public float mTotalFlexShrink;
 
     /**
      * The sum of the cross size used before this flex line.
      */
-    int mSumCrossSizeBefore;
-
-    /**
-     * Store the indices of the children views whose alignSelf property is stretch.
-     * The stored indices are the absolute indices including all children in the Flexbox,
-     * not the relative indices in this flex line.
-     */
-    List<Integer> mIndicesAlignSelfStretch = new ArrayList<>();
-
-    int mFirstIndex;
-
-    int mLastIndex;
+    public int mSumCrossSizeBefore;
 
     /**
      * Set to true if any {@link FlexItem}s in this line have {@link FlexItem#getFlexGrow()}
      * attributes set (have the value other than {@link FlexItem#FLEX_GROW_DEFAULT})
      */
-    boolean mAnyItemsHaveFlexGrow;
+    public boolean mAnyItemsHaveFlexGrow;
 
     /**
      * Set to true if any {@link FlexItem}s in this line have {@link FlexItem#getFlexShrink()}
      * attributes set (have the value other than {@link FlexItem#FLEX_SHRINK_NOT_SET})
      */
-    boolean mAnyItemsHaveFlexShrink;
+    public boolean mAnyItemsHaveFlexShrink;
 
     /**
      * @return the size of the flex line in pixels along the main axis of the flex container.
@@ -169,48 +118,6 @@ public class FlexLine {
     @SuppressWarnings("WeakerAccess")
     public int getItemCountNotGone() {
         return mItemCount - mGoneItemCount;
-    }
-
-    /**
-     * @return the sum of the flexGrow properties of the children included in this flex line
-     */
-    @SuppressWarnings("WeakerAccess")
-    public float getTotalFlexGrow() {
-        return mTotalFlexGrow;
-    }
-
-    /**
-     * @return the sum of the flexShrink properties of the children included in this flex line
-     */
-    @SuppressWarnings("WeakerAccess")
-    public float getTotalFlexShrink() {
-        return mTotalFlexShrink;
-    }
-
-    /**
-     * @return the first view's index included in this flex line.
-     */
-    public int getFirstIndex() {
-        return mFirstIndex;
-    }
-
-    /**
-     * Updates the position of the flex line from the contained view.
-     *
-     * @param view             the view contained in this flex line
-     * @param leftDecoration   the length of the decoration on the left of the view
-     * @param topDecoration    the length of the decoration on the top of the view
-     * @param rightDecoration  the length of the decoration on the right of the view
-     * @param bottomDecoration the length of the decoration on the bottom of the view
-     */
-    void updatePositionFromView(NewFlexItem view, int leftDecoration, int topDecoration,
-                                int rightDecoration, int bottomDecoration) {
-        FlexItem flexItem = (FlexItem) view.getLayoutParams();
-        mLeft = Math.min(mLeft, view.getLeft() - flexItem.getMarginLeft() - leftDecoration);
-        mTop = Math.min(mTop, view.getTop() - flexItem.getMarginTop() - topDecoration);
-        mRight = Math.max(mRight, view.getRight() + flexItem.getMarginRight() + rightDecoration);
-        mBottom = Math
-                .max(mBottom, view.getBottom() + flexItem.getMarginBottom() + bottomDecoration);
     }
 
     public boolean isFrozen() {

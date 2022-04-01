@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 
 import com.xinwendewen.flexbox.ContainerProperties;
+import com.xinwendewen.flexbox.FlexLine;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.NewFlexItemImpl;
 
@@ -368,35 +369,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
                 mFlexLinesResult);
         mFlexboxHelper.calculateFlexibleLength(mainSize, widthMeasureSpec, heightMeasureSpec);
 
-        // TODO: Consider the case any individual child's mAlignSelf is set to ALIGN_SELF_BASELINE
-        if (mAlignItems == AlignItems.BASELINE) {
-            for (FlexLine flexLine : mFlexLines) {
-                // The largest height value that also take the baseline shift into account
-                int largestHeightInLine = Integer.MIN_VALUE;
-                for (int i = 0; i < flexLine.mItemCount; i++) {
-                    int viewIndex = flexLine.mFirstIndex + i;
-                    View child = getReorderedChildAt(viewIndex);
-                    if (child == null || child.getVisibility() == View.GONE) {
-                        continue;
-                    }
-                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
-                    if (mFlexWrap != FlexWrap.WRAP_REVERSE) {
-                        int marginTop = flexLine.mMaxBaseline - child.getBaseline();
-                        marginTop = Math.max(marginTop, lp.topMargin);
-                        largestHeightInLine = Math.max(largestHeightInLine,
-                                child.getMeasuredHeight() + marginTop + lp.bottomMargin);
-                    } else {
-                        int marginBottom = flexLine.mMaxBaseline - child.getMeasuredHeight() +
-                                child.getBaseline();
-                        marginBottom = Math.max(marginBottom, lp.bottomMargin);
-                        largestHeightInLine = Math.max(largestHeightInLine,
-                                child.getMeasuredHeight() + lp.topMargin + marginBottom);
-                    }
-                }
-                flexLine.mCrossSize = largestHeightInLine;
-            }
-        }
-
         if (containerProps.requireFixedCrossSize()) {
            if (mFlexLinesResult.isSingleLine()) {
                 mFlexLinesResult.mFlexLines.get(0).mCrossSize =
@@ -636,535 +608,50 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 //        }
     }
 
-    /**
-     * Sub method for {@link #onLayout(boolean, int, int, int, int)} when the
-     * {@link #mFlexDirection} is either {@link FlexDirection#ROW} or
-     * {@link FlexDirection#ROW_REVERSE}.
-     *
-     * @param isRtl  {@code true} if the horizontal layout direction is right to left, {@code
-     *               false} otherwise.
-     * @param left   the left position of this View
-     * @param top    the top position of this View
-     * @param right  the right position of this View
-     * @param bottom the bottom position of this View
-     * @see #getFlexWrap()
-     * @see #setFlexWrap(int)
-     * @see #getJustifyContent()
-     * @see #setJustifyContent(int)
-     * @see #getAlignItems()
-     * @see #setAlignItems(int)
-     * @see LayoutParams#mAlignSelf
-     */
-    private void layoutHorizontal(boolean isRtl, int left, int top, int right, int bottom) {
-        int paddingLeft = getPaddingLeft();
-        int paddingRight = getPaddingRight();
-        // Use float to reduce the round error that may happen in when justifyContent ==
-        // SPACE_BETWEEN or SPACE_AROUND
-        float childLeft;
-
-        int height = bottom - top;
-        int width = right - left;
-        // childBottom is used if the mFlexWrap is WRAP_REVERSE otherwise
-        // childTop is used to align the vertical position of the children views.
-        int childBottom = height - getPaddingBottom();
-        int childTop = getPaddingTop();
-
-        // Used only for RTL layout
-        // Use float to reduce the round error that may happen in when justifyContent ==
-        // SPACE_BETWEEN or SPACE_AROUND
-        float childRight;
-        for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-            FlexLine flexLine = mFlexLines.get(i);
-            if (hasDividerBeforeFlexLine(i)) {
-                childBottom -= mDividerHorizontalHeight;
-                childTop += mDividerHorizontalHeight;
-            }
-            float spaceBetweenItem = 0f;
-            switch (mJustifyContent) {
-                case JustifyContent.FLEX_START:
-                    childLeft = paddingLeft;
-                    childRight = width - paddingRight;
-                    break;
-                case JustifyContent.FLEX_END:
-                    childLeft = width - flexLine.mMainSize + paddingRight;
-                    childRight = flexLine.mMainSize - paddingLeft;
-                    break;
-                case JustifyContent.CENTER:
-                    childLeft = paddingLeft + (width - flexLine.mMainSize) / 2f;
-                    childRight = width - paddingRight - (width - flexLine.mMainSize) / 2f;
-                    break;
-                case JustifyContent.SPACE_AROUND: {
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    if (visibleCount != 0) {
-                        spaceBetweenItem = (width - flexLine.mMainSize)
-                                / (float) visibleCount;
-                    }
-                    childLeft = paddingLeft + spaceBetweenItem / 2f;
-                    childRight = width - paddingRight - spaceBetweenItem / 2f;
-                    break;
-                }
-                case JustifyContent.SPACE_BETWEEN: {
-                    childLeft = paddingLeft;
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    float denominator = visibleCount != 1 ? visibleCount - 1 : 1f;
-                    spaceBetweenItem = (width - flexLine.mMainSize) / denominator;
-                    childRight = width - paddingRight;
-                    break;
-                }
-                case JustifyContent.SPACE_EVENLY: {
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    if (visibleCount != 0) {
-                        spaceBetweenItem = (width - flexLine.mMainSize)
-                                / (float) (visibleCount + 1);
-                    }
-                    childLeft = paddingLeft + spaceBetweenItem;
-                    childRight = width - paddingRight - spaceBetweenItem;
-                    break;
-                }
-                default:
-                    throw new IllegalStateException(
-                            "Invalid justifyContent is set: " + mJustifyContent);
-            }
-            spaceBetweenItem = Math.max(spaceBetweenItem, 0);
-
-            for (int j = 0; j < flexLine.mItemCount; j++) {
-                int index = flexLine.mFirstIndex + j;
-                NewFlexItem child = NewFlexItemImpl.wrap(getReorderedChildAt(index));
-                if (child == null || child.isGone()) {
-                    continue;
-                }
-                LayoutParams lp = ((LayoutParams) child.getLayoutParams());
-                childLeft += lp.leftMargin;
-                childRight -= lp.rightMargin;
-                int beforeDividerLength = 0;
-                int endDividerLength = 0;
-                if (hasDividerBeforeChildAtAlongMainAxis(index, j)) {
-                    beforeDividerLength = mDividerVerticalWidth;
-                    childLeft += beforeDividerLength;
-                    childRight -= beforeDividerLength;
-                }
-                if (j == flexLine.mItemCount - 1 && (mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
-                    endDividerLength = mDividerVerticalWidth;
-                }
-
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    if (isRtl) {
-                        mFlexboxHelper.layoutSingleChildHorizontal(child, flexLine,
-                                Math.round(childRight) - child.getMeasuredWidth(),
-                                childBottom - child.getMeasuredHeight(), Math.round(childRight),
-                                childBottom);
-                    } else {
-                        mFlexboxHelper.layoutSingleChildHorizontal(child, flexLine,
-                                Math.round(childLeft), childBottom - child.getMeasuredHeight(),
-                                Math.round(childLeft) + child.getMeasuredWidth(), childBottom);
-                    }
-                } else {
-                    if (isRtl) {
-                        mFlexboxHelper.layoutSingleChildHorizontal(child, flexLine,
-                                Math.round(childRight) - child.getMeasuredWidth(),
-                                childTop, Math.round(childRight),
-                                childTop + child.getMeasuredHeight());
-                    } else {
-                        mFlexboxHelper.layoutSingleChildHorizontal(child, flexLine,
-                                Math.round(childLeft), childTop,
-                                Math.round(childLeft) + child.getMeasuredWidth(),
-                                childTop + child.getMeasuredHeight());
-                    }
-                }
-                childLeft += child.getMeasuredWidth() + spaceBetweenItem + lp.rightMargin;
-                childRight -= child.getMeasuredWidth() + spaceBetweenItem + lp.leftMargin;
-
-                if (isRtl) {
-                    flexLine.updatePositionFromView(child, /*leftDecoration*/endDividerLength, 0,
-                            /*rightDecoration*/ beforeDividerLength, 0);
-                } else {
-                    flexLine.updatePositionFromView(child, /*leftDecoration*/beforeDividerLength, 0,
-                            /*rightDecoration*/ endDividerLength, 0);
-                }
-            }
-            childTop += flexLine.mCrossSize;
-            childBottom -= flexLine.mCrossSize;
-        }
-    }
-
-    /**
-     * Sub method for {@link #onLayout(boolean, int, int, int, int)} when the
-     * {@link #mFlexDirection} is either {@link FlexDirection#COLUMN} or
-     * {@link FlexDirection#COLUMN_REVERSE}.
-     *
-     * @param isRtl           {@code true} if the horizontal layout direction is right to left,
-     *                        {@code false}
-     *                        otherwise
-     * @param fromBottomToTop {@code true} if the layout direction is bottom to top, {@code false}
-     *                        otherwise
-     * @param left            the left position of this View
-     * @param top             the top position of this View
-     * @param right           the right position of this View
-     * @param bottom          the bottom position of this View
-     * @see #getFlexWrap()
-     * @see #setFlexWrap(int)
-     * @see #getJustifyContent()
-     * @see #setJustifyContent(int)
-     * @see #getAlignItems()
-     * @see #setAlignItems(int)
-     * @see LayoutParams#mAlignSelf
-     */
-    private void layoutVertical(boolean isRtl, boolean fromBottomToTop, int left, int top,
-            int right, int bottom) {
-        int paddingTop = getPaddingTop();
-        int paddingBottom = getPaddingBottom();
-
-        int paddingRight = getPaddingRight();
-        int childLeft = getPaddingLeft();
-
-        int width = right - left;
-        int height = bottom - top;
-        // childRight is used if the mFlexWrap is WRAP_REVERSE otherwise
-        // childLeft is used to align the horizontal position of the children views.
-        int childRight = width - paddingRight;
-
-        // Use float to reduce the round error that may happen in when justifyContent ==
-        // SPACE_BETWEEN or SPACE_AROUND
-        float childTop;
-
-        // Used only for if the direction is from bottom to top
-        float childBottom;
-
-        for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-            FlexLine flexLine = mFlexLines.get(i);
-            if (hasDividerBeforeFlexLine(i)) {
-                childLeft += mDividerVerticalWidth;
-                childRight -= mDividerVerticalWidth;
-            }
-            float spaceBetweenItem = 0f;
-            switch (mJustifyContent) {
-                case JustifyContent.FLEX_START:
-                    childTop = paddingTop;
-                    childBottom = height - paddingBottom;
-                    break;
-                case JustifyContent.FLEX_END:
-                    childTop = height - flexLine.mMainSize + paddingBottom;
-                    childBottom = flexLine.mMainSize - paddingTop;
-                    break;
-                case JustifyContent.CENTER:
-                    childTop = paddingTop + (height - flexLine.mMainSize) / 2f;
-                    childBottom = height - paddingBottom - (height - flexLine.mMainSize) / 2f;
-                    break;
-                case JustifyContent.SPACE_AROUND: {
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    if (visibleCount != 0) {
-                        spaceBetweenItem = (height - flexLine.mMainSize)
-                                / (float) visibleCount;
-                    }
-                    childTop = paddingTop + spaceBetweenItem / 2f;
-                    childBottom = height - paddingBottom - spaceBetweenItem / 2f;
-                    break;
-                }
-                case JustifyContent.SPACE_BETWEEN: {
-                    childTop = paddingTop;
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    float denominator = visibleCount != 1 ? visibleCount - 1 : 1f;
-                    spaceBetweenItem = (height - flexLine.mMainSize) / denominator;
-                    childBottom = height - paddingBottom;
-                    break;
-                }
-                case JustifyContent.SPACE_EVENLY: {
-                    int visibleCount = flexLine.getItemCountNotGone();
-                    if (visibleCount != 0) {
-                        spaceBetweenItem = (height - flexLine.mMainSize)
-                                / (float) (visibleCount + 1);
-                    }
-                    childTop = paddingTop + spaceBetweenItem;
-                    childBottom = height - paddingBottom - spaceBetweenItem;
-                    break;
-                }
-                default:
-                    throw new IllegalStateException(
-                            "Invalid justifyContent is set: " + mJustifyContent);
-            }
-            spaceBetweenItem = Math.max(spaceBetweenItem, 0);
-
-            for (int j = 0; j < flexLine.mItemCount; j++) {
-                int index = flexLine.mFirstIndex + j;
-                NewFlexItem child = NewFlexItemImpl.wrap(getReorderedChildAt(index));
-                if (child == null || child.isGone()) {
-                    continue;
-                }
-                LayoutParams lp = ((LayoutParams) child.getLayoutParams());
-                childTop += lp.topMargin;
-                childBottom -= lp.bottomMargin;
-                int beforeDividerLength = 0;
-                int endDividerLength = 0;
-                if (hasDividerBeforeChildAtAlongMainAxis(index, j)) {
-                    beforeDividerLength = mDividerHorizontalHeight;
-                    childTop += beforeDividerLength;
-                    childBottom -= beforeDividerLength;
-                }
-                if (j == flexLine.mItemCount - 1
-                        && (mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
-                    endDividerLength = mDividerHorizontalHeight;
-                }
-                if (isRtl) {
-                    if (fromBottomToTop) {
-                        mFlexboxHelper.layoutSingleChildVertical(child, flexLine, true,
-                                childRight - child.getMeasuredWidth(),
-                                Math.round(childBottom) - child.getMeasuredHeight(), childRight,
-                                Math.round(childBottom));
-                    } else {
-                        mFlexboxHelper.layoutSingleChildVertical(child, flexLine, true,
-                                childRight - child.getMeasuredWidth(), Math.round(childTop),
-                                childRight, Math.round(childTop) + child.getMeasuredHeight());
-                    }
-                } else {
-                    if (fromBottomToTop) {
-                        mFlexboxHelper.layoutSingleChildVertical(child, flexLine, false,
-                                childLeft, Math.round(childBottom) - child.getMeasuredHeight(),
-                                childLeft + child.getMeasuredWidth(), Math.round(childBottom));
-                    } else {
-                        mFlexboxHelper.layoutSingleChildVertical(child, flexLine, false,
-                                childLeft, Math.round(childTop),
-                                childLeft + child.getMeasuredWidth(),
-                                Math.round(childTop) + child.getMeasuredHeight());
-                    }
-                }
-                childTop += child.getMeasuredHeight() + spaceBetweenItem + lp.bottomMargin;
-                childBottom -= child.getMeasuredHeight() + spaceBetweenItem + lp.topMargin;
-
-                if (fromBottomToTop) {
-                    flexLine.updatePositionFromView(child, 0, /*topDecoration*/endDividerLength, 0,
-                            /*bottomDecoration*/ beforeDividerLength);
-                } else {
-                    flexLine.updatePositionFromView(child, 0, /*topDecoration*/beforeDividerLength,
-                            0, /*bottomDecoration*/endDividerLength);
-                }
-            }
-            childLeft += flexLine.mCrossSize;
-            childRight -= flexLine.mCrossSize;
-        }
-    }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (mDividerDrawableVertical == null && mDividerDrawableHorizontal == null) {
-            return;
-        }
-        if (mShowDividerHorizontal == SHOW_DIVIDER_NONE
-                && mShowDividerVertical == SHOW_DIVIDER_NONE) {
-            return;
-        }
-
-        int layoutDirection = ViewCompat.getLayoutDirection(this);
-        boolean isRtl;
-        boolean fromBottomToTop = false;
-        switch (mFlexDirection) {
-            case ROW:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    fromBottomToTop = true;
-                }
-                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
-                break;
-            case ROW_REVERSE:
-                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    fromBottomToTop = true;
-                }
-                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
-                break;
-            case COLUMN:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    isRtl = !isRtl;
-                }
-                drawDividersVertical(canvas, isRtl, false);
-                break;
-            case FlexDirection.COLUMN_REVERSE:
-                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-                    isRtl = !isRtl;
-                }
-                drawDividersVertical(canvas, isRtl, true);
-                break;
-        }
-    }
-
-    /**
-     * Sub method for {@link #onDraw(Canvas)} when the main axis direction is horizontal
-     * ({@link #mFlexDirection} is either of {@link FlexDirection#ROW} or
-     * {@link FlexDirection#ROW_REVERSE}.
-     *
-     * @param canvas          the canvas on which the background will be drawn
-     * @param isRtl           {@code true} when the horizontal layout direction is right to left,
-     *                        {@code false} otherwise
-     * @param fromBottomToTop {@code true} when the vertical layout direction is bottom to top,
-     *                        {@code false} otherwise
-     */
-    private void drawDividersHorizontal(Canvas canvas, boolean isRtl, boolean fromBottomToTop) {
-        int paddingLeft = getPaddingLeft();
-        int paddingRight = getPaddingRight();
-        int horizontalDividerLength = Math.max(0, getWidth() - paddingRight - paddingLeft);
-        for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-            FlexLine flexLine = mFlexLines.get(i);
-            for (int j = 0; j < flexLine.mItemCount; j++) {
-                int viewIndex = flexLine.mFirstIndex + j;
-                View view = getReorderedChildAt(viewIndex);
-                if (view == null || view.getVisibility() == View.GONE) {
-                    continue;
-                }
-                LayoutParams lp = (LayoutParams) view.getLayoutParams();
-
-                // Judge if the beginning or middle divider is needed
-                if (hasDividerBeforeChildAtAlongMainAxis(viewIndex, j)) {
-                    int dividerLeft;
-                    if (isRtl) {
-                        dividerLeft = view.getRight() + lp.rightMargin;
-                    } else {
-                        dividerLeft = view.getLeft() - lp.leftMargin - mDividerVerticalWidth;
-                    }
-
-                    drawVerticalDivider(canvas, dividerLeft, flexLine.mTop, flexLine.mCrossSize);
-                }
-
-                // Judge if the end divider is needed
-                if (j == flexLine.mItemCount - 1) {
-                    if ((mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
-                        int dividerLeft;
-                        if (isRtl) {
-                            dividerLeft = view.getLeft() - lp.leftMargin - mDividerVerticalWidth;
-                        } else {
-                            dividerLeft = view.getRight() + lp.rightMargin;
-                        }
-
-                        drawVerticalDivider(canvas, dividerLeft, flexLine.mTop,
-                                flexLine.mCrossSize);
-                    }
-                }
-            }
-
-            // Judge if the beginning or middle dividers are needed before the flex line
-            if (hasDividerBeforeFlexLine(i)) {
-                int horizontalDividerTop;
-                if (fromBottomToTop) {
-                    horizontalDividerTop = flexLine.mBottom;
-                } else {
-                    horizontalDividerTop = flexLine.mTop - mDividerHorizontalHeight;
-                }
-                drawHorizontalDivider(canvas, paddingLeft, horizontalDividerTop,
-                        horizontalDividerLength);
-            }
-            // Judge if the end divider is needed before the flex line
-            if (hasEndDividerAfterFlexLine(i)) {
-                if ((mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
-                    int horizontalDividerTop;
-                    if (fromBottomToTop) {
-                        horizontalDividerTop = flexLine.mTop - mDividerHorizontalHeight;
-                    } else {
-                        horizontalDividerTop = flexLine.mBottom;
-                    }
-                    drawHorizontalDivider(canvas, paddingLeft, horizontalDividerTop,
-                            horizontalDividerLength);
-                }
-            }
-        }
-    }
-
-    /**
-     * Sub method for {@link #onDraw(Canvas)} when the main axis direction is vertical
-     * ({@link #mFlexDirection} is either of {@link FlexDirection#COLUMN} or
-     * {@link FlexDirection#COLUMN_REVERSE}.
-     *
-     * @param canvas          the canvas on which the background will be drawn
-     * @param isRtl           {@code true} when the horizontal layout direction is right to left,
-     *                        {@code false} otherwise
-     * @param fromBottomToTop {@code true} when the vertical layout direction is bottom to top,
-     *                        {@code false} otherwise
-     */
-    private void drawDividersVertical(Canvas canvas, boolean isRtl, boolean fromBottomToTop) {
-        int paddingTop = getPaddingTop();
-        int paddingBottom = getPaddingBottom();
-        int verticalDividerLength = Math.max(0, getHeight() - paddingBottom - paddingTop);
-        for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-            FlexLine flexLine = mFlexLines.get(i);
-
-            // Draw horizontal dividers if needed
-            for (int j = 0; j < flexLine.mItemCount; j++) {
-                int viewIndex = flexLine.mFirstIndex + j;
-                View view = getReorderedChildAt(viewIndex);
-                if (view == null || view.getVisibility() == View.GONE) {
-                    continue;
-                }
-                LayoutParams lp = (LayoutParams) view.getLayoutParams();
-
-                // Judge if the beginning or middle divider is needed
-                if (hasDividerBeforeChildAtAlongMainAxis(viewIndex, j)) {
-                    int dividerTop;
-                    if (fromBottomToTop) {
-                        dividerTop = view.getBottom() + lp.bottomMargin;
-                    } else {
-                        dividerTop = view.getTop() - lp.topMargin - mDividerHorizontalHeight;
-                    }
-
-                    drawHorizontalDivider(canvas, flexLine.mLeft, dividerTop, flexLine.mCrossSize);
-                }
-
-                // Judge if the end divider is needed
-                if (j == flexLine.mItemCount - 1) {
-                    if ((mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
-                        int dividerTop;
-                        if (fromBottomToTop) {
-                            dividerTop = view.getTop() - lp.topMargin - mDividerHorizontalHeight;
-                        } else {
-                            dividerTop = view.getBottom() + lp.bottomMargin;
-                        }
-
-                        drawHorizontalDivider(canvas, flexLine.mLeft, dividerTop,
-                                flexLine.mCrossSize);
-                    }
-                }
-            }
-
-            // Judge if the beginning or middle dividers are needed before the flex line
-            if (hasDividerBeforeFlexLine(i)) {
-                int verticalDividerLeft;
-                if (isRtl) {
-                    verticalDividerLeft = flexLine.mRight;
-                } else {
-                    verticalDividerLeft = flexLine.mLeft - mDividerVerticalWidth;
-                }
-                drawVerticalDivider(canvas, verticalDividerLeft, paddingTop,
-                        verticalDividerLength);
-            }
-            if (hasEndDividerAfterFlexLine(i)) {
-                if ((mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
-                    int verticalDividerLeft;
-                    if (isRtl) {
-                        verticalDividerLeft = flexLine.mLeft - mDividerVerticalWidth;
-                    } else {
-                        verticalDividerLeft = flexLine.mRight;
-                    }
-                    drawVerticalDivider(canvas, verticalDividerLeft, paddingTop,
-                            verticalDividerLength);
-                }
-            }
-        }
-    }
-
-    private void drawVerticalDivider(Canvas canvas, int left, int top, int length) {
-        if (mDividerDrawableVertical == null) {
-            return;
-        }
-        mDividerDrawableVertical.setBounds(left, top, left + mDividerVerticalWidth, top + length);
-        mDividerDrawableVertical.draw(canvas);
-    }
-
-    private void drawHorizontalDivider(Canvas canvas, int left, int top, int length) {
-        if (mDividerDrawableHorizontal == null) {
-            return;
-        }
-        mDividerDrawableHorizontal
-                .setBounds(left, top, left + length, top + mDividerHorizontalHeight);
-        mDividerDrawableHorizontal.draw(canvas);
+//        if (mDividerDrawableVertical == null && mDividerDrawableHorizontal == null) {
+//            return;
+//        }
+//        if (mShowDividerHorizontal == SHOW_DIVIDER_NONE
+//                && mShowDividerVertical == SHOW_DIVIDER_NONE) {
+//            return;
+//        }
+//
+//        int layoutDirection = ViewCompat.getLayoutDirection(this);
+//        boolean isRtl;
+//        boolean fromBottomToTop = false;
+//        switch (mFlexDirection) {
+//            case ROW:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    fromBottomToTop = true;
+//                }
+//                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
+//                break;
+//            case ROW_REVERSE:
+//                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    fromBottomToTop = true;
+//                }
+//                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
+//                break;
+//            case COLUMN:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    isRtl = !isRtl;
+//                }
+//                drawDividersVertical(canvas, isRtl, false);
+//                break;
+//            case FlexDirection.COLUMN_REVERSE:
+//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
+//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
+//                    isRtl = !isRtl;
+//                }
+//                drawDividersVertical(canvas, isRtl, true);
+//                break;
+//        }
     }
 
     @Override
@@ -1323,12 +810,12 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (isMainAxisDirectionHorizontal()) {
             if ((mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
                 flexLine.mMainSize += mDividerVerticalWidth;
-                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
+//                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
             }
         } else {
             if ((mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
                 flexLine.mMainSize += mDividerHorizontalHeight;
-                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
+//                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
             }
         }
     }
@@ -1349,10 +836,10 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
             if (isMainAxisDirectionHorizontal()) {
                 flexLine.mMainSize += mDividerVerticalWidth;
-                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
+//                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
             } else {
                 flexLine.mMainSize += mDividerHorizontalHeight;
-                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
+//                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
             }
         }
     }

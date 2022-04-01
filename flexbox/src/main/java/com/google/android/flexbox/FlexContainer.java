@@ -18,6 +18,7 @@ package com.google.android.flexbox;
 
 import android.view.View;
 
+import com.xinwendewen.flexbox.FlexLine;
 import com.xinwendewen.flexbox.NewFlexItem;
 import com.xinwendewen.flexbox.NewFlexItemImpl;
 

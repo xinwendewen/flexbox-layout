@@ -18,6 +18,7 @@ package com.google.android.flexbox
 
 import android.view.View
 import android.view.ViewGroup
+import com.xinwendewen.flexbox.FlexLine
 
 /**
  * Fake implementation of [FlexContainer].
