@@ -55,9 +55,6 @@ public interface FlexContainer {
      * @see FlexItem#getOrder()
      */
     View getReorderedFlexItemAt(int index);
-    default NewFlexItem getReorderedNewFlexItemAt(int index) {
-        return NewFlexItemImpl.wrap(getReorderedFlexItemAt(index));
-    }
 
     /**
      * Adds the view to the flex container as a flex item.

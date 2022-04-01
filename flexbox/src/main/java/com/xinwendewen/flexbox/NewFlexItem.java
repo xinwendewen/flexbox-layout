@@ -1,40 +1,20 @@
 package com.xinwendewen.flexbox;
 
-import com.google.android.flexbox.FlexItem;
-
 public interface NewFlexItem {
     boolean isGone();
-
+    float getFlexBasisPercent();
     int getMeasuredWidth();
     int getMeasuredHeight();
-    void measure(MeasureRequest widthMeasureRequest, MeasureRequest heightMeasureRequest);
-    void measure(int widthMeasureRequest, int heightMeasureRequest);
+
     void layout(int left, int top, int right, int bottom);
-
-    FlexItem getLayoutParams();
-
-    int getMeasuredState();
-
-    int getBaseline();
-
-    int getLeft();
-
-    int getTop();
-
-    int getRight();
-
-    int getBottom();
 
     int getMarginStart();
     int getMarginEnd();
 
-    void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec,
-                 int occupiedCrossSize, boolean isMainAxisHorizontal);
     void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
                  MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
                  boolean isMainAxisHorizontal);
 
-    void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize, int mSumCrossSizeBefore);
     void fixedMainSizeMeasure(int roundedNewMainSize,
                                      MeasureRequest crossAxisMeasureRequest,
                                      int occupiedCrossSize, boolean isMainAxisHorizontal);
@@ -52,14 +32,9 @@ public interface NewFlexItem {
 
     int getOuterCrossSize(boolean isMainAxisHorizontal);
 
-    int getAlignSelf();
-
-    AlignSelf getAlignSelfNew();
+    AlignSelf getAlignSelf();
 
     int getMainSize(boolean mainAxisHorizontal);
-
-    LayoutPositions generateLayoutPosition(int mainStart, int mainEnd, int crossStart,
-                                           int crossEnd, boolean isMainAxisHorizontal);
 
     int minMainSize(boolean isMainAxisHorizontal);
 

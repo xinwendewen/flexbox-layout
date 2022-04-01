@@ -11,21 +11,11 @@ public class MeasureRequestUtils {
         return View.MeasureSpec.getSize(measureSpec);
     }
 
-    public static boolean isUnspecifiedMode(int measureSpec) {
-        return getMeasureSpecMode(measureSpec) == View.MeasureSpec.UNSPECIFIED;
-    }
     public static boolean isTight(int measureSpec) {
         return getMeasureSpecMode(measureSpec) == View.MeasureSpec.EXACTLY;
     }
 
-    public static int combineMeasureStates(int currentState, int newState) {
-        return currentState | newState;
-    }
     public static int generateExactlyMeasureSpec(int size) {
         return View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY);
-    }
-
-    public static int generateMeasureSpec(int size, int mode) {
-        return View.MeasureSpec.makeMeasureSpec(size, mode);
     }
 }

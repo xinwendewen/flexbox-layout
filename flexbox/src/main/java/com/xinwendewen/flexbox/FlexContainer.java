@@ -9,7 +9,7 @@ public interface FlexContainer {
     void setAlignContent(AlignContent alignContent);
     void setAlignItems(AlignItems alignItems);
     void setPaddings(Paddings paddings);
-    void setFlexItems(List<NewFlexItem> flexItems);
+    <T extends NewFlexItem> void setFlexItems(List<T> flexItems, int count);
     void measure(MeasureRequest mainAxisMeasureRequest, MeasureRequest crossAxisMeasureRequest);
     void layout(int left, int top, int right, int bottom, boolean isRtl);
     List<FlexLine> getFlexLines();

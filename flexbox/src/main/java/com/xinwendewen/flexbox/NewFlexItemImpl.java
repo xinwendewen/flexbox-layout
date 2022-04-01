@@ -3,158 +3,27 @@ package com.xinwendewen.flexbox;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
-import static com.xinwendewen.flexbox.AlignSelf.AUTO;
-import static com.xinwendewen.flexbox.AlignSelf.CENTER;
-import static com.xinwendewen.flexbox.AlignSelf.FLEX_END;
-import static com.xinwendewen.flexbox.AlignSelf.FLEX_START;
-import static com.xinwendewen.flexbox.AlignSelf.STRETCH;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
-import static com.xinwendewen.flexbox.MeasureRequestUtils.getMeasureSpecSize;
-import static com.xinwendewen.flexbox.MeasureRequestUtils.isTight;
 
-import android.view.View;
 import android.view.ViewGroup;
-
-import androidx.core.view.MarginLayoutParamsCompat;
 
 import com.google.android.flexbox.FlexItem;
 
-public class NewFlexItemImpl implements NewFlexItem {
-    private final View view;
-
-    public NewFlexItemImpl(View view) {
-        this.view = view;
-    }
-
-    public static NewFlexItemImpl wrap(View view) {
-        return new NewFlexItemImpl(view);
-    }
-
-    @Override
-    public boolean isGone() {
-        return view.getVisibility() == View.GONE;
-    }
-
-    public int getFlexBasis(int containerMainMeasureRequest, boolean isMainHorizontal) {
-        FlexItem flexItem = (FlexItem) view.getLayoutParams();
-        float flexBasisPercent = flexItem.getFlexBasisPercent();
-        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && isTight(containerMainMeasureRequest)) {
-            return Math.round(getMeasureSpecSize(containerMainMeasureRequest) * flexBasisPercent);
-        } else {
-            if (isMainHorizontal) {
-                return flexItem.getWidth();
-            }
-            return flexItem.getHeight();
-        }
-    }
+public abstract class NewFlexItemImpl implements NewFlexItem {
     public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
-        FlexItem flexItem = (FlexItem) view.getLayoutParams();
-        float flexBasisPercent = flexItem.getFlexBasisPercent();
+        float flexBasisPercent = getFlexBasisPercent();
         if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && containerMainMeasureRequest.isTight()) {
             return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
         } else {
             if (isMainHorizontal) {
-                return flexItem.getWidth();
+                return getRequiredWidth();
             }
-            return flexItem.getHeight();
+            return getRequiredHeight();
         }
-    }
-
-    @Override
-    public int getMeasuredWidth() {
-        return view.getMeasuredWidth();
-    }
-
-    @Override
-    public int getMeasuredHeight() {
-        return view.getMeasuredHeight();
-    }
-
-    @Override
-    public void measure(MeasureRequest widthMeasureRequest, MeasureRequest heightMeasureRequest) {
-
-    }
-
-    @Override
-    public void measure(int widthMeasureRequest, int heightMeasureRequest) {
-        view.measure(widthMeasureRequest, heightMeasureRequest);
-    }
-
-    @Override
-    public void layout(int left, int top, int right, int bottom) {
-        view.layout(left, top, right, bottom);
-    }
-
-    @Override
-    public FlexItem getLayoutParams() {
-        return (FlexItem) view.getLayoutParams();
-    }
-
-    @Override
-    public int getMeasuredState() {
-        return view.getMeasuredState();
-    }
-
-    @Override
-    public int getBaseline() {
-        return view.getBaseline();
-    }
-
-    @Override
-    public int getLeft() {
-        return view.getLeft();
-    }
-
-    @Override
-    public int getTop() {
-        return view.getTop();
-    }
-
-    @Override
-    public int getRight() {
-        return view.getRight();
-    }
-
-    @Override
-    public int getBottom() {
-        return view.getBottom();
     }
 
     public static boolean isFlexItemHeightMatchParent(FlexItem flexItem) {
         return flexItem.getHeight() == MATCH_PARENT;
-    }
-
-    @Override
-    public int getMarginStart() {
-        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams)
-                view.getLayoutParams();
-                return  MarginLayoutParamsCompat.getMarginStart(lp);
-    }
-    @Override
-    public int getMarginEnd() {
-        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams)
-                view.getLayoutParams();
-                return MarginLayoutParamsCompat.getMarginEnd(lp);
-
-    }
-
-    ViewGroup.MarginLayoutParams getMarginLayoutParams() {
-        return (ViewGroup.MarginLayoutParams)view.getLayoutParams();
-    }
-
-    @Override
-    public void measure(int containerMainMeasureSpec, int occupiedMainSize, int containerCrossMeasureSpec, int occupiedCrossSize, boolean isMainAxisHorizontal) {
-        int itemFlexBasis = getFlexBasis(containerMainMeasureSpec, isMainAxisHorizontal);
-        int mainMeasureSpec = generateMeasureSpec(containerMainMeasureSpec,
-                occupiedMainSize + mainAxisMargin(isMainAxisHorizontal), itemFlexBasis);
-        int intentCrossSize = getIntentCrossSize(isMainAxisHorizontal);
-        int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
-                occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal), intentCrossSize);
-        if (isMainAxisHorizontal) {
-            view.measure(mainMeasureSpec, crossMeasureSpec);
-        } else {
-            view.measure(crossMeasureSpec, mainMeasureSpec);
-        }
     }
 
     @Override
@@ -168,27 +37,13 @@ public class NewFlexItemImpl implements NewFlexItem {
         int crossMeasureSpec = generateMeasureSpec(crossAxisMeasureRequest.getMeasureSpec(),
                 occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal), intentCrossSize);
         if (isMainAxisHorizontal) {
-            view.measure(mainMeasureSpec, crossMeasureSpec);
+            measure(mainMeasureSpec, crossMeasureSpec);
         } else {
-            view.measure(crossMeasureSpec, mainMeasureSpec);
+            measure(crossMeasureSpec, mainMeasureSpec);
         }
     }
 
-    @Override
-    public void fixedMainSizeMeasure(ContainerProperties containerProps, int roundedNewMainSize,
-                                     int occupiedCrossSize) {
-        int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
-        int intentCrossSize = getIntentCrossSize(containerProps.isMainAxisHorizontal);
-        int containerCrossMeasureSpec = containerProps.getCrossAxisMeasureSpec();
-        int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
-                occupiedCrossSize + crossAxisMargin(containerProps.isMainAxisHorizontal),
-                intentCrossSize);
-        if (containerProps.isMainAxisHorizontal) {
-            view.measure(mainMeasureSpec, crossMeasureSpec);
-        } else {
-            view.measure(crossMeasureSpec, mainMeasureSpec);
-        }
-    }
+    protected abstract void measure(int widthSpec, int heightSpec);
 
     @Override
     public void fixedMainSizeMeasure(int roundedNewMainSize,
@@ -201,16 +56,16 @@ public class NewFlexItemImpl implements NewFlexItem {
                 occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal),
                 intentCrossSize);
         if (isMainAxisHorizontal) {
-            view.measure(mainMeasureSpec, crossMeasureSpec);
+            measure(mainMeasureSpec, crossMeasureSpec);
         } else {
-            view.measure(crossMeasureSpec, mainMeasureSpec);
+            measure(crossMeasureSpec, mainMeasureSpec);
         }
     }
 
     @Override
     public void clampByMinMaxCrossSize() {
         boolean violated = false;
-        int width = view.getMeasuredWidth();
+        int width = getMeasuredWidth();
         if (width < getMinWidth()) {
             violated = true;
             width = getMinWidth();
@@ -219,7 +74,7 @@ public class NewFlexItemImpl implements NewFlexItem {
             width = getMaxWidth();
         }
 
-        int height = view.getMeasuredHeight();
+        int height = getMeasuredHeight();
         if (height < getMinHeight()) {
             violated = true;
             height = getMinHeight();
@@ -229,7 +84,7 @@ public class NewFlexItemImpl implements NewFlexItem {
         }
 
         if (violated) {
-            view.measure(generateExactlyMeasureSpec(width), generateExactlyMeasureSpec(height));
+            measure(generateExactlyMeasureSpec(width), generateExactlyMeasureSpec(height));
         }
     }
 
@@ -238,22 +93,6 @@ public class NewFlexItemImpl implements NewFlexItem {
         return getMeasuredMainSize(isMainAxisHorizontal) + mainAxisMargin(isMainAxisHorizontal);
     }
 
-    @Override
-    public boolean requireCrossSizeMatchParent(boolean isMainAxisHorizontal) {
-        int expectCrossSize = isMainAxisHorizontal ? getLayoutParams().getHeight() :
-                getLayoutParams().getWidth();
-        return expectCrossSize == MATCH_PARENT;
-    }
-
-    @Override
-    public float getFlexGrow() {
-        return getLayoutParams().getFlexGrow();
-    }
-
-    @Override
-    public float getFlexShrink() {
-        return getLayoutParams().getFlexShrink();
-    }
 
     @Override
     public boolean isFlexible() {
@@ -265,39 +104,15 @@ public class NewFlexItemImpl implements NewFlexItem {
         return getMeasureCrossSize(isMainAxisHorizontal) + crossAxisMargin(isMainAxisHorizontal);
     }
 
-    @Override
-    public int getAlignSelf() {
-        return getLayoutParams().getAlignSelf();
-    }
-
-    @Override
-    public AlignSelf getAlignSelfNew() {
-        switch (getAlignSelf()) {
-            case com.google.android.flexbox.AlignSelf.FLEX_START:
-                return FLEX_START;
-            case com.google.android.flexbox.AlignSelf.FLEX_END:
-                return FLEX_END;
-            case com.google.android.flexbox.AlignSelf.CENTER:
-                return CENTER;
-            case com.google.android.flexbox.AlignSelf.STRETCH:
-                return STRETCH;
-            default:
-                return AUTO;
-        }
-    }
 
     @Override
     public int getMainSize(boolean isMainAxisHorizontal) {
-        if (isMainAxisHorizontal) {
-            return view.getMeasuredWidth();
-        } else {
-            return view.getMeasuredHeight();
-        }
+        return getMeasuredMainSize(isMainAxisHorizontal);
     }
 
     @Override
     public int getCrossSize(boolean isMainAxisHorizontal) {
-        return isMainAxisHorizontal ? view.getMeasuredHeight() : view.getMeasuredWidth();
+        return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();
     }
 
     @Override
@@ -318,7 +133,7 @@ public class NewFlexItemImpl implements NewFlexItem {
             top += mainStart;
             bottom += mainEnd;
         }
-        view.layout(left, top, right, bottom);
+        layout(left, top, right, bottom);
     }
 
     @Override
@@ -331,10 +146,9 @@ public class NewFlexItemImpl implements NewFlexItem {
     @Override
     public void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
-            view.measure(generateExactlyMeasureSpec(mainSize), generateExactlyMeasureSpec(crossSize));
+            measure(generateExactlyMeasureSpec(mainSize), generateExactlyMeasureSpec(crossSize));
         } else {
-            view.measure(generateExactlyMeasureSpec(crossSize),
-                    generateExactlyMeasureSpec(mainSize));
+            measure(generateExactlyMeasureSpec(crossSize), generateExactlyMeasureSpec(mainSize));
         }
     }
 
@@ -355,41 +169,28 @@ public class NewFlexItemImpl implements NewFlexItem {
     }
 
     @Override
-    public LayoutPositions generateLayoutPosition(int mainStart, int mainEnd, int crossStart,
-                                                  int crossEnd, boolean isMainAxisHorizontal) {
-        int left;
-        int top;
-        int right;
-        int bottom;
-        if (isMainAxisHorizontal) {
-            left = mainStart;
-            right = mainEnd;
-            top = crossStart;
-            bottom = crossEnd;
-        } else {
-            left = crossStart;
-            right = crossEnd;
-            top = mainStart;
-            bottom = mainEnd;
-        }
-        return new LayoutPositions(left, top, right, bottom);
-    }
-
-    @Override
     public int minMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
-            return getLayoutParams().getMinWidth();
+            return getMinWidth();
         } else {
-            return getLayoutParams().getMinHeight();
+            return getMinHeight();
         }
     }
+
+    protected abstract int getMinWidth();
+
+    protected abstract int getMinHeight();
+
+    protected abstract int getMaxWidth();
+
+    protected abstract int getMaxHeight();
 
     @Override
     public float maxMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
-            return getLayoutParams().getMaxWidth();
+            return getMaxWidth();
         } else {
-            return getLayoutParams().getMaxHeight();
+            return getMaxHeight();
         }
     }
 
@@ -402,29 +203,17 @@ public class NewFlexItemImpl implements NewFlexItem {
         return isMainAxisHorizontal ? getMeasuredWidth() : getMeasuredHeight();
     }
 
-    private int getMaxHeight() {
-        return getLayoutParams().getMaxHeight();
-    }
-
-    private int getMinHeight() {
-        return getLayoutParams().getMinHeight();
-    }
-
-    private int getMaxWidth() {
-        return getLayoutParams().getMaxWidth();
-    }
-
-    private int getMinWidth() {
-        return getLayoutParams().getMinWidth();
-    }
 
     private int getIntentCrossSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
-            return getLayoutParams().getHeight();
+            return getRequiredHeight();
         } else {
-            return getLayoutParams().getWidth();
+            return getRequiredWidth();
         }
     }
+
+    protected abstract int getRequiredWidth();
+    protected abstract int getRequiredHeight();
 
     private int generateMeasureSpec(int containerMeasureSpec, int occupied, int expect) {
         return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
@@ -449,13 +238,6 @@ public class NewFlexItemImpl implements NewFlexItem {
         return getMarginBottom();
     }
 
-    private int getMarginBottom() {
-        return getMarginLayoutParams().bottomMargin;
-    }
-
-    private int getMarginTop() {
-        return getMarginLayoutParams().topMargin;
-    }
 
     @Override
     public int crossAxisMargin(boolean isMainAxisHorizontal) {
@@ -481,12 +263,8 @@ public class NewFlexItemImpl implements NewFlexItem {
         }
     }
 
-    private int getMarginRight() {
-        return getMarginLayoutParams().rightMargin;
-    }
-
-
-    private int getMarginLeft() {
-        return getMarginLayoutParams().leftMargin;
-    }
+    protected abstract int getMarginBottom();
+    protected abstract int getMarginTop();
+    protected abstract int getMarginLeft();
+    protected abstract int getMarginRight();
 }

@@ -192,20 +192,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     /** The width of the {@link #mDividerDrawableVertical}. */
     private int mDividerVerticalWidth;
 
-    /**
-     * Holds reordered indices, which {@link FlexItem#getOrder()} parameters are taken
-     * into account
-     */
-    private int[] mReorderedIndices;
-
-    /**
-     * Caches the {@link FlexItem#getOrder()} attributes for children views.
-     * Key: the index of the view reordered indices using the {@link FlexItem#getOrder()}
-     * isn't taken into account)
-     * Value: the value for the order attribute
-     */
-    private SparseIntArray mOrderCache;
-
     private List<FlexLine> mFlexLines = new ArrayList<>();
 
     public FlexboxLayout(Context context) {
@@ -263,31 +249,22 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     }
 
     MeasureRequestImpl widthMeasureRequest = new MeasureRequestImpl(0);
+
     MeasureRequestImpl heightMeasureRequest = new MeasureRequestImpl(0);
+
     Paddings paddings = new Paddings();
-    List<NewFlexItem> flexItems = new ArrayList<>();
+
+    List<FlexItemImpl> flexItems = new ArrayList<>(20);
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (mOrderCache == null) {
-            mOrderCache = new SparseIntArray(getChildCount());
-        }
-        paddings.endPadding = getPaddingEnd();
-        paddings.startPadding = getPaddingStart();
-        paddings.leftPadding = getPaddingLeft();
-        paddings.rightPadding = getPaddingRight();
-        paddings.topPadding = getPaddingTop();
-        paddings.bottomPadding = getPaddingBottom();
-        flexContainer.setPaddings(paddings);
-        setInnerFlexDirection(mFlexDirection);
-        setInnerFlexWrap(mFlexWrap);
-        setInnerJustifyContent(mJustifyContent);
-        setInnerAlignContent(mAlignContent);
-        setInnerAlignItems(mAlignItems);
-        flexItems.clear();
+        updatePaddings();
+        updateFlexContainerProperties();
+        ensureFlexItemCapacity(getChildCount());
         for (int i = 0; i < getChildCount(); i++) {
-            flexItems.add(new NewFlexItemImpl(getChildAt(i))); // TODO: 2022/4/1 remove new keyword
+            flexItems.get(i).view = getChildAt(i);
         }
-        flexContainer.setFlexItems(flexItems);
+        flexContainer.setFlexItems(flexItems, getChildCount());
         widthMeasureRequest.measureSpec = widthMeasureSpec;
         heightMeasureRequest.measureSpec = heightMeasureSpec;
         if (isMainAxisDirectionHorizontal()) {
@@ -297,6 +274,129 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         }
         mFlexLines = flexContainer.getFlexLines();
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec, 0);
+    }
+
+    private void ensureFlexItemCapacity(int childCount) {
+        int current = flexItems.size();
+        if (current < childCount) {
+            int diff = childCount - current;
+            while (diff > 0) {
+                flexItems.add(new FlexItemImpl());
+                diff--;
+            }
+        }
+    }
+
+    private void updateFlexContainerProperties() {
+        setInnerFlexDirection(mFlexDirection);
+        setInnerFlexWrap(mFlexWrap);
+        setInnerJustifyContent(mJustifyContent);
+        setInnerAlignContent(mAlignContent);
+        setInnerAlignItems(mAlignItems);
+    }
+
+    private void updatePaddings() {
+        paddings.endPadding = getPaddingEnd();
+        paddings.startPadding = getPaddingStart();
+        paddings.leftPadding = getPaddingLeft();
+        paddings.rightPadding = getPaddingRight();
+        paddings.topPadding = getPaddingTop();
+        paddings.bottomPadding = getPaddingBottom();
+        flexContainer.setPaddings(paddings);
+    }
+
+    void setInnerFlexDirection(@FlexDirection int flexDirection) {
+        switch (flexDirection) {
+            case FlexDirection.ROW:
+                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.ROW);
+                break;
+            case FlexDirection.ROW_REVERSE:
+                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.ROW_REVERSE);
+                break;
+            case FlexDirection.COLUMN:
+                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.COLUMN);
+                break;
+            case FlexDirection.COLUMN_REVERSE:
+                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.COLUMN_REVERSE);
+                break;
+        }
+    }
+
+    void setInnerFlexWrap(@FlexWrap int flexWrap) {
+        switch (flexWrap) {
+            case FlexWrap.WRAP:
+                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.WRAP);
+                break;
+            case FlexWrap.NOWRAP:
+                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.NOWRAP);
+                break;
+            case FlexWrap.WRAP_REVERSE:
+                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.WRAP_REVERSE);
+                break;
+        }
+    }
+
+    void setInnerJustifyContent(@JustifyContent int justifyContent) {
+        switch (justifyContent) {
+            case JustifyContent.FLEX_START:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.FLEX_START);
+                break;
+            case JustifyContent.FLEX_END:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.FLEX_END);
+                break;
+            case JustifyContent.CENTER:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.CENTER);
+                break;
+            case JustifyContent.SPACE_BETWEEN:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_BETWEEN);
+                break;
+            case JustifyContent.SPACE_AROUND:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_AROUND);
+                break;
+            case JustifyContent.SPACE_EVENLY:
+                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_EVENLY);
+                break;
+        }
+    }
+
+    void setInnerAlignItems(@AlignItems int alignItems) {
+        switch (alignItems) {
+            case AlignItems.FLEX_START:
+                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.FLEX_START);
+                break;
+            case AlignItems.FLEX_END:
+                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.FLEX_END);
+                break;
+            case AlignItems.CENTER:
+                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.CENTER);
+                break;
+            case AlignItems.STRETCH:
+                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.STRETCH);
+                break;
+        }
+    }
+
+    void setInnerAlignContent(@AlignContent int alignContent) {
+        switch (alignContent) {
+            case AlignContent.FLEX_START:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.FLEX_START);
+                break;
+            case AlignContent.FLEX_END:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.FLEX_END);
+                break;
+            case AlignContent.CENTER:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.CENTER);
+                break;
+            case AlignContent.SPACE_BETWEEN:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.SPACE_BETWEEN);
+                break;
+            case AlignContent.SPACE_AROUND:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.SPACE_AROUND);
+                break;
+            case AlignContent.STRETCH:
+                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.STRETCH);
+                break;
+        }
     }
 
     @Override
@@ -319,39 +419,12 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
      * returns {@code null}.
      */
     public View getReorderedChildAt(int index) {
-//        if (index < 0 || index >= mReorderedIndices.length) {
-//            return null;
-//        }
-//        return getChildAt(mReorderedIndices[index]);
         return getChildAt(index);
     }
 
     @Override
     public View getReorderedFlexItemAt(int index) {
         return getReorderedChildAt(index);
-    }
-
-    @Override
-    public NewFlexItem getReorderedNewFlexItemAt(int index) {
-        return NewFlexItemImpl.wrap(getReorderedFlexItemAt(index));
-    }
-
-    @Override
-    public void addView(View child, int index, ViewGroup.LayoutParams params) {
-        if (mOrderCache == null) {
-            mOrderCache = new SparseIntArray(getChildCount());
-        }
-        // Create an array for the reordered indices before the View is added in the parent
-        // ViewGroup since otherwise reordered indices won't be in effect before the
-        // FlexboxLayout's onMeasure is called.
-        // Because requestLayout is requested in the super.addView method.
-//        mReorderedIndices = mFlexboxHelper
-//                .createReorderedIndices(child, index, params, mOrderCache);
-        super.addView(child, index, params);
-    }
-
-    public static boolean isMainAxisHorizontal(int flexDirection) {
-        return flexDirection == FlexDirection.ROW || flexDirection == FlexDirection.ROW_REVERSE;
     }
 
     /**
@@ -501,56 +574,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-//        if (mDividerDrawableVertical == null && mDividerDrawableHorizontal == null) {
-//            return;
-//        }
-//        if (mShowDividerHorizontal == SHOW_DIVIDER_NONE
-//                && mShowDividerVertical == SHOW_DIVIDER_NONE) {
-//            return;
-//        }
-//
-//        int layoutDirection = ViewCompat.getLayoutDirection(this);
-//        boolean isRtl;
-//        boolean fromBottomToTop = false;
-//        switch (mFlexDirection) {
-//            case ROW:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    fromBottomToTop = true;
-//                }
-//                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
-//                break;
-//            case ROW_REVERSE:
-//                isRtl = layoutDirection != ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    fromBottomToTop = true;
-//                }
-//                drawDividersHorizontal(canvas, isRtl, fromBottomToTop);
-//                break;
-//            case COLUMN:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    isRtl = !isRtl;
-//                }
-//                drawDividersVertical(canvas, isRtl, false);
-//                break;
-//            case FlexDirection.COLUMN_REVERSE:
-//                isRtl = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL;
-//                if (mFlexWrap == FlexWrap.WRAP_REVERSE) {
-//                    isRtl = !isRtl;
-//                }
-//                drawDividersVertical(canvas, isRtl, true);
-//                break;
-//        }
-    }
-
-    @Override
-    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
-        return p instanceof FlexboxLayout.LayoutParams;
-    }
-
-    @Override
     public LayoutParams generateLayoutParams(AttributeSet attrs) {
         return new FlexboxLayout.LayoutParams(getContext(), attrs);
     }
@@ -635,100 +658,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         }
     }
 
-    void setInnerFlexDirection(@FlexDirection int flexDirection) {
-        switch (flexDirection) {
-            case FlexDirection.ROW:
-                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.ROW);
-                break;
-            case FlexDirection.ROW_REVERSE:
-                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.ROW_REVERSE);
-                break;
-            case FlexDirection.COLUMN:
-                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.COLUMN);
-                break;
-            case FlexDirection.COLUMN_REVERSE:
-                flexContainer.setFlexDirection(com.xinwendewen.flexbox.FlexDirection.COLUMN_REVERSE);
-                break;
-        }
-    }
-
-    void setInnerFlexWrap(@FlexWrap int flexWrap) {
-        switch (flexWrap) {
-            case FlexWrap.WRAP:
-                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.WRAP);
-                break;
-            case FlexWrap.NOWRAP:
-                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.NOWRAP);
-                break;
-            case FlexWrap.WRAP_REVERSE:
-                flexContainer.setFlexWrap(com.xinwendewen.flexbox.FlexWrap.WRAP_REVERSE);
-                break;
-        }
-    }
-
-    void setInnerJustifyContent(@JustifyContent int justifyContent) {
-        switch (justifyContent) {
-            case JustifyContent.FLEX_START:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.FLEX_START);
-                break;
-            case JustifyContent.FLEX_END:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.FLEX_END);
-                break;
-            case JustifyContent.CENTER:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.CENTER);
-                break;
-            case JustifyContent.SPACE_BETWEEN:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_BETWEEN);
-                break;
-            case JustifyContent.SPACE_AROUND:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_AROUND);
-                break;
-            case JustifyContent.SPACE_EVENLY:
-                flexContainer.setJustifyContent(com.xinwendewen.flexbox.JustifyContent.SPACE_EVENLY);
-                break;
-        }
-    }
-
-    void setInnerAlignItems(@AlignItems int alignItems) {
-        switch (alignItems) {
-            case AlignItems.FLEX_START:
-                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.FLEX_START);
-                break;
-            case AlignItems.FLEX_END:
-                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.FLEX_END);
-                break;
-            case AlignItems.CENTER:
-                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.CENTER);
-                break;
-            case AlignItems.STRETCH:
-                flexContainer.setAlignItems(com.xinwendewen.flexbox.AlignItems.STRETCH);
-                break;
-        }
-    }
-
-    void setInnerAlignContent(@AlignContent int alignContent) {
-        switch (alignContent) {
-            case AlignContent.FLEX_START:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.FLEX_START);
-                break;
-            case AlignContent.FLEX_END:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.FLEX_END);
-                break;
-            case AlignContent.CENTER:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.CENTER);
-                break;
-            case AlignContent.SPACE_BETWEEN:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.SPACE_BETWEEN);
-                break;
-            case AlignContent.SPACE_AROUND:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.SPACE_AROUND);
-                break;
-            case AlignContent.STRETCH:
-                flexContainer.setAlignContent(com.xinwendewen.flexbox.AlignContent.STRETCH);
-                break;
-        }
-    }
-
     @Override
     public int getMaxLine() {
         return mMaxLine;
@@ -795,12 +724,10 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (isMainAxisDirectionHorizontal()) {
             if ((mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
                 flexLine.mMainSize += mDividerVerticalWidth;
-//                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
             }
         } else {
             if ((mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
                 flexLine.mMainSize += mDividerHorizontalHeight;
-//                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
             }
         }
     }
@@ -821,10 +748,8 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
             if (isMainAxisDirectionHorizontal()) {
                 flexLine.mMainSize += mDividerVerticalWidth;
-//                flexLine.mDividerLengthInMainSize += mDividerVerticalWidth;
             } else {
                 flexLine.mMainSize += mDividerHorizontalHeight;
-//                flexLine.mDividerLengthInMainSize += mDividerHorizontalHeight;
             }
         }
     }

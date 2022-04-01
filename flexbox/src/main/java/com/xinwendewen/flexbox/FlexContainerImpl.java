@@ -50,8 +50,11 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     @Override
-    public void setFlexItems(List<NewFlexItem> flexItems) {
-        items = flexItems;
+    public <T extends NewFlexItem> void setFlexItems(List<T> flexItems, int count) {
+        items.clear();
+        for (int i = 0; i < count; i++) {
+            items.add(flexItems.get(i));
+        }
     }
 
     @Override
@@ -95,10 +98,10 @@ public class FlexContainerImpl implements FlexContainer {
         if (item.getOuterCrossSize(isMainAxisHorizontal) >= flexLineCrossSize) {
             return false;
         }
-        if (item.getAlignSelfNew() == STRETCH) {
+        if (item.getAlignSelf() == STRETCH) {
             return true;
         }
-        if (item.getAlignSelfNew() == AUTO && alignItems == AlignItems.STRETCH) {
+        if (item.getAlignSelf() == AUTO && alignItems == AlignItems.STRETCH) {
             return true;
         }
         return false;
@@ -416,7 +419,7 @@ public class FlexContainerImpl implements FlexContainer {
             mainEnd = mainStart + item.getMainSize(isMainAxisHorizontal);
         }
         AlignItems crossAlignment = alignItems;
-        AlignSelf alignSelf = item.getAlignSelfNew();
+        AlignSelf alignSelf = item.getAlignSelf();
         if (alignSelf != AUTO) {
             switch (alignSelf) {
                 case FLEX_START:
