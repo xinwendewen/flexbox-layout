@@ -20,8 +20,6 @@ import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_GROW_DEFAULT;
 import static com.google.android.flexbox.FlexItem.FLEX_SHRINK_NOT_SET;
 
-import com.google.android.flexbox.FlexItem;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,13 +35,13 @@ public class FlexLine {
         return flexLine;
     }
 
-    public NewFlexItem getItemAt(int index) {
+    public FlexItem getItemAt(int index) {
        return items.get(index);
     }
 
-    public List<NewFlexItem> items = new ArrayList<>();
+    public List<FlexItem> items = new ArrayList<>();
 
-    public void addItem(NewFlexItem item, boolean isMainAxisHorizontal) {
+    public void addItem(FlexItem item, boolean isMainAxisHorizontal) {
         items.add(item);
         mItemCount++;
         mAnyItemsHaveFlexGrow |= item.getFlexGrow() != FLEX_GROW_DEFAULT;
@@ -73,14 +71,14 @@ public class FlexLine {
     public int mSumCrossSizeBefore;
 
     /**
-     * Set to true if any {@link FlexItem}s in this line have {@link FlexItem#getFlexGrow()}
-     * attributes set (have the value other than {@link FlexItem#FLEX_GROW_DEFAULT})
+     * Set to true if any {@link com.google.android.flexbox.FlexItem}s in this line have {@link com.google.android.flexbox.FlexItem#getFlexGrow()}
+     * attributes set (have the value other than {@link com.google.android.flexbox.FlexItem#FLEX_GROW_DEFAULT})
      */
     public boolean mAnyItemsHaveFlexGrow;
 
     /**
-     * Set to true if any {@link FlexItem}s in this line have {@link FlexItem#getFlexShrink()}
-     * attributes set (have the value other than {@link FlexItem#FLEX_SHRINK_NOT_SET})
+     * Set to true if any {@link com.google.android.flexbox.FlexItem}s in this line have {@link com.google.android.flexbox.FlexItem#getFlexShrink()}
+     * attributes set (have the value other than {@link com.google.android.flexbox.FlexItem#FLEX_SHRINK_NOT_SET})
      */
     public boolean mAnyItemsHaveFlexShrink;
 
@@ -117,7 +115,7 @@ public class FlexLine {
 
     public boolean isFrozen() {
         for (int i = 0; i < mItemCount; i++) {
-            NewFlexItem item = items.get(i);
+            FlexItem item = items.get(i);
             boolean isItemFrozen = !item.isFlexible() || violatedIndices.contains(i);
             if (!isItemFrozen) {
                 return false;
@@ -133,7 +131,7 @@ public class FlexLine {
         if (violatedIndices.contains(index)) {
             return true;
         }
-        NewFlexItem item = items.get(index);
+        FlexItem item = items.get(index);
         float flexShrink = item.getFlexShrink();
         if (flexShrink <= 0) {
             return true;
@@ -145,7 +143,7 @@ public class FlexLine {
         if (violatedIndices.contains(index)) {
             return true;
         }
-        NewFlexItem item = items.get(index);
+        FlexItem item = items.get(index);
         float flexGrow = item.getFlexGrow();
         if (flexGrow <= 0) {
             return true;
@@ -155,7 +153,7 @@ public class FlexLine {
 
     public void freezeItemAt(int index) {
         violatedIndices.add(index);
-        NewFlexItem item = items.get(index);
+        FlexItem item = items.get(index);
         float growFactor = item.getFlexGrow();
         if (growFactor != NOT_SET) {
             mTotalFlexGrow -= growFactor;
@@ -168,7 +166,7 @@ public class FlexLine {
 
     public void refreshCrossSize(boolean isMainAxisHorizontal) {
         int crossSize = 0;
-        for (NewFlexItem item : items) {
+        for (FlexItem item : items) {
             crossSize = Math.max(crossSize, item.getOuterCrossSize(isMainAxisHorizontal));
         }
     }

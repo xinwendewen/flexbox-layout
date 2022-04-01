@@ -2,6 +2,8 @@ package com.google.android.flexbox;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
+import static com.google.android.flexbox.FlexContainer.NOT_SET;
+import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.xinwendewen.flexbox.AlignSelf.AUTO;
 import static com.xinwendewen.flexbox.AlignSelf.CENTER;
 import static com.xinwendewen.flexbox.AlignSelf.FLEX_END;
@@ -13,9 +15,9 @@ import android.view.ViewGroup;
 
 import androidx.core.view.MarginLayoutParamsCompat;
 
-import com.xinwendewen.flexbox.NewFlexItemImpl;
+import com.xinwendewen.flexbox.InnerFlexItem;
 
-class FlexItemImpl extends NewFlexItemImpl {
+class FlexItemImpl extends InnerFlexItem {
     View view;
 
     @Override
@@ -88,8 +90,23 @@ class FlexItemImpl extends NewFlexItemImpl {
     }
 
     @Override
+    protected boolean isFlexBasisPercentSet() {
+        return getFlexBasisPercent() != FLEX_BASIS_PERCENT_DEFAULT;
+    }
+
+    @Override
     protected void measure(int widthSpec, int heightSpec) {
         view.measure(widthSpec, heightSpec);
+    }
+
+    @Override
+    protected boolean isFlexShrinkSet() {
+        return getFlexShrink() != NOT_SET;
+    }
+
+    @Override
+    protected boolean isFlexGrowSet() {
+        return getFlexGrow() != NOT_SET;
     }
 
     @Override

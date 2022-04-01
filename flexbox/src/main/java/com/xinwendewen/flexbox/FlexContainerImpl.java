@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FlexContainerImpl implements FlexContainer {
-    private List<NewFlexItem> items = new ArrayList<>();
+    private List<FlexItem> items = new ArrayList<>();
     private final FlexLines flexLines = new FlexLines();
     private final ContainerFlexProperties flexProperties = new ContainerFlexProperties();
     private final Paddings paddings = new Paddings();
@@ -50,7 +50,7 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     @Override
-    public <T extends NewFlexItem> void setFlexItems(List<T> flexItems, int count) {
+    public <T extends FlexItem> void setFlexItems(List<T> flexItems, int count) {
         items.clear();
         for (int i = 0; i < count; i++) {
             items.add(flexItems.get(i));
@@ -78,7 +78,7 @@ public class FlexContainerImpl implements FlexContainer {
 
     void stretchItems() {
         for (FlexLine flexLine : flexLines.mFlexLines) {
-            for (NewFlexItem item : flexLine.items) {
+            for (FlexItem item : flexLine.items) {
                 if (needStretch(item, flexProperties.alignItems, flexLine.mCrossSize,
                         isMainAxisHorizontal())) {
                     stretchItem(item, flexLine, isMainAxisHorizontal());
@@ -87,13 +87,13 @@ public class FlexContainerImpl implements FlexContainer {
         }
     }
 
-    private void stretchItem(NewFlexItem item, FlexLine flexLine, boolean isMainAxisHorizontal) {
+    private void stretchItem(FlexItem item, FlexLine flexLine, boolean isMainAxisHorizontal) {
         int newCrossSize = flexLine.mCrossSize - item.crossAxisMargin(isMainAxisHorizontal);
         newCrossSize = item.clampByMinMaxCrossSize(newCrossSize, isMainAxisHorizontal);
         item.fixedSizeMeasure(item.getMainSize(isMainAxisHorizontal), newCrossSize, isMainAxisHorizontal);
     }
 
-    private boolean needStretch(NewFlexItem item, AlignItems alignItems, int flexLineCrossSize,
+    private boolean needStretch(FlexItem item, AlignItems alignItems, int flexLineCrossSize,
                                 boolean isMainAxisHorizontal) {
         if (item.getOuterCrossSize(isMainAxisHorizontal) >= flexLineCrossSize) {
             return false;
@@ -193,7 +193,7 @@ public class FlexContainerImpl implements FlexContainer {
             float spaceUnit = available / (available > 0 ? flexLine.mTotalFlexGrow : flexLine.mTotalFlexShrink);
             boolean hasViolation = false;
             for (int i = 0; i < flexLine.mItemCount; i++) {
-                NewFlexItem item = flexLine.getItemAt(i);
+                FlexItem item = flexLine.getItemAt(i);
                 if (available < 0 && flexLine.isItemShrinkFrozen(i)) {
                     continue;
                 }
@@ -236,7 +236,7 @@ public class FlexContainerImpl implements FlexContainer {
         FlexLine currentFlexLine = new FlexLine();
 
         int occupiedContainerCrossSize = paddings.getCrossPaddings(isMainAxisHorizontal);
-        for (NewFlexItem item : items) {
+        for (FlexItem item : items) {
             // measure flex item
             int occupiedMainSize = paddings.getMainPaddings(isMainAxisHorizontal);
             item.measure(mainAxisMeasureRequest, occupiedMainSize, crossAxisMeasureRequest,
@@ -266,7 +266,7 @@ public class FlexContainerImpl implements FlexContainer {
 
     private boolean isWrapNeeded(MeasureRequest mainAxisMeasureRequest,
                                  FlexWrap flexWrap,
-                                 FlexLine currentFlexLine, NewFlexItem item,
+                                 FlexLine currentFlexLine, FlexItem item,
                                  boolean isMainAxisHorizontal) {
         if (flexWrap == FlexWrap.NOWRAP) {
             return false;
@@ -377,7 +377,7 @@ public class FlexContainerImpl implements FlexContainer {
             }
             RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
             for (int i = 0; i < flexLine.getItemCount(); i++) {
-                NewFlexItem item = flexLine.getItemAt(i);
+                FlexItem item = flexLine.getItemAt(i);
                 layoutItem(item, isMainAxisReversed, mainAxisAnchor, isCrossAxisReversed,
                         crossAxisAnchor, isMainAxisHorizontal, flexProperties.alignItems,
                         flexLine, paddings.leftPadding, paddings.topPadding);
@@ -390,7 +390,7 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     private int forwardMainAxisAnchor(int mainAxisAnchor, boolean isMainAxisReversed,
-                                      NewFlexItem item, int spaceBetweenItems,
+                                      FlexItem item, int spaceBetweenItems,
                                       boolean isMainAxisHorizontal) {
         return isMainAxisReversed ?
                 mainAxisAnchor - (item.mainAxisMarginStart(isMainAxisHorizontal) + item.getMainSize(isMainAxisHorizontal) + spaceBetweenItems) :
@@ -401,7 +401,7 @@ public class FlexContainerImpl implements FlexContainer {
         return isCrossAxisReversed ? crossAxisAnchor - flexLine.getCrossSize() : crossAxisAnchor + flexLine.getCrossSize();
     }
 
-    void layoutItem(NewFlexItem item, boolean isMainAxisReversed, int mainAxisAnchor,
+    void layoutItem(FlexItem item, boolean isMainAxisReversed, int mainAxisAnchor,
                     boolean isCrossAxisReversed, int crossAxisAnchor,
                     boolean isMainAxisHorizontal, AlignItems alignItems, FlexLine flexLine,
                     int leftPadding, int topPadding) {

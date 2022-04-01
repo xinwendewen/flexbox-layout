@@ -1,15 +1,9 @@
 package com.xinwendewen.flexbox;
 
-public interface NewFlexItem {
+public interface FlexItem {
     boolean isGone();
     float getFlexBasisPercent();
-    int getMeasuredWidth();
-    int getMeasuredHeight();
-
     void layout(int left, int top, int right, int bottom);
-
-    int getMarginStart();
-    int getMarginEnd();
 
     void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
                  MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,

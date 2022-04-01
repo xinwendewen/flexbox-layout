@@ -22,12 +22,10 @@ import static com.google.android.flexbox.FlexDirection.ROW_REVERSE;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.SparseIntArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -39,8 +37,6 @@ import androidx.core.view.ViewCompat;
 
 import com.xinwendewen.flexbox.FlexContainerImpl;
 import com.xinwendewen.flexbox.FlexLine;
-import com.xinwendewen.flexbox.NewFlexItem;
-import com.xinwendewen.flexbox.NewFlexItemImpl;
 import com.xinwendewen.flexbox.Paddings;
 
 import java.lang.annotation.Retention;

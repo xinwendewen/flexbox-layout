@@ -1,18 +1,13 @@
 package com.xinwendewen.flexbox;
 
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static com.google.android.flexbox.FlexContainer.NOT_SET;
-import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
 
 import android.view.ViewGroup;
 
-import com.google.android.flexbox.FlexItem;
-
-public abstract class NewFlexItemImpl implements NewFlexItem {
+public abstract class InnerFlexItem implements FlexItem {
     public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
         float flexBasisPercent = getFlexBasisPercent();
-        if (flexBasisPercent != FLEX_BASIS_PERCENT_DEFAULT && containerMainMeasureRequest.isTight()) {
+        if (isFlexBasisPercentSet() && containerMainMeasureRequest.isTight()) {
             return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
         } else {
             if (isMainHorizontal) {
@@ -22,9 +17,7 @@ public abstract class NewFlexItemImpl implements NewFlexItem {
         }
     }
 
-    public static boolean isFlexItemHeightMatchParent(FlexItem flexItem) {
-        return flexItem.getHeight() == MATCH_PARENT;
-    }
+    protected abstract boolean isFlexBasisPercentSet();
 
     @Override
     public void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
@@ -96,9 +89,11 @@ public abstract class NewFlexItemImpl implements NewFlexItem {
 
     @Override
     public boolean isFlexible() {
-        return getFlexShrink() != NOT_SET || getFlexGrow() != NOT_SET;
+        return isFlexShrinkSet() || isFlexGrowSet();
     }
 
+    protected abstract boolean isFlexShrinkSet();
+    protected abstract boolean isFlexGrowSet();
     @Override
     public int getOuterCrossSize(boolean isMainAxisHorizontal) {
         return getMeasureCrossSize(isMainAxisHorizontal) + crossAxisMargin(isMainAxisHorizontal);
@@ -199,6 +194,9 @@ public abstract class NewFlexItemImpl implements NewFlexItem {
         return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();
     }
 
+    protected abstract int getMeasuredWidth();
+    protected abstract int getMeasuredHeight();
+
     private int getMeasuredMainSize(boolean isMainAxisHorizontal) {
         return isMainAxisHorizontal ? getMeasuredWidth() : getMeasuredHeight();
     }
@@ -263,6 +261,8 @@ public abstract class NewFlexItemImpl implements NewFlexItem {
         }
     }
 
+    protected abstract int getMarginStart();
+    protected abstract int getMarginEnd();
     protected abstract int getMarginBottom();
     protected abstract int getMarginTop();
     protected abstract int getMarginLeft();
