@@ -53,7 +53,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (checkedId == R.id.radiobutton_viewgroup) {
                 replaceToFlexboxLayoutFragment(fragmentManager)
             } else {
-                replaceToRecyclerViewFragment(fragmentManager)
             }
         }
 
@@ -69,15 +68,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment, FLEXBOXLAYOUT_FRAGMENT).commit()
-    }
-
-    private fun replaceToRecyclerViewFragment(fragmentManager: FragmentManager) {
-        var fragment: RecyclerViewFragment? = fragmentManager.findFragmentByTag(RECYCLERVIEW_FRAGMENT) as RecyclerViewFragment?
-        if (fragment == null) {
-            fragment = RecyclerViewFragment.newInstance()
-        }
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment, RECYCLERVIEW_FRAGMENT).commit()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
