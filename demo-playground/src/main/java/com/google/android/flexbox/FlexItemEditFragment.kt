@@ -98,10 +98,6 @@ internal class FlexItemEditFragment : DialogFragment() {
         orderEdit.addTextChangedListener(
                 FlexEditTextWatcher(context, orderTextInput, IntegerInputValidator(),
                         R.string.must_be_integer))
-        if (flexItem is FlexboxLayoutManager.LayoutParams) {
-            // Order is not enabled in FlexboxLayoutManager
-            orderEdit.isEnabled = false
-        }
 
         val flexGrowInput: TextInputLayout = view .findViewById(R.id.input_layout_flex_grow)
         val flexGrowEdit: EditText = view.findViewById(R.id.edit_text_flex_grow)
@@ -302,9 +298,7 @@ internal class FlexItemEditFragment : DialogFragment() {
             }
             val value = editable.toString().toFloatOrNull() ?: return
             when (textInputLayout.id) {
-                R.id.input_layout_order -> if (flexItemInEdit !is FlexboxLayoutManager.LayoutParams) {
-                    flexItemInEdit.order = value.toInt()
-                } else return
+                R.id.input_layout_order -> flexItemInEdit.order = value.toInt()
                 R.id.input_layout_flex_grow -> flexItemInEdit.flexGrow = value
                 R.id.input_layout_flex_shrink -> flexItemInEdit.flexShrink = value
                 R.id.input_layout_width -> flexItemInEdit.width = context.dpToPixel(value.toInt())
@@ -324,22 +318,13 @@ internal class FlexItemEditFragment : DialogFragment() {
     }
 
     private fun createNewFlexItem(item: FlexItem): FlexItem {
-        if (item is FlexboxLayout.LayoutParams) {
-            val newItem = FlexboxLayout.LayoutParams(item.getWidth(), item.getHeight())
-            copyFlexItemValues(item, newItem)
-            return newItem
-        } else if (item is FlexboxLayoutManager.LayoutParams) {
-            val newItem = FlexboxLayoutManager.LayoutParams(item.getWidth(), item.getHeight())
-            copyFlexItemValues(item, newItem)
-            return newItem
-        }
-        throw IllegalArgumentException("Unknown FlexItem: $item")
+        val newItem = FlexboxLayout.LayoutParams(item.getWidth(), item.getHeight())
+        copyFlexItemValues(item, newItem)
+        return newItem
     }
 
     private fun copyFlexItemValues(from: FlexItem, to: FlexItem) {
-        if (from !is FlexboxLayoutManager.LayoutParams) {
-            to.order = from.order
-        }
+        to.order = from.order
         to.flexGrow = from.flexGrow
         to.flexShrink = from.flexShrink
         to.flexBasisPercent = from.flexBasisPercent

@@ -107,10 +107,7 @@ internal class FragmentHelper(private val activity: MainActivity, private val fl
     fun setFlexItemAttributes(flexItem: FlexItem): FlexItem {
         flexItem.width = activity.dpToPixel(readPreferenceAsInteger(activity.getString(R.string.new_width_key), DEFAULT_WIDTH))
         flexItem.height = activity.dpToPixel(readPreferenceAsInteger(activity.getString(R.string.new_height_key), DEFAULT_HEIGHT))
-        // Order is not supported in the FlexboxLayoutManager
-        if (flexItem !is FlexboxLayoutManager.LayoutParams) {
-            flexItem.order = readPreferenceAsInteger(activity.getString(R.string.new_flex_item_order_key), "1")
-        }
+        flexItem.order = readPreferenceAsInteger(activity.getString(R.string.new_flex_item_order_key), "1")
         flexItem.flexGrow = readPreferenceAsFloat(activity.getString(R.string.new_flex_grow_key), "0.0")
         flexItem.flexShrink = readPreferenceAsFloat(activity.getString(R.string.new_flex_shrink_key), "1.0")
         val flexBasisPercent = readPreferenceAsInteger(
@@ -188,14 +185,7 @@ internal class FragmentHelper(private val activity: MainActivity, private val fl
                         flexContainer.flexWrap = when (parent.getItemAtPosition(position).toString()) {
                             NOWRAP -> FlexWrap.NOWRAP
                             WRAP -> FlexWrap.WRAP
-                            WRAP_REVERSE -> if (flexContainer is FlexboxLayoutManager) {
-                                Toast.makeText(activity,
-                                        R.string.wrap_reverse_not_supported,
-                                        Toast.LENGTH_SHORT).show()
-                                return
-                            } else {
-                                FlexWrap.WRAP_REVERSE
-                            }
+                            WRAP_REVERSE -> FlexWrap.WRAP_REVERSE
                             else -> return
                         }
                     }
@@ -289,11 +279,6 @@ internal class FragmentHelper(private val activity: MainActivity, private val fl
                 object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: AdapterView<*>, ignored: View?, position: Int,
                                                 id: Long) {
-                        if (flexContainer is FlexboxLayoutManager) {
-                            Toast.makeText(activity, R.string.align_content_not_supported,
-                                    Toast.LENGTH_SHORT).show()
-                            return
-                        }
                         flexContainer.alignContent = when (parent.getItemAtPosition(position).toString()) {
                             FLEX_START -> AlignContent.FLEX_START
                             FLEX_END -> AlignContent.FLEX_END
