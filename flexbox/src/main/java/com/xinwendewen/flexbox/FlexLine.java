@@ -47,7 +47,6 @@ public class FlexLine {
 
     public List<NewFlexItem> items = new ArrayList<>();
 
-    // TODO: 2022/3/16 remove index , move isMainHorizontal to constructor
     public void addItem(NewFlexItem item, boolean isMainAxisHorizontal) {
         items.add(item);
         mItemCount++;
