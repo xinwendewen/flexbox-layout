@@ -1,7 +1,5 @@
 package com.xinwendewen.flexbox;
 
-import android.view.ViewGroup;
-
 public abstract class InnerFlexItem implements FlexItem {
     public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
         float flexBasisPercent = getFlexBasisPercent();

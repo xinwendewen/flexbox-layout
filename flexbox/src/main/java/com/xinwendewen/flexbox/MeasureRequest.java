@@ -7,6 +7,4 @@ public interface MeasureRequest {
     boolean isUnconstrainted();
 
     int intentSize();
-
-    int getMeasureSpec(); // TODO: 2022/4/1 remove measureSpec
 }

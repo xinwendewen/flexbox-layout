@@ -26,11 +26,6 @@ class MeasureRequestImpl implements MeasureRequest {
         return getMeasureSpecSize(measureSpec);
     }
 
-    @Override
-    public int getMeasureSpec() {
-        return measureSpec;
-    }
-
     private static int getMeasureSpecMode(int measureSpec) {
         return View.MeasureSpec.getMode(measureSpec);
     }
