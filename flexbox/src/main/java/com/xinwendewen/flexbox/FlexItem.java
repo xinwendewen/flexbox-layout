@@ -8,8 +8,9 @@ public interface FlexItem {
                  boolean isMainAxisHorizontal);
 
     void fixedMainSizeMeasure(int roundedNewMainSize,
-                                     MeasureRequest crossAxisMeasureRequest,
-                                     int occupiedCrossSize, boolean isMainAxisHorizontal);
+                              MeasureRequest crossAxisMeasureRequest,
+                              int occupiedCrossSize, boolean isMainAxisHorizontal);
+
     void clampByMinMaxDimensions();
 
     int getOuterMainSize(boolean isMainAxisHorizontal);

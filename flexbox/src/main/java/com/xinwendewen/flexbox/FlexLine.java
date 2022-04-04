@@ -20,6 +20,8 @@ public class FlexLine {
 
     boolean hasFlexibleItem;
 
+    Set<Integer> violatedIndices = new HashSet<>();
+
     static FlexLine createDummyWithCrossSize(int crossSize) {
         FlexLine flexLine = new FlexLine();
         flexLine.crossSize = crossSize;
@@ -27,7 +29,7 @@ public class FlexLine {
     }
 
     FlexItem getItemAt(int index) {
-       return items.get(index);
+        return items.get(index);
     }
 
     void addItem(FlexItem item, boolean isMainAxisHorizontal) {
@@ -62,8 +64,6 @@ public class FlexLine {
         }
         return true;
     }
-
-    Set<Integer> violatedIndices = new HashSet<>();
 
     boolean isItemShrinkFrozen(int index) {
         if (violatedIndices.contains(index)) {

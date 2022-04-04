@@ -1,7 +1,6 @@
 package com.google.android.flexbox;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-
 import static com.google.android.flexbox.FlexContainer.NOT_SET;
 import static com.google.android.flexbox.FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
 import static com.xinwendewen.flexbox.AlignSelf.AUTO;
@@ -20,6 +19,10 @@ import com.xinwendewen.flexbox.MeasureRequest;
 
 class ViewWrapper extends BaseFlexItem {
     View view;
+
+    public static int generateExactlyMeasureSpec(int size) {
+        return View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY);
+    }
 
     @Override
     public boolean isGone() {
@@ -80,7 +83,7 @@ class ViewWrapper extends BaseFlexItem {
     public int getMarginStart() {
         ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams)
                 view.getLayoutParams();
-        return  MarginLayoutParamsCompat.getMarginStart(lp);
+        return MarginLayoutParamsCompat.getMarginStart(lp);
     }
 
     @Override
@@ -100,7 +103,7 @@ class ViewWrapper extends BaseFlexItem {
                            int expectedWidth, MeasureRequest parentHeightMeasureRequest,
                            int parentOccupiedHeight, int expectedHeight) {
         int widthMeasureSpec =
-                generateMeasureSpec(((MeasureSpecWrapper)parentWidthMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper) parentWidthMeasureRequest).measureSpec,
                         parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
         int heightMeasureSpec =
                 generateMeasureSpec(((MeasureSpecWrapper) parentHeightMeasureRequest).measureSpec,
@@ -122,7 +125,7 @@ class ViewWrapper extends BaseFlexItem {
     protected void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
                                       int parentOccupiedWidth, int expectedWidth) {
         int widthMeasureSpec =
-                generateMeasureSpec(((MeasureSpecWrapper)parentWidthMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper) parentWidthMeasureRequest).measureSpec,
                         parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
         int heightMeasureSpec = generateExactlyMeasureSpec(height);
         view.measure(widthMeasureSpec, heightMeasureSpec);
@@ -145,10 +148,6 @@ class ViewWrapper extends BaseFlexItem {
 
     private int generateMeasureSpec(int containerMeasureSpec, int occupied, int expect) {
         return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
-    }
-
-    public static int generateExactlyMeasureSpec(int size) {
-        return View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY);
     }
 
     @Override

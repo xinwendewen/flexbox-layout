@@ -37,6 +37,7 @@ public class Paddings {
             return bottomPadding;
         }
     }
+
     public int getCrossPaddings(boolean isMainAxisHorizontal) {
         int crossPaddingStart = getCrossPaddingStart(isMainAxisHorizontal);
         int crossPaddingEnd = getCrossPaddingEnd(isMainAxisHorizontal);

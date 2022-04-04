@@ -1,20 +1,6 @@
 package com.xinwendewen.flexbox;
 
 public abstract class BaseFlexItem implements FlexItem {
-    public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
-        float flexBasisPercent = getFlexBasisPercent();
-        if (isFlexBasisPercentSet() && containerMainMeasureRequest.isTight()) {
-            return Math.round(containerMainMeasureRequest.getExpectedSize() * flexBasisPercent);
-        } else {
-            if (isMainHorizontal) {
-                return getRequiredWidth();
-            }
-            return getRequiredHeight();
-        }
-    }
-
-    protected abstract boolean isFlexBasisPercentSet();
-
     @Override
     public void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
                         MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
@@ -30,15 +16,21 @@ public abstract class BaseFlexItem implements FlexItem {
         }
     }
 
-    protected abstract void measure(MeasureRequest parentWidthMeasureRequest,
-                                    int parentOccupiedWidth, int expectedWidth,
-                                    MeasureRequest parentHeightMeasureRequest,
-                                    int parentOccupiedHeight, int expectedHeight);
-    protected abstract void fixedWidthMeasure(int width, MeasureRequest parentHeightMeasureRequest,
-                                              int parentOccupiedHeight, int expectedHeight);
-    protected abstract void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
-                                               int parentOccupiedWidth, int expectedWidth);
-    protected abstract void fixedSizeMeasure(int width, int height);
+    private int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
+        float flexBasisPercent = getFlexBasisPercent();
+        if (isFlexBasisPercentSet() && containerMainMeasureRequest.isTight()) {
+            return Math.round(containerMainMeasureRequest.getExpectedSize() * flexBasisPercent);
+        } else {
+            if (isMainHorizontal) {
+                return getRequiredWidth();
+            }
+            return getRequiredHeight();
+        }
+    }
+
+    protected abstract float getFlexBasisPercent();
+
+    protected abstract boolean isFlexBasisPercentSet();
 
     @Override
     public void fixedMainSizeMeasure(int roundedNewMainSize,
@@ -80,13 +72,10 @@ public abstract class BaseFlexItem implements FlexItem {
         }
     }
 
-    protected abstract float getFlexBasisPercent();
-
     @Override
     public int getOuterMainSize(boolean isMainAxisHorizontal) {
         return getMeasuredMainSize(isMainAxisHorizontal) + getMainAxisMargin(isMainAxisHorizontal);
     }
-
 
     @Override
     public boolean isFlexible() {
@@ -94,12 +83,13 @@ public abstract class BaseFlexItem implements FlexItem {
     }
 
     protected abstract boolean isFlexShrinkSet();
+
     protected abstract boolean isFlexGrowSet();
+
     @Override
     public int getOuterCrossSize(boolean isMainAxisHorizontal) {
         return getMeasureCrossSize(isMainAxisHorizontal) + getCrossAxisMargin(isMainAxisHorizontal);
     }
-
 
     @Override
     public int getMeasuredMainSize(boolean isMainAxisHorizontal) {
@@ -115,7 +105,7 @@ public abstract class BaseFlexItem implements FlexItem {
     public void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
                        boolean isMainAxisHorizontal, int leftPadding, int topPadding) {
         int left = leftPadding;
-        int top =  topPadding;
+        int top = topPadding;
         int right = leftPadding;
         int bottom = topPadding;
         if (isMainAxisHorizontal) {
@@ -159,7 +149,7 @@ public abstract class BaseFlexItem implements FlexItem {
     }
 
     private int getMinCrossSize(boolean isMainAxisHorizontal) {
-    if (isMainAxisHorizontal) {
+        if (isMainAxisHorizontal) {
             return getMinHeight();
         } else {
             return getMinWidth();
@@ -175,14 +165,6 @@ public abstract class BaseFlexItem implements FlexItem {
         }
     }
 
-    protected abstract int getMinWidth();
-
-    protected abstract int getMinHeight();
-
-    protected abstract int getMaxWidth();
-
-    protected abstract int getMaxHeight();
-
     @Override
     public float getMaxMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
@@ -196,9 +178,6 @@ public abstract class BaseFlexItem implements FlexItem {
         return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();
     }
 
-    protected abstract int getMeasuredWidth();
-    protected abstract int getMeasuredHeight();
-
     private int getRequiredCrossSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getRequiredHeight();
@@ -207,13 +186,11 @@ public abstract class BaseFlexItem implements FlexItem {
         }
     }
 
-    protected abstract int getRequiredWidth();
-    protected abstract int getRequiredHeight();
-
     @Override
     public int getMainAxisMargin(boolean isMainAxisHorizontal) {
-       return getMainAxisMarginStart(isMainAxisHorizontal) + getMainAxisMarginEnd(isMainAxisHorizontal);
+        return getMainAxisMarginStart(isMainAxisHorizontal) + getMainAxisMarginEnd(isMainAxisHorizontal);
     }
+
     @Override
     public int getMainAxisMarginStart(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
@@ -221,6 +198,7 @@ public abstract class BaseFlexItem implements FlexItem {
         }
         return getMarginTop();
     }
+
     @Override
     public int getMainAxisMarginEnd(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
@@ -255,9 +233,43 @@ public abstract class BaseFlexItem implements FlexItem {
     }
 
     protected abstract int getMarginStart();
+
     protected abstract int getMarginEnd();
+
     protected abstract int getMarginBottom();
+
     protected abstract int getMarginTop();
+
     protected abstract int getMarginLeft();
+
     protected abstract int getMarginRight();
+
+    protected abstract int getMinWidth();
+
+    protected abstract int getMinHeight();
+
+    protected abstract int getMaxWidth();
+
+    protected abstract int getMaxHeight();
+
+    protected abstract int getMeasuredWidth();
+
+    protected abstract int getMeasuredHeight();
+
+    protected abstract int getRequiredWidth();
+
+    protected abstract int getRequiredHeight();
+
+    protected abstract void measure(MeasureRequest parentWidthMeasureRequest,
+                                    int parentOccupiedWidth, int expectedWidth,
+                                    MeasureRequest parentHeightMeasureRequest,
+                                    int parentOccupiedHeight, int expectedHeight);
+
+    protected abstract void fixedSizeMeasure(int width, int height);
+
+    protected abstract void fixedWidthMeasure(int width, MeasureRequest parentHeightMeasureRequest,
+                                              int parentOccupiedHeight, int expectedHeight);
+
+    protected abstract void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
+                                               int parentOccupiedWidth, int expectedWidth);
 }

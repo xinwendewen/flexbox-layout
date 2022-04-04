@@ -142,6 +142,7 @@ public class FlexContainerImpl implements FlexContainer {
             mFlexLinesResult.insertBetweenFlexLines(unitSpace);
         }
     }
+
     private void alignContentStretch(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             int unitSpace = freeSpace / mFlexLinesResult.size();
@@ -150,11 +151,13 @@ public class FlexContainerImpl implements FlexContainer {
             }
         }
     }
+
     private void alignContentCenter(FlexLines mFlexLinesResult, int freeSpace) {
         int unitSpace = freeSpace / 2;
         mFlexLinesResult.addTop(FlexLine.createDummyWithCrossSize(unitSpace));
         mFlexLinesResult.addBottom(FlexLine.createDummyWithCrossSize(unitSpace));
     }
+
     private void alignContentSpaceAround(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             float unitSpace = (float) freeSpace / (mFlexLinesResult.size() * 2);
@@ -226,6 +229,7 @@ public class FlexContainerImpl implements FlexContainer {
         }
         flexLine.refreshCrossSize(isMainAxisHorizontal);
     }
+
     List<FlexLine> fillFlexLines(MeasureRequest mainAxisMeasureRequest,
                                  MeasureRequest crossAxisMeasureRequest) {
         boolean isMainAxisHorizontal = isMainAxisHorizontal();
