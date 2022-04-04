@@ -244,25 +244,20 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         a.recycle();
     }
 
-    MeasureRequestImpl widthMeasureRequest = new MeasureRequestImpl(0);
+    private final MeasureSpecWrapper widthMeasureRequest = new MeasureSpecWrapper();
 
-    MeasureRequestImpl heightMeasureRequest = new MeasureRequestImpl(0);
+    private final MeasureSpecWrapper heightMeasureRequest = new MeasureSpecWrapper();
 
-    Paddings paddings = new Paddings();
+    private final Paddings paddings = new Paddings();
 
-    List<ViewHolder> flexItems = new ArrayList<>(20);
+    private final List<ViewWrapper> flexItems = new ArrayList<>(20);
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         updatePaddings();
         updateFlexContainerProperties();
-        ensureFlexItemCapacity(getChildCount());
-        for (int i = 0; i < getChildCount(); i++) {
-            flexItems.get(i).view = getChildAt(i);
-        }
-        flexContainer.setFlexItems(flexItems, getChildCount());
-        widthMeasureRequest.measureSpec = widthMeasureSpec;
-        heightMeasureRequest.measureSpec = heightMeasureSpec;
+        updateFlexItems();
+        updateMeasureRequests(widthMeasureSpec, heightMeasureSpec);
         if (isMainAxisDirectionHorizontal()) {
             flexContainer.measure(widthMeasureRequest, heightMeasureRequest);
         } else {
@@ -272,12 +267,25 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         setMeasuredDimensionForFlex(mFlexDirection, widthMeasureSpec, heightMeasureSpec, 0);
     }
 
+    private void updateMeasureRequests(int widthMeasureSpec, int heightMeasureSpec) {
+        widthMeasureRequest.measureSpec = widthMeasureSpec;
+        heightMeasureRequest.measureSpec = heightMeasureSpec;
+    }
+
+    private void updateFlexItems() {
+        ensureFlexItemCapacity(getChildCount());
+        for (int i = 0; i < getChildCount(); i++) {
+            flexItems.get(i).view = getChildAt(i);
+        }
+        flexContainer.setFlexItems(flexItems, getChildCount());
+    }
+
     private void ensureFlexItemCapacity(int childCount) {
         int current = flexItems.size();
         if (current < childCount) {
             int diff = childCount - current;
             while (diff > 0) {
-                flexItems.add(new ViewHolder());
+                flexItems.add(new ViewWrapper());
                 diff--;
             }
         }

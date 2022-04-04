@@ -4,12 +4,8 @@ import android.view.View;
 
 import com.xinwendewen.flexbox.MeasureRequest;
 
-class MeasureRequestImpl implements MeasureRequest {
+class MeasureSpecWrapper implements MeasureRequest {
     int measureSpec;
-
-    public MeasureRequestImpl(int measureSpec) {
-        this.measureSpec = measureSpec;
-    }
 
     @Override
     public boolean isTight() {

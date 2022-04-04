@@ -18,7 +18,7 @@ import androidx.core.view.MarginLayoutParamsCompat;
 import com.xinwendewen.flexbox.BaseFlexItem;
 import com.xinwendewen.flexbox.MeasureRequest;
 
-class ViewHolder extends BaseFlexItem {
+class ViewWrapper extends BaseFlexItem {
     View view;
 
     @Override
@@ -100,10 +100,10 @@ class ViewHolder extends BaseFlexItem {
                            int expectedWidth, MeasureRequest parentHeightMeasureRequest,
                            int parentOccupiedHeight, int expectedHeight) {
         int widthMeasureSpec =
-                generateMeasureSpec(((MeasureRequestImpl)parentWidthMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper)parentWidthMeasureRequest).measureSpec,
                         parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
         int heightMeasureSpec =
-                generateMeasureSpec(((MeasureRequestImpl) parentHeightMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper) parentHeightMeasureRequest).measureSpec,
                         parentOccupiedHeight + getVerticalMargin(), expectedHeight);
         view.measure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -113,7 +113,7 @@ class ViewHolder extends BaseFlexItem {
                                      int parentOccupiedHeight, int expectedHeight) {
         int widthMeasureSpec = generateExactlyMeasureSpec(width);
         int heightMeasureSpec =
-                generateMeasureSpec(((MeasureRequestImpl) parentHeightMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper) parentHeightMeasureRequest).measureSpec,
                         parentOccupiedHeight + getVerticalMargin(), expectedHeight);
         view.measure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -122,7 +122,7 @@ class ViewHolder extends BaseFlexItem {
     protected void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
                                       int parentOccupiedWidth, int expectedWidth) {
         int widthMeasureSpec =
-                generateMeasureSpec(((MeasureRequestImpl)parentWidthMeasureRequest).measureSpec,
+                generateMeasureSpec(((MeasureSpecWrapper)parentWidthMeasureRequest).measureSpec,
                         parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
         int heightMeasureSpec = generateExactlyMeasureSpec(height);
         view.measure(widthMeasureSpec, heightMeasureSpec);
