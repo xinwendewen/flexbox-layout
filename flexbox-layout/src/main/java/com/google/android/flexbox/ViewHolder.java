@@ -18,7 +18,7 @@ import androidx.core.view.MarginLayoutParamsCompat;
 import com.xinwendewen.flexbox.BaseFlexItem;
 import com.xinwendewen.flexbox.MeasureRequest;
 
-class FlexItemImpl extends BaseFlexItem {
+class ViewHolder extends BaseFlexItem {
     View view;
 
     @Override

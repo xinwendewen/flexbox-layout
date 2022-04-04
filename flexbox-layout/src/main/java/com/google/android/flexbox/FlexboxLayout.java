@@ -250,7 +250,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     Paddings paddings = new Paddings();
 
-    List<FlexItemImpl> flexItems = new ArrayList<>(20);
+    List<ViewHolder> flexItems = new ArrayList<>(20);
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -277,7 +277,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         if (current < childCount) {
             int diff = childCount - current;
             while (diff > 0) {
-                flexItems.add(new FlexItemImpl());
+                flexItems.add(new ViewHolder());
                 diff--;
             }
         }
