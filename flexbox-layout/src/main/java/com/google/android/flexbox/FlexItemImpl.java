@@ -15,10 +15,10 @@ import android.view.ViewGroup;
 
 import androidx.core.view.MarginLayoutParamsCompat;
 
-import com.xinwendewen.flexbox.InnerFlexItem;
+import com.xinwendewen.flexbox.BaseFlexItem;
 import com.xinwendewen.flexbox.MeasureRequest;
 
-class FlexItemImpl extends InnerFlexItem {
+class FlexItemImpl extends BaseFlexItem {
     View view;
 
     @Override

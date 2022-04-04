@@ -1,6 +1,6 @@
 package com.xinwendewen.flexbox;
 
-public abstract class InnerFlexItem implements FlexItem {
+public abstract class BaseFlexItem implements FlexItem {
     public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
         float flexBasisPercent = getFlexBasisPercent();
         if (isFlexBasisPercentSet() && containerMainMeasureRequest.isTight()) {
