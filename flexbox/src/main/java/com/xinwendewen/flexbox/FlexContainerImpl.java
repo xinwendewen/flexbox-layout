@@ -16,7 +16,7 @@ public class FlexContainerImpl implements FlexContainer {
 
     @Override
     public List<FlexLine> getFlexLines() {
-        return flexLines.mFlexLines;
+        return flexLines.flexLineList;
     }
 
     @Override
@@ -60,12 +60,12 @@ public class FlexContainerImpl implements FlexContainer {
     @Override
     public void measure(MeasureRequest mainAxisMeasureRequest, MeasureRequest crossAxisMeasureRequest) {
         flexLines.reset();
-        flexLines.mFlexLines = fillFlexLines(mainAxisMeasureRequest, crossAxisMeasureRequest);
+        flexLines.flexLineList = fillFlexLines(mainAxisMeasureRequest, crossAxisMeasureRequest);
         int mainSize = determineMainSize(mainAxisMeasureRequest);
         calculateFlexibleLength(mainSize, crossAxisMeasureRequest);
         if (crossAxisMeasureRequest.isTight()) {
             if (flexLines.isSingleLine()) {
-                flexLines.mFlexLines.get(0).mCrossSize =
+                flexLines.flexLineList.get(0).mCrossSize =
                         crossAxisMeasureRequest.getExpectedSize() - paddings.getCrossPaddings(isMainAxisHorizontal());
             } else {
                 int determinedCrossSize = crossAxisMeasureRequest.getExpectedSize();
@@ -77,7 +77,7 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     void stretchItems() {
-        for (FlexLine flexLine : flexLines.mFlexLines) {
+        for (FlexLine flexLine : flexLines.flexLineList) {
             for (FlexItem item : flexLine.items) {
                 if (needStretch(item, flexProperties.alignItems, flexLine.mCrossSize,
                         isMainAxisHorizontal())) {
@@ -145,7 +145,7 @@ public class FlexContainerImpl implements FlexContainer {
     private void alignContentStretch(FlexLines mFlexLinesResult, int freeSpace) {
         if (freeSpace > 0) {
             int unitSpace = freeSpace / mFlexLinesResult.size();
-            for (FlexLine flexLine : mFlexLinesResult.mFlexLines) {
+            for (FlexLine flexLine : mFlexLinesResult.flexLineList) {
                 flexLine.mCrossSize += unitSpace;
             }
         }
@@ -175,7 +175,7 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     void calculateFlexibleLength(int mainSize, MeasureRequest crossAxisMeasureRequest) {
-        for (FlexLine flexLine : flexLines.mFlexLines) {
+        for (FlexLine flexLine : flexLines.flexLineList) {
             if (flexLine.mMainSize < mainSize && flexLine.mAnyItemsHaveFlexGrow) {
                 calculateFlexibleLength(flexLine, mainSize, crossAxisMeasureRequest);
             } else if (flexLine.mMainSize > mainSize && flexLine.mAnyItemsHaveFlexShrink) {
@@ -337,7 +337,7 @@ public class FlexContainerImpl implements FlexContainer {
                 isMainAxisReversed = true;
         }
         int crossAxisAnchor = isCrossAxisReversed ? containerInnerCrossSize : 0;
-        for (FlexLine flexLine : flexLines.mFlexLines) {
+        for (FlexLine flexLine : flexLines.flexLineList) {
             JustifyContent justifyContent = flexProperties.justifyContent;
             int flexLineMainSize = flexLine.mMainSize;
             int mainAxisAnchor = 0;

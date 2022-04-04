@@ -3,50 +3,50 @@ package com.xinwendewen.flexbox;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlexLines {
-    public List<FlexLine> mFlexLines;
+class FlexLines {
+    List<FlexLine> flexLineList;
 
-    public void reset() {
-        mFlexLines = null;
+    void reset() {
+        flexLineList = null;
     }
 
-    public int getLargestMainSize() {
+    int getLargestMainSize() {
         int largestMainSize = 0;
-        for (FlexLine flexLine : mFlexLines) {
+        for (FlexLine flexLine : flexLineList) {
             largestMainSize = Math.max(largestMainSize, flexLine.mMainSize);
         }
         return largestMainSize;
     }
 
-    public boolean isSingleLine() {
-        return mFlexLines.size() == 1;
+    boolean isSingleLine() {
+        return flexLineList.size() == 1;
     }
 
-    public int getCrossSize() {
+    int getCrossSize() {
         int crossSize = 0;
-        for (FlexLine flexLine : mFlexLines) {
+        for (FlexLine flexLine : flexLineList) {
             crossSize += flexLine.mCrossSize;
         }
         return crossSize;
     }
 
-    public void addTop(FlexLine flexLine) {
-        mFlexLines.add(0, flexLine);
+    void addTop(FlexLine flexLine) {
+        flexLineList.add(0, flexLine);
     }
 
-    public int size() {
-        return mFlexLines.size();
+    int size() {
+        return flexLineList.size();
     }
 
-    public void addBottom(FlexLine flexLine) {
-        mFlexLines.add(mFlexLines.size(), flexLine);
+    void addBottom(FlexLine flexLine) {
+        flexLineList.add(flexLineList.size(), flexLine);
     }
 
-    public void insertBetweenFlexLines(float unitSpace) {
+    void insertBetweenFlexLines(float unitSpace) {
         RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
         List<FlexLine> newFlexLines = new ArrayList<>();
-        for (int i = 0; i < mFlexLines.size(); i++) {
-            FlexLine flexLine = mFlexLines.get(i);
+        for (int i = 0; i < flexLineList.size(); i++) {
+            FlexLine flexLine = flexLineList.get(i);
             if (i != 0) {
                 FlexLine dummyFlexLine =
                         FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(unitSpace));
@@ -54,13 +54,13 @@ public class FlexLines {
             }
             newFlexLines.add(flexLine);
         }
-        mFlexLines = newFlexLines;
+        flexLineList = newFlexLines;
     }
 
-    public void insertAround(float space) {
+    void insertAround(float space) {
         RoundingErrorAccumulator errorAccumulator = new RoundingErrorAccumulator();
         List<FlexLine> newFlexLines = new ArrayList<>();
-        for (FlexLine currentFlexLine : mFlexLines) {
+        for (FlexLine currentFlexLine : flexLineList) {
             FlexLine dummyFlexLine =
                     FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(space));
             newFlexLines.add(dummyFlexLine);
@@ -69,6 +69,6 @@ public class FlexLines {
                     FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(space));
             newFlexLines.add(dummyFlexLine);
         }
-        mFlexLines = newFlexLines;
+        flexLineList = newFlexLines;
     }
 }
