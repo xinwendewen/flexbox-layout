@@ -56,4 +56,6 @@ dependencies {
     androidTestImplementation "androidx.test:rules:${rootProject.androidxTestVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.androidxEspressoVersion}"
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.kotlinVersion}"
+
+    implementation project(":flexbox")
 }

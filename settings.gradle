@@ -15,3 +15,4 @@
  */
 
 include ':demo-playground', ':flexbox-layout'
+include ':flexbox'
