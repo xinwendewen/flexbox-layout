@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FlexContainerImpl implements FlexContainer {
-    private List<FlexItem> items = new ArrayList<>();
+    private final List<FlexItem> items = new ArrayList<>();
     private final FlexLines flexLines = new FlexLines();
     private final ContainerFlexProperties flexProperties = new ContainerFlexProperties();
     private final Paddings paddings = new Paddings();
