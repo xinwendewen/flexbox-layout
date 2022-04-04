@@ -1,7 +1,5 @@
 package com.xinwendewen.flexbox;
 
-import static com.xinwendewen.flexbox.MeasureRequestUtils.generateExactlyMeasureSpec;
-
 import android.view.ViewGroup;
 
 public abstract class InnerFlexItem implements FlexItem {
@@ -34,26 +32,27 @@ public abstract class InnerFlexItem implements FlexItem {
         }
     }
 
-    protected abstract void measure(int widthSpec, int heightSpec);
     protected abstract void measure(MeasureRequest parentWidthMeasureRequest,
                                     int parentOccupiedWidth, int expectedWidth,
                                     MeasureRequest parentHeightMeasureRequest,
                                     int parentOccupiedHeight, int expectedHeight);
+    protected abstract void fixedWidthMeasure(int width, MeasureRequest parentHeightMeasureRequest,
+                                              int parentOccupiedHeight, int expectedHeight);
+    protected abstract void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
+                                               int parentOccupiedWidth, int expectedWidth);
+    protected abstract void fixedSizeMeasure(int width, int height);
 
     @Override
     public void fixedMainSizeMeasure(int roundedNewMainSize,
                                      MeasureRequest crossAxisMeasureRequest,
                                      int occupiedCrossSize, boolean isMainAxisHorizontal) {
-        int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
-        int intentCrossSize = getRequiredCrossSize(isMainAxisHorizontal);
-        int containerCrossMeasureSpec = crossAxisMeasureRequest.getMeasureSpec();
-        int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
-                occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal),
-                intentCrossSize);
+        int expectedCrossSize = getRequiredCrossSize(isMainAxisHorizontal);
         if (isMainAxisHorizontal) {
-            measure(mainMeasureSpec, crossMeasureSpec);
+            fixedWidthMeasure(roundedNewMainSize, crossAxisMeasureRequest, occupiedCrossSize,
+                    expectedCrossSize);
         } else {
-            measure(crossMeasureSpec, mainMeasureSpec);
+            fixedHeightMeasure(roundedNewMainSize, crossAxisMeasureRequest, occupiedCrossSize,
+                    expectedCrossSize);
         }
     }
 
@@ -79,7 +78,7 @@ public abstract class InnerFlexItem implements FlexItem {
         }
 
         if (violated) {
-            measure(generateExactlyMeasureSpec(width), generateExactlyMeasureSpec(height));
+            fixedSizeMeasure(width, height);
         }
     }
 
@@ -143,9 +142,9 @@ public abstract class InnerFlexItem implements FlexItem {
     @Override
     public void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
-            measure(generateExactlyMeasureSpec(mainSize), generateExactlyMeasureSpec(crossSize));
+            fixedSizeMeasure(mainSize, crossSize);
         } else {
-            measure(generateExactlyMeasureSpec(crossSize), generateExactlyMeasureSpec(mainSize));
+            fixedSizeMeasure(crossSize, mainSize);
         }
     }
 
@@ -158,7 +157,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
     private int getMinCrossSize(boolean isMainAxisHorizontal) {
-        if (isMainAxisHorizontal) {
+    if (isMainAxisHorizontal) {
             return getMinHeight();
         } else {
             return getMinWidth();
@@ -191,7 +190,6 @@ public abstract class InnerFlexItem implements FlexItem {
         }
     }
 
-
     private int getMeasureCrossSize(boolean isMainAxisHorizontal) {
         return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();
     }
@@ -214,10 +212,6 @@ public abstract class InnerFlexItem implements FlexItem {
 
     protected abstract int getRequiredWidth();
     protected abstract int getRequiredHeight();
-
-    private int generateMeasureSpec(int containerMeasureSpec, int occupied, int expect) {
-        return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
-    }
 
     @Override
     public int mainAxisMargin(boolean isMainAxisHorizontal) {

@@ -96,11 +96,6 @@ class FlexItemImpl extends InnerFlexItem {
     }
 
     @Override
-    protected void measure(int widthSpec, int heightSpec) {
-        view.measure(widthSpec, heightSpec);
-    }
-
-    @Override
     protected void measure(MeasureRequest parentWidthMeasureRequest, int parentOccupiedWidth,
                            int expectedWidth, MeasureRequest parentHeightMeasureRequest,
                            int parentOccupiedHeight, int expectedHeight) {
@@ -110,6 +105,33 @@ class FlexItemImpl extends InnerFlexItem {
         int heightMeasureSpec =
                 generateMeasureSpec(((MeasureRequestImpl) parentHeightMeasureRequest).measureSpec,
                         parentOccupiedHeight + getVerticalMargin(), expectedHeight);
+        view.measure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void fixedWidthMeasure(int width, MeasureRequest parentHeightMeasureRequest,
+                                     int parentOccupiedHeight, int expectedHeight) {
+        int widthMeasureSpec = generateExactlyMeasureSpec(width);
+        int heightMeasureSpec =
+                generateMeasureSpec(((MeasureRequestImpl) parentHeightMeasureRequest).measureSpec,
+                        parentOccupiedHeight + getVerticalMargin(), expectedHeight);
+        view.measure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void fixedHeightMeasure(int height, MeasureRequest parentWidthMeasureRequest,
+                                      int parentOccupiedWidth, int expectedWidth) {
+        int widthMeasureSpec =
+                generateMeasureSpec(((MeasureRequestImpl)parentWidthMeasureRequest).measureSpec,
+                        parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
+        int heightMeasureSpec = generateExactlyMeasureSpec(height);
+        view.measure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void fixedSizeMeasure(int width, int height) {
+        int widthMeasureSpec = generateExactlyMeasureSpec(width);
+        int heightMeasureSpec = generateExactlyMeasureSpec(height);
         view.measure(widthMeasureSpec, heightMeasureSpec);
     }
 
@@ -123,6 +145,10 @@ class FlexItemImpl extends InnerFlexItem {
 
     private int generateMeasureSpec(int containerMeasureSpec, int occupied, int expect) {
         return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
+    }
+
+    public static int generateExactlyMeasureSpec(int size) {
+        return View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY);
     }
 
     @Override
