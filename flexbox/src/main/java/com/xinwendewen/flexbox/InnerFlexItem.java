@@ -55,7 +55,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
     @Override
-    public void clampByMinMaxCrossSize() {
+    public void clampByMinMaxDimensions() {
         boolean violated = false;
         int width = getMeasuredWidth();
         if (width < getMinWidth()) {
@@ -131,7 +131,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
     @Override
-    public int clampByMinMaxCrossSize(int crossSize, boolean isMainAxisHorizontal) {
+    public int clampByMinMaxDimensions(int crossSize, boolean isMainAxisHorizontal) {
         crossSize = Math.max(crossSize, getMinCrossSize(isMainAxisHorizontal));
         crossSize = Math.min(crossSize, getMaxCrossSize(isMainAxisHorizontal));
         return crossSize;

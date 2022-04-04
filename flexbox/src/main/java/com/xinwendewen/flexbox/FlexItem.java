@@ -12,7 +12,7 @@ public interface FlexItem {
     void fixedMainSizeMeasure(int roundedNewMainSize,
                                      MeasureRequest crossAxisMeasureRequest,
                                      int occupiedCrossSize, boolean isMainAxisHorizontal);
-    void clampByMinMaxCrossSize();
+    void clampByMinMaxDimensions();
 
     int getOuterMainSize(boolean isMainAxisHorizontal);
 
@@ -51,7 +51,7 @@ public interface FlexItem {
     void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
                 boolean isMainAxisHorizontal, int leftPadding, int topPadding);
 
-    int clampByMinMaxCrossSize(int crossSize, boolean isMainAxisHorizontal);
+    int clampByMinMaxDimensions(int crossSize, boolean isMainAxisHorizontal);
 
     void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal);
 }

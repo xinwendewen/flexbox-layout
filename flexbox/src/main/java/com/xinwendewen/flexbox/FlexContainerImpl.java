@@ -89,7 +89,7 @@ public class FlexContainerImpl implements FlexContainer {
 
     private void stretchItem(FlexItem item, FlexLine flexLine, boolean isMainAxisHorizontal) {
         int newCrossSize = flexLine.mCrossSize - item.crossAxisMargin(isMainAxisHorizontal);
-        newCrossSize = item.clampByMinMaxCrossSize(newCrossSize, isMainAxisHorizontal);
+        newCrossSize = item.clampByMinMaxDimensions(newCrossSize, isMainAxisHorizontal);
         item.fixedSizeMeasure(item.getMainSize(isMainAxisHorizontal), newCrossSize, isMainAxisHorizontal);
     }
 
@@ -218,7 +218,7 @@ public class FlexContainerImpl implements FlexContainer {
                 roundedNewMainSize += errorAccumulator.compensate();
                 item.fixedMainSizeMeasure(roundedNewMainSize, crossAxisMeasureRequest,
                         flexLine.mSumCrossSizeBefore, isMainAxisHorizontal);
-                item.clampByMinMaxCrossSize();
+                item.clampByMinMaxDimensions();
                 flexLine.mMainSize += item.getOuterMainSize(isMainAxisHorizontal);
             }
             if (!hasViolation) {
@@ -242,7 +242,7 @@ public class FlexContainerImpl implements FlexContainer {
             item.measure(mainAxisMeasureRequest, occupiedMainSize, crossAxisMeasureRequest,
                     occupiedContainerCrossSize, isMainAxisHorizontal);
             // clamp by min/max constraints and remeasure if needed
-            item.clampByMinMaxCrossSize();
+            item.clampByMinMaxDimensions();
             if (isWrapNeeded(mainAxisMeasureRequest, flexProperties.flexWrap, currentFlexLine, item,
                     isMainAxisHorizontal)) {
                 // finish current flex line
