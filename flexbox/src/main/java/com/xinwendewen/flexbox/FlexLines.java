@@ -52,7 +52,7 @@ public class FlexLines {
             FlexLine flexLine = mFlexLines.get(i);
             if (i != 0) {
                 FlexLine dummyFlexLine =
-                        FlexLine.createDummyWithCrossSize(errorAccumulator.round(unitSpace) + errorAccumulator.compensate());
+                        FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(unitSpace));
                 newFlexLines.add(dummyFlexLine);
             }
             newFlexLines.add(flexLine);
@@ -65,11 +65,11 @@ public class FlexLines {
         List<FlexLine> newFlexLines = new ArrayList<>();
         for (FlexLine currentFlexLine : mFlexLines) {
             FlexLine dummyFlexLine =
-                    FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
+                    FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(space));
             newFlexLines.add(dummyFlexLine);
             newFlexLines.add(currentFlexLine);
             dummyFlexLine =
-                    FlexLine.createDummyWithCrossSize(errorAccumulator.round(space) + errorAccumulator.compensate());
+                    FlexLine.createDummyWithCrossSize(errorAccumulator.roundAndCompensate(space));
             newFlexLines.add(dummyFlexLine);
         }
         mFlexLines = newFlexLines;

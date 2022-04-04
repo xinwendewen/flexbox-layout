@@ -31,6 +31,11 @@ public class RoundingErrorAccumulator {
         return rounded;
     }
 
+    public int roundAndCompensate(double value) {
+        int rounded = round(value);
+        return rounded + compensate();
+    }
+
     public void accumulatedError(double error) {
         currentError += error;
     }

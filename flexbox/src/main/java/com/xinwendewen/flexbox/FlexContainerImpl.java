@@ -382,7 +382,7 @@ public class FlexContainerImpl implements FlexContainer {
                         crossAxisAnchor, isMainAxisHorizontal, flexProperties.alignItems,
                         flexLine, paddings.leftPadding, paddings.topPadding);
                 mainAxisAnchor = forwardMainAxisAnchor(mainAxisAnchor, isMainAxisReversed, item,
-                        errorAccumulator.round(spaceBetweenItems) + errorAccumulator.compensate(),
+                        errorAccumulator.roundAndCompensate(spaceBetweenItems),
                         isMainAxisHorizontal);
             }
             crossAxisAnchor = forwardCrossAxisAnchor(crossAxisAnchor, isCrossAxisReversed, flexLine);
