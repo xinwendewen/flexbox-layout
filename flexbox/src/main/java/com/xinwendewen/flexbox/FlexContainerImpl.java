@@ -88,9 +88,9 @@ public class FlexContainerImpl implements FlexContainer {
     }
 
     private void stretchItem(FlexItem item, FlexLine flexLine, boolean isMainAxisHorizontal) {
-        int newCrossSize = flexLine.mCrossSize - item.crossAxisMargin(isMainAxisHorizontal);
-        newCrossSize = item.clampByMinMaxDimensions(newCrossSize, isMainAxisHorizontal);
-        item.fixedSizeMeasure(item.getMainSize(isMainAxisHorizontal), newCrossSize, isMainAxisHorizontal);
+        int newCrossSize = flexLine.mCrossSize - item.getCrossAxisMargin(isMainAxisHorizontal);
+        newCrossSize = item.getClampedCrossSize(newCrossSize, isMainAxisHorizontal);
+        item.fixedSizeMeasure(item.getMeasuredMainSize(isMainAxisHorizontal), newCrossSize, isMainAxisHorizontal);
     }
 
     private boolean needStretch(FlexItem item, AlignItems alignItems, int flexLineCrossSize,
@@ -202,16 +202,16 @@ public class FlexContainerImpl implements FlexContainer {
                 }
                 flexLine.mMainSize -= item.getOuterMainSize(isMainAxisHorizontal);
                 int measuredMainSize =
-                        item.getMainSize(isMainAxisHorizontal);
+                        item.getMeasuredMainSize(isMainAxisHorizontal);
                 float newMainSize = measuredMainSize + spaceUnit * (available > 0 ?
                         item.getFlexGrow() : item.getFlexShrink());
-                if (newMainSize < item.minMainSize(isMainAxisHorizontal)) {
+                if (newMainSize < item.getMinMainSize(isMainAxisHorizontal)) {
                     hasViolation = true;
-                    newMainSize = item.minMainSize(isMainAxisHorizontal);
+                    newMainSize = item.getMinMainSize(isMainAxisHorizontal);
                     flexLine.freezeItemAt(i);
-                } else if (newMainSize > item.maxMainSize(isMainAxisHorizontal)) {
+                } else if (newMainSize > item.getMaxMainSize(isMainAxisHorizontal)) {
                     hasViolation = true;
-                    newMainSize = item.maxMainSize(isMainAxisHorizontal);
+                    newMainSize = item.getMaxMainSize(isMainAxisHorizontal);
                     flexLine.freezeItemAt(i);
                 }
                 int roundedNewMainSize = errorAccumulator.round(newMainSize);
@@ -393,8 +393,8 @@ public class FlexContainerImpl implements FlexContainer {
                                       FlexItem item, int spaceBetweenItems,
                                       boolean isMainAxisHorizontal) {
         return isMainAxisReversed ?
-                mainAxisAnchor - (item.mainAxisMarginStart(isMainAxisHorizontal) + item.getMainSize(isMainAxisHorizontal) + spaceBetweenItems) :
-                mainAxisAnchor + (item.mainAxisMarginEnd(isMainAxisHorizontal) + item.getMainSize(isMainAxisHorizontal) + spaceBetweenItems);
+                mainAxisAnchor - (item.getMainAxisMarginStart(isMainAxisHorizontal) + item.getMeasuredMainSize(isMainAxisHorizontal) + spaceBetweenItems) :
+                mainAxisAnchor + (item.getMainAxisMarginEnd(isMainAxisHorizontal) + item.getMeasuredMainSize(isMainAxisHorizontal) + spaceBetweenItems);
     }
 
     private int forwardCrossAxisAnchor(int crossAxisAnchor, boolean isCrossAxisReversed, FlexLine flexLine) {
@@ -410,11 +410,11 @@ public class FlexContainerImpl implements FlexContainer {
         int crossStart;
         int crossEnd;
         if (isMainAxisReversed) {
-            mainEnd = mainAxisAnchor - item.mainAxisMarginEnd(isMainAxisHorizontal);
-            mainStart = mainEnd - item.getMainSize(isMainAxisHorizontal);
+            mainEnd = mainAxisAnchor - item.getMainAxisMarginEnd(isMainAxisHorizontal);
+            mainStart = mainEnd - item.getMeasuredMainSize(isMainAxisHorizontal);
         } else {
-            mainStart = mainAxisAnchor + item.mainAxisMarginStart(isMainAxisHorizontal);
-            mainEnd = mainStart + item.getMainSize(isMainAxisHorizontal);
+            mainStart = mainAxisAnchor + item.getMainAxisMarginStart(isMainAxisHorizontal);
+            mainEnd = mainStart + item.getMeasuredMainSize(isMainAxisHorizontal);
         }
         AlignItems crossAlignment = alignItems;
         AlignSelf alignSelf = item.getAlignSelf();
@@ -438,22 +438,22 @@ public class FlexContainerImpl implements FlexContainer {
             case STRETCH:
             case FLEX_START:
                 if (isCrossAxisReversed) {
-                    crossEnd = crossAxisAnchor - item.crossAxisMarginEnd(isMainAxisHorizontal);
-                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                    crossEnd = crossAxisAnchor - item.getCrossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getMeasuredCrossSize(isMainAxisHorizontal);
                 } else {
-                    crossStart = crossAxisAnchor + item.crossAxisMarginStart(isMainAxisHorizontal);
-                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                    crossStart = crossAxisAnchor + item.getCrossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getMeasuredCrossSize(isMainAxisHorizontal);
                 }
                 break;
             case FLEX_END:
                 if (isCrossAxisReversed) {
                     crossStart =
-                            crossAxisAnchor - flexLine.mCrossSize + item.crossAxisMarginStart(isMainAxisHorizontal);
-                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                            crossAxisAnchor - flexLine.mCrossSize + item.getCrossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getMeasuredCrossSize(isMainAxisHorizontal);
                 } else {
                     crossEnd =
-                            crossAxisAnchor + flexLine.mCrossSize - item.crossAxisMarginEnd(isMainAxisHorizontal);
-                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                            crossAxisAnchor + flexLine.mCrossSize - item.getCrossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getMeasuredCrossSize(isMainAxisHorizontal);
                 }
                 break;
             case CENTER:
@@ -461,14 +461,14 @@ public class FlexContainerImpl implements FlexContainer {
                     crossEnd =
                             crossAxisAnchor - (flexLine.mCrossSize / 2 -
                                     item.getOuterCrossSize(isMainAxisHorizontal) / 2) -
-                                    item.crossAxisMarginEnd(isMainAxisHorizontal);
-                    crossStart = crossEnd - item.getCrossSize(isMainAxisHorizontal);
+                                    item.getCrossAxisMarginEnd(isMainAxisHorizontal);
+                    crossStart = crossEnd - item.getMeasuredCrossSize(isMainAxisHorizontal);
                 } else {
                     crossStart =
                             crossAxisAnchor + flexLine.mCrossSize / 2 -
                                     item.getOuterCrossSize(isMainAxisHorizontal) / 2 +
-                                    item.crossAxisMarginStart(isMainAxisHorizontal);
-                    crossEnd = crossStart + item.getCrossSize(isMainAxisHorizontal);
+                                    item.getCrossAxisMarginStart(isMainAxisHorizontal);
+                    crossEnd = crossStart + item.getMeasuredCrossSize(isMainAxisHorizontal);
                 }
                 break;
             default:

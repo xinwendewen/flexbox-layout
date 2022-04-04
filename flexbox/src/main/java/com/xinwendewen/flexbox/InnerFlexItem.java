@@ -80,9 +80,11 @@ public abstract class InnerFlexItem implements FlexItem {
         }
     }
 
+    protected abstract float getFlexBasisPercent();
+
     @Override
     public int getOuterMainSize(boolean isMainAxisHorizontal) {
-        return getMeasuredMainSize(isMainAxisHorizontal) + mainAxisMargin(isMainAxisHorizontal);
+        return getMeasuredMainSize(isMainAxisHorizontal) + getMainAxisMargin(isMainAxisHorizontal);
     }
 
 
@@ -95,17 +97,17 @@ public abstract class InnerFlexItem implements FlexItem {
     protected abstract boolean isFlexGrowSet();
     @Override
     public int getOuterCrossSize(boolean isMainAxisHorizontal) {
-        return getMeasureCrossSize(isMainAxisHorizontal) + crossAxisMargin(isMainAxisHorizontal);
+        return getMeasureCrossSize(isMainAxisHorizontal) + getCrossAxisMargin(isMainAxisHorizontal);
     }
 
 
     @Override
-    public int getMainSize(boolean isMainAxisHorizontal) {
-        return getMeasuredMainSize(isMainAxisHorizontal);
+    public int getMeasuredMainSize(boolean isMainAxisHorizontal) {
+        return isMainAxisHorizontal ? getMeasuredWidth() : getMeasuredHeight();
     }
 
     @Override
-    public int getCrossSize(boolean isMainAxisHorizontal) {
+    public int getMeasuredCrossSize(boolean isMainAxisHorizontal) {
         return isMainAxisHorizontal ? getMeasuredHeight() : getMeasuredWidth();
     }
 
@@ -130,8 +132,10 @@ public abstract class InnerFlexItem implements FlexItem {
         layout(left, top, right, bottom);
     }
 
+    protected abstract void layout(int left, int top, int right, int bottom);
+
     @Override
-    public int clampByMinMaxDimensions(int crossSize, boolean isMainAxisHorizontal) {
+    public int getClampedCrossSize(int crossSize, boolean isMainAxisHorizontal) {
         crossSize = Math.max(crossSize, getMinCrossSize(isMainAxisHorizontal));
         crossSize = Math.min(crossSize, getMaxCrossSize(isMainAxisHorizontal));
         return crossSize;
@@ -163,7 +167,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
     @Override
-    public int minMainSize(boolean isMainAxisHorizontal) {
+    public int getMinMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMinWidth();
         } else {
@@ -180,7 +184,7 @@ public abstract class InnerFlexItem implements FlexItem {
     protected abstract int getMaxHeight();
 
     @Override
-    public float maxMainSize(boolean isMainAxisHorizontal) {
+    public float getMaxMainSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMaxWidth();
         } else {
@@ -195,11 +199,6 @@ public abstract class InnerFlexItem implements FlexItem {
     protected abstract int getMeasuredWidth();
     protected abstract int getMeasuredHeight();
 
-    private int getMeasuredMainSize(boolean isMainAxisHorizontal) {
-        return isMainAxisHorizontal ? getMeasuredWidth() : getMeasuredHeight();
-    }
-
-
     private int getRequiredCrossSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getRequiredHeight();
@@ -212,18 +211,18 @@ public abstract class InnerFlexItem implements FlexItem {
     protected abstract int getRequiredHeight();
 
     @Override
-    public int mainAxisMargin(boolean isMainAxisHorizontal) {
-       return mainAxisMarginStart(isMainAxisHorizontal) + mainAxisMarginEnd(isMainAxisHorizontal);
+    public int getMainAxisMargin(boolean isMainAxisHorizontal) {
+       return getMainAxisMarginStart(isMainAxisHorizontal) + getMainAxisMarginEnd(isMainAxisHorizontal);
     }
     @Override
-    public int mainAxisMarginStart(boolean isMainAxisHorizontal) {
+    public int getMainAxisMarginStart(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginStart();
         }
         return getMarginTop();
     }
     @Override
-    public int mainAxisMarginEnd(boolean isMainAxisHorizontal) {
+    public int getMainAxisMarginEnd(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginEnd();
         }
@@ -232,13 +231,13 @@ public abstract class InnerFlexItem implements FlexItem {
 
 
     @Override
-    public int crossAxisMargin(boolean isMainAxisHorizontal) {
-        return crossAxisMarginStart(isMainAxisHorizontal) +
-                crossAxisMarginEnd(isMainAxisHorizontal);
+    public int getCrossAxisMargin(boolean isMainAxisHorizontal) {
+        return getCrossAxisMarginStart(isMainAxisHorizontal) +
+                getCrossAxisMarginEnd(isMainAxisHorizontal);
     }
 
     @Override
-    public int crossAxisMarginStart(boolean isMainAxisHorizontal) {
+    public int getCrossAxisMarginStart(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginTop();
         } else {
@@ -247,7 +246,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
     @Override
-    public int crossAxisMarginEnd(boolean isMainAxisHorizontal) {
+    public int getCrossAxisMarginEnd(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getMarginBottom();
         } else {

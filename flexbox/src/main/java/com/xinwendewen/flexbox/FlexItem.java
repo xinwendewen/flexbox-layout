@@ -2,8 +2,6 @@ package com.xinwendewen.flexbox;
 
 public interface FlexItem {
     boolean isGone();
-    float getFlexBasisPercent();
-    void layout(int left, int top, int right, int bottom);
 
     void measure(MeasureRequest mainAxisMeasureRequest, int occupiedMainSize,
                  MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
@@ -28,30 +26,30 @@ public interface FlexItem {
 
     AlignSelf getAlignSelf();
 
-    int getMainSize(boolean mainAxisHorizontal);
+    int getMeasuredMainSize(boolean mainAxisHorizontal);
 
-    int minMainSize(boolean isMainAxisHorizontal);
+    int getMinMainSize(boolean isMainAxisHorizontal);
 
-    float maxMainSize(boolean isMainAxisHorizontal);
+    float getMaxMainSize(boolean isMainAxisHorizontal);
 
-    int mainAxisMargin(boolean isMainAxisHorizontal);
+    int getMainAxisMargin(boolean isMainAxisHorizontal);
 
-    int mainAxisMarginStart(boolean isMainAxisHorizontal);
+    int getMainAxisMarginStart(boolean isMainAxisHorizontal);
 
-    int mainAxisMarginEnd(boolean isMainAxisHorizontal);
+    int getMainAxisMarginEnd(boolean isMainAxisHorizontal);
 
-    int crossAxisMargin(boolean isMainAxisHorizontal);
+    int getCrossAxisMargin(boolean isMainAxisHorizontal);
 
-    int crossAxisMarginStart(boolean isMainAxisHorizontal);
+    int getCrossAxisMarginStart(boolean isMainAxisHorizontal);
 
-    int crossAxisMarginEnd(boolean isMainAxisHorizontal);
+    int getCrossAxisMarginEnd(boolean isMainAxisHorizontal);
 
-    int getCrossSize(boolean isMainAxisHorizontal);
+    int getMeasuredCrossSize(boolean isMainAxisHorizontal);
 
     void layout(int mainStart, int mainEnd, int crossStart, int crossEnd,
                 boolean isMainAxisHorizontal, int leftPadding, int topPadding);
 
-    int clampByMinMaxDimensions(int crossSize, boolean isMainAxisHorizontal);
+    int getClampedCrossSize(int crossSize, boolean isMainAxisHorizontal);
 
     void fixedSizeMeasure(int mainSize, int crossSize, boolean isMainAxisHorizontal);
 }
