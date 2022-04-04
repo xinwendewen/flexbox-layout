@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import androidx.core.view.MarginLayoutParamsCompat;
 
 import com.xinwendewen.flexbox.InnerFlexItem;
+import com.xinwendewen.flexbox.MeasureRequest;
 
 class FlexItemImpl extends InnerFlexItem {
     View view;
@@ -97,6 +98,31 @@ class FlexItemImpl extends InnerFlexItem {
     @Override
     protected void measure(int widthSpec, int heightSpec) {
         view.measure(widthSpec, heightSpec);
+    }
+
+    @Override
+    protected void measure(MeasureRequest parentWidthMeasureRequest, int parentOccupiedWidth,
+                           int expectedWidth, MeasureRequest parentHeightMeasureRequest,
+                           int parentOccupiedHeight, int expectedHeight) {
+        int widthMeasureSpec =
+                generateMeasureSpec(((MeasureRequestImpl)parentWidthMeasureRequest).measureSpec,
+                        parentOccupiedWidth + getHorizontalMargin(), expectedWidth);
+        int heightMeasureSpec =
+                generateMeasureSpec(((MeasureRequestImpl) parentHeightMeasureRequest).measureSpec,
+                        parentOccupiedHeight + getVerticalMargin(), expectedHeight);
+        view.measure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    private int getVerticalMargin() {
+        return getMarginTop() + getMarginBottom();
+    }
+
+    private int getHorizontalMargin() {
+        return getMarginStart() + getMarginEnd();
+    }
+
+    private int generateMeasureSpec(int containerMeasureSpec, int occupied, int expect) {
+        return ViewGroup.getChildMeasureSpec(containerMeasureSpec, occupied, expect);
     }
 
     @Override

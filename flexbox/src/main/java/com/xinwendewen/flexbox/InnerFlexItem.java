@@ -24,26 +24,28 @@ public abstract class InnerFlexItem implements FlexItem {
                         MeasureRequest crossAxisMeasureRequest, int occupiedCrossSize,
                         boolean isMainAxisHorizontal) {
         int itemFlexBasis = getFlexBasis(mainAxisMeasureRequest, isMainAxisHorizontal);
-        int mainMeasureSpec = generateMeasureSpec(mainAxisMeasureRequest.getMeasureSpec(),
-                occupiedMainSize + mainAxisMargin(isMainAxisHorizontal), itemFlexBasis);
-        int intentCrossSize = getIntentCrossSize(isMainAxisHorizontal);
-        int crossMeasureSpec = generateMeasureSpec(crossAxisMeasureRequest.getMeasureSpec(),
-                occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal), intentCrossSize);
+        int expectedCrossSize = getRequiredCrossSize(isMainAxisHorizontal);
         if (isMainAxisHorizontal) {
-            measure(mainMeasureSpec, crossMeasureSpec);
+            measure(mainAxisMeasureRequest, occupiedMainSize, itemFlexBasis,
+                    crossAxisMeasureRequest, occupiedCrossSize, expectedCrossSize);
         } else {
-            measure(crossMeasureSpec, mainMeasureSpec);
+            measure(crossAxisMeasureRequest, occupiedCrossSize, expectedCrossSize,
+                    mainAxisMeasureRequest, occupiedMainSize, itemFlexBasis);
         }
     }
 
     protected abstract void measure(int widthSpec, int heightSpec);
+    protected abstract void measure(MeasureRequest parentWidthMeasureRequest,
+                                    int parentOccupiedWidth, int expectedWidth,
+                                    MeasureRequest parentHeightMeasureRequest,
+                                    int parentOccupiedHeight, int expectedHeight);
 
     @Override
     public void fixedMainSizeMeasure(int roundedNewMainSize,
                                      MeasureRequest crossAxisMeasureRequest,
                                      int occupiedCrossSize, boolean isMainAxisHorizontal) {
         int mainMeasureSpec = generateExactlyMeasureSpec(roundedNewMainSize);
-        int intentCrossSize = getIntentCrossSize(isMainAxisHorizontal);
+        int intentCrossSize = getRequiredCrossSize(isMainAxisHorizontal);
         int containerCrossMeasureSpec = crossAxisMeasureRequest.getMeasureSpec();
         int crossMeasureSpec = generateMeasureSpec(containerCrossMeasureSpec,
                 occupiedCrossSize + crossAxisMargin(isMainAxisHorizontal),
@@ -202,7 +204,7 @@ public abstract class InnerFlexItem implements FlexItem {
     }
 
 
-    private int getIntentCrossSize(boolean isMainAxisHorizontal) {
+    private int getRequiredCrossSize(boolean isMainAxisHorizontal) {
         if (isMainAxisHorizontal) {
             return getRequiredHeight();
         } else {
