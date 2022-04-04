@@ -15,16 +15,6 @@ public class RoundingErrorAccumulator {
         return 0;
     }
 
-    public double currentError() {
-        return currentError;
-    }
-
-    public double getAndReset() {
-        double value = currentError;
-        currentError = 0;
-        return value;
-    }
-
     public int round(double value) {
         int rounded = (int) Math.round(value);
         currentError += value - rounded;
@@ -34,9 +24,5 @@ public class RoundingErrorAccumulator {
     public int roundAndCompensate(double value) {
         int rounded = round(value);
         return rounded + compensate();
-    }
-
-    public void accumulatedError(double error) {
-        currentError += error;
     }
 }
