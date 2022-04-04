@@ -6,68 +6,54 @@ import java.util.List;
 import java.util.Set;
 
 public class FlexLine {
-    public FlexLine() {
-    }
+    final List<FlexItem> items = new ArrayList<>();
 
-    public static FlexLine createDummyWithCrossSize(int crossSize) {
+    int mainSize;
+
+    int crossSize;
+
+    float totalFlexGrow;
+
+    float totalFlexShrink;
+
+    int crossSizeSumAbove;
+
+    boolean hasFlexibleItem;
+
+    static FlexLine createDummyWithCrossSize(int crossSize) {
         FlexLine flexLine = new FlexLine();
-        flexLine.mCrossSize = crossSize;
+        flexLine.crossSize = crossSize;
         return flexLine;
     }
 
-    public FlexItem getItemAt(int index) {
+    FlexItem getItemAt(int index) {
        return items.get(index);
     }
 
-    public List<FlexItem> items = new ArrayList<>();
-
-    public void addItem(FlexItem item, boolean isMainAxisHorizontal) {
+    void addItem(FlexItem item, boolean isMainAxisHorizontal) {
         items.add(item);
-        mItemCount++;
-        mAnyItemsHaveFlexGrow |= item.getFlexGrow() > 0;
-        mAnyItemsHaveFlexShrink |= item.getFlexShrink() > 0;
-        mMainSize += item.getOuterMainSize(isMainAxisHorizontal);
-        mTotalFlexGrow += item.getFlexGrow();
-        mTotalFlexShrink += item.getFlexShrink();
-        mCrossSize = Math.max(mCrossSize, item.getOuterCrossSize(isMainAxisHorizontal));
+        hasFlexibleItem |= item.getFlexGrow() > 0;
+        hasFlexibleItem |= item.getFlexShrink() > 0;
+        mainSize += item.getOuterMainSize(isMainAxisHorizontal);
+        totalFlexGrow += item.getFlexGrow();
+        totalFlexShrink += item.getFlexShrink();
+        crossSize = Math.max(crossSize, item.getOuterCrossSize(isMainAxisHorizontal));
     }
 
-    public int mMainSize;
-
-    public int mCrossSize;
-
-    public int mItemCount;
-
-    int mGoneItemCount;
-
-    public float mTotalFlexGrow;
-
-    public float mTotalFlexShrink;
-
-    public int mSumCrossSizeBefore;
-
-    public boolean mAnyItemsHaveFlexGrow;
-
-    public boolean mAnyItemsHaveFlexShrink;
-
     public int getMainSize() {
-        return mMainSize;
+        return mainSize;
     }
 
     public int getCrossSize() {
-        return mCrossSize;
+        return crossSize;
     }
 
     public int getItemCount() {
         return items.size();
     }
 
-    public int getItemCountNotGone() {
-        return mItemCount - mGoneItemCount;
-    }
-
-    public boolean isFrozen() {
-        for (int i = 0; i < mItemCount; i++) {
+    boolean isFrozen() {
+        for (int i = 0; i < items.size(); i++) {
             FlexItem item = items.get(i);
             boolean isItemFrozen = !item.isFlexible() || violatedIndices.contains(i);
             if (!isItemFrozen) {
@@ -79,8 +65,7 @@ public class FlexLine {
 
     Set<Integer> violatedIndices = new HashSet<>();
 
-
-    public boolean isItemShrinkFrozen(int index) {
+    boolean isItemShrinkFrozen(int index) {
         if (violatedIndices.contains(index)) {
             return true;
         }
@@ -92,7 +77,7 @@ public class FlexLine {
         return false;
     }
 
-    public boolean isItemGrowFrozen(int index) {
+    boolean isItemGrowFrozen(int index) {
         if (violatedIndices.contains(index)) {
             return true;
         }
@@ -104,20 +89,20 @@ public class FlexLine {
         return false;
     }
 
-    public void freezeItemAt(int index) {
+    void freezeItemAt(int index) {
         violatedIndices.add(index);
         FlexItem item = items.get(index);
         float growFactor = item.getFlexGrow();
         if (growFactor > 0) {
-            mTotalFlexGrow -= growFactor;
+            totalFlexGrow -= growFactor;
         }
         float shrinkFactor = item.getFlexShrink();
         if (shrinkFactor > 0) {
-            mTotalFlexShrink -= shrinkFactor;
+            totalFlexShrink -= shrinkFactor;
         }
     }
 
-    public void refreshCrossSize(boolean isMainAxisHorizontal) {
+    void refreshCrossSize(boolean isMainAxisHorizontal) {
         int crossSize = 0;
         for (FlexItem item : items) {
             crossSize = Math.max(crossSize, item.getOuterCrossSize(isMainAxisHorizontal));

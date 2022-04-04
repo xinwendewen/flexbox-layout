@@ -525,7 +525,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     public int getLargestMainSize() {
         int largestSize = Integer.MIN_VALUE;
         for (FlexLine flexLine : mFlexLines) {
-            largestSize = Math.max(largestSize, flexLine.mMainSize);
+            largestSize = Math.max(largestSize, flexLine.getMainSize());
         }
         return largestSize;
     }
@@ -553,7 +553,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
                     sum += mDividerVerticalWidth;
                 }
             }
-            sum += flexLine.mCrossSize;
+            sum += flexLine.getCrossSize();
         }
         return sum;
     }
@@ -677,7 +677,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
     public List<FlexLine> getFlexLines() {
         List<FlexLine> result = new ArrayList<>(mFlexLines.size());
         for (FlexLine flexLine : mFlexLines) {
-            if (flexLine.getItemCountNotGone() == 0) {
+            if (flexLine.getItemCount() == 0) {
                 continue;
             }
             result.add(flexLine);
@@ -715,17 +715,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     @Override
     public void onNewFlexLineAdded(FlexLine flexLine) {
-        // The size of the end divider isn't added until the flexLine is added to the flex container
-        // take the divider width (or height) into account when adding the flex line.
-        if (isMainAxisDirectionHorizontal()) {
-            if ((mShowDividerVertical & SHOW_DIVIDER_END) > 0) {
-                flexLine.mMainSize += mDividerVerticalWidth;
-            }
-        } else {
-            if ((mShowDividerHorizontal & SHOW_DIVIDER_END) > 0) {
-                flexLine.mMainSize += mDividerHorizontalHeight;
-            }
-        }
     }
 
     @Override
@@ -740,14 +729,6 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     @Override
     public void onNewFlexItemAdded(View view, int index, int indexInFlexLine, FlexLine flexLine) {
-        // Check if the beginning or middle divider is required for the flex item
-        if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
-            if (isMainAxisDirectionHorizontal()) {
-                flexLine.mMainSize += mDividerVerticalWidth;
-            } else {
-                flexLine.mMainSize += mDividerHorizontalHeight;
-            }
-        }
     }
 
     @Override
@@ -967,7 +948,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
 
     private boolean allFlexLinesAreDummyBefore(int flexLineIndex) {
         for (int i = 0; i < flexLineIndex; i++) {
-            if (mFlexLines.get(i).getItemCountNotGone() > 0) {
+            if (mFlexLines.get(i).getItemCount() > 0) {
                 return false;
             }
         }
@@ -986,7 +967,7 @@ public class FlexboxLayout extends ViewGroup implements FlexContainer {
         }
 
         for (int i = flexLineIndex + 1; i < mFlexLines.size(); i++) {
-            if (mFlexLines.get(i).getItemCountNotGone() > 0) {
+            if (mFlexLines.get(i).getItemCount() > 0) {
                 return false;
             }
         }

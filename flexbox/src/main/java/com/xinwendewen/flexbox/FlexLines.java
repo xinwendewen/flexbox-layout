@@ -13,7 +13,7 @@ class FlexLines {
     int getLargestMainSize() {
         int largestMainSize = 0;
         for (FlexLine flexLine : flexLineList) {
-            largestMainSize = Math.max(largestMainSize, flexLine.mMainSize);
+            largestMainSize = Math.max(largestMainSize, flexLine.mainSize);
         }
         return largestMainSize;
     }
@@ -25,7 +25,7 @@ class FlexLines {
     int getCrossSize() {
         int crossSize = 0;
         for (FlexLine flexLine : flexLineList) {
-            crossSize += flexLine.mCrossSize;
+            crossSize += flexLine.crossSize;
         }
         return crossSize;
     }
