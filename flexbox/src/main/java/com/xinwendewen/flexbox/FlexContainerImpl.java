@@ -66,9 +66,9 @@ public class FlexContainerImpl implements FlexContainer {
         if (crossAxisMeasureRequest.isTight()) {
             if (flexLines.isSingleLine()) {
                 flexLines.mFlexLines.get(0).mCrossSize =
-                        crossAxisMeasureRequest.intentSize() - paddings.getCrossPaddings(isMainAxisHorizontal());
+                        crossAxisMeasureRequest.getExpectedSize() - paddings.getCrossPaddings(isMainAxisHorizontal());
             } else {
-                int determinedCrossSize = crossAxisMeasureRequest.intentSize();
+                int determinedCrossSize = crossAxisMeasureRequest.getExpectedSize();
                 int containerCrossAxisPadding = paddings.getCrossPaddings(isMainAxisHorizontal());
                 crossAlignment(determinedCrossSize - containerCrossAxisPadding, flexLines);
             }
@@ -166,7 +166,7 @@ public class FlexContainerImpl implements FlexContainer {
 
     int determineMainSize(MeasureRequest mainAxisMeasureRequest) {
         int largestFlexLineMainSize = flexLines.getLargestMainSize();
-        int expectedMainSize = mainAxisMeasureRequest.intentSize();
+        int expectedMainSize = mainAxisMeasureRequest.getExpectedSize();
         if (mainAxisMeasureRequest.isTight()) {
             return expectedMainSize;
         } else {
@@ -271,10 +271,10 @@ public class FlexContainerImpl implements FlexContainer {
         if (flexWrap == FlexWrap.NOWRAP) {
             return false;
         }
-        if (mainAxisMeasureRequest.isUnconstrainted()) {
+        if (mainAxisMeasureRequest.isUnconstrained()) {
             return false;
         }
-        return mainAxisMeasureRequest.intentSize()
+        return mainAxisMeasureRequest.getExpectedSize()
                 < currentFlexLine.mMainSize + item.getOuterMainSize(isMainAxisHorizontal);
     }
 

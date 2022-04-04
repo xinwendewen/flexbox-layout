@@ -1,10 +1,9 @@
 package com.xinwendewen.flexbox;
 
-
 public interface MeasureRequest {
     boolean isTight();
 
-    boolean isUnconstrainted();
+    boolean isUnconstrained();
 
-    int intentSize();
+    int getExpectedSize();
 }

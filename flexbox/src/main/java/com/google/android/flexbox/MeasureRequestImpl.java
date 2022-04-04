@@ -17,12 +17,12 @@ class MeasureRequestImpl implements MeasureRequest {
     }
 
     @Override
-    public boolean isUnconstrainted() {
+    public boolean isUnconstrained() {
         return getMeasureSpecMode(measureSpec) == View.MeasureSpec.UNSPECIFIED;
     }
 
     @Override
-    public int intentSize() {
+    public int getExpectedSize() {
         return getMeasureSpecSize(measureSpec);
     }
 

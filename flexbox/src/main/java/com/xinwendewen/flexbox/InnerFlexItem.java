@@ -4,7 +4,7 @@ public abstract class InnerFlexItem implements FlexItem {
     public int getFlexBasis(MeasureRequest containerMainMeasureRequest, boolean isMainHorizontal) {
         float flexBasisPercent = getFlexBasisPercent();
         if (isFlexBasisPercentSet() && containerMainMeasureRequest.isTight()) {
-            return Math.round(containerMainMeasureRequest.intentSize() * flexBasisPercent);
+            return Math.round(containerMainMeasureRequest.getExpectedSize() * flexBasisPercent);
         } else {
             if (isMainHorizontal) {
                 return getRequiredWidth();
