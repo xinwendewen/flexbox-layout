@@ -1,407 +1,675 @@
-# FlexboxLayout
-[ ![Circle CI](https://circleci.com/gh/google/flexbox-layout.svg?style=shield&circle-token=2a42716dfffab73d73c5ce7ed7b3ee620cfa137b) ](https://circleci.com/gh/google/flexbox-layout/tree/main)
+# Introduction
 
-FlexboxLayout is a library project which brings the similar capabilities of
-[CSS Flexible Box Layout Module](https://www.w3.org/TR/css-flexbox-1) to Android.
+This project is derivied from the google FlexboxLayout with the following changes:
 
-# Installation
-Add the following dependency to your `build.gradle` file:
+- add a new stand-alone java library that implements the CSS Flexbox algorithm
+
+- take reference and rewrite most of the original flexbox algorithm according to my own understanding of implementing flexbox specification on android platform
+
+- remove the code related to RecyclerView, the optimization during flex calculation, the android tests and the cat gallery demo
+
+- delegate the flex calculation during the measure and layout process of google FlexboxLayout to the library. Verify the correctness by existing unit tests and the playground demo
+
+- some flexbox features are not implemented yet such as order and baseline alignment
+
+# Algorithm
+
+## The Measure Phase
+
+### 1.generate the flex lines data structure
+
+given the
+
+- flex items
+
+- measure request of the container
+
+- container flex properties
+
+measure all flex items and fill the flex lines with flex items
 
 ```
-dependencies {
-    implementation 'com.google.android.flexbox:flexbox:3.0.0'
+prepare flex lines
+prepare current flex line
+for each flex item {
+    measure its main size (do not take filled flex items into account)
+    measure its cross size (take occupied cross size into account)
+    clamp by min/max constrains and remeasure if needed
+    if (isWrapNeeded) {
+        finish and append current flex line
+        remeasure if cross size MATCH_PARENT
+        prepare new current flex line
+    }
+    add current item to current flex line
+}
+append current flex line
+return flex lines
+
+boolean isWrapNeeded(flexContainer, currentFlexLine, flexItem) {
+    if (flexContainer.flexWrap == noWrap) return false;
+    if (flexContainer.mainAxisMeasureRequest.isUnconstrained) return false;
+    return (flexContainer.mainAxisMeasureRequest.initialSize <
+        currentFlexLine.mainSize + flexItem.outerMainSize)
 }
 ```
 
-**Starting from 3.0.0, the groupId is changed to `com.google.android.flexbox` in preparation to uploading the artifacts to google maven.
-You can still download the artifacts from jcenter for the past versions with the prior groupId (`com.google.android`), but migrating the library 3.0.0 is recommended.**
+### 2.determine the main size of the container
 
-Note that the default values for `alignItems` and `alignContent` for `FlexboxLayout` have been changed from `stretch` to `flex_start` starting from 2.0.0, it may break the existing apps.
-Please make sure to set `stretch` explicitly if you want to apply the behavior of `stretch`.
+given
 
+- the generated flex lines
 
-Note that starting from 1.1.0, the library is expeced to use with AndroidX. Please migrate to [AndroidX](https://developer.android.com/jetpack/androidx/migrate) if you use 1.1.0 or above.
+- measure request of the container
 
-Please use 1.0.0 if you haven't migrated to AndroidX.
+calculate and determine the main size of the container, as one input for flexable length calculation. if the container requires exact size, respect that, otherwise use the min of require size and the max main size of flex line in generated flex lines
 
-
-# Usage
-There are two ways of using Flexbox in your layout.
-
-## FlexboxLayout
-The first one is `FlexboxLayout` that extends the `ViewGroup` like `LinearLayout` and `RelativeLayout`.
-You can specify the attributes from a layout XML like:
-```xml
-<com.google.android.flexbox.FlexboxLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:flexWrap="wrap"
-    app:alignItems="stretch"
-    app:alignContent="stretch" >
-
-    <TextView
-        android:id="@+id/textview1"
-        android:layout_width="120dp"
-        android:layout_height="80dp"
-        app:layout_flexBasisPercent="50%"
-        />
-
-    <TextView
-        android:id="@+id/textview2"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        app:layout_alignSelf="center"
-        />
-
-    <TextView
-        android:id="@+id/textview3"
-        android:layout_width="160dp"
-        android:layout_height="80dp"
-        app:layout_alignSelf="flex_end"
-        />
-</com.google.android.flexbox.FlexboxLayout>
 ```
-
-Or from code like:
-```java
-FlexboxLayout flexboxLayout = (FlexboxLayout) findViewById(R.id.flexbox_layout);
-flexboxLayout.setFlexDirection(FlexDirection.ROW);
-
-View view = flexboxLayout.getChildAt(0);
-FlexboxLayout.LayoutParams lp = (FlexboxLayout.LayoutParams) view.getLayoutParams();
-lp.setOrder(-1);
-lp.setFlexGrow(2);
-view.setLayoutParams(lp);
-```
-
-## FlexboxLayoutManager (within RecyclerView)
-The second one is `FlexboxLayoutManager` that can be used within `RecyclerView`.
-
-```java
-RecyclerView recyclerView = (RecyclerView) context.findViewById(R.id.recyclerview);
-FlexboxLayoutManager layoutManager = new FlexboxLayoutManager(context);
-layoutManager.setFlexDirection(FlexDirection.COLUMN);
-layoutManager.setJustifyContent(JustifyContent.FLEX_END);
-recyclerView.setLayoutManager(layoutManager);
-```
-
-or for the attributes for the children of the `FlexboxLayoutManager` you can do like:
-
-```java
-mImageView.setImageDrawable(drawable);
-ViewGroup.LayoutParams lp = mImageView.getLayoutParams();
-if (lp instanceof FlexboxLayoutManager.LayoutParams) {
-    FlexboxLayoutManager.LayoutParams flexboxLp = (FlexboxLayoutManager.LayoutParams) lp;
-    flexboxLp.setFlexGrow(1.0f);
-    flexboxLp.setAlignSelf(AlignSelf.FLEX_END);
+int determineMainSize() {
+    int largestFlexLineMainSize = flexLines.getLargetsMainSize
+    int requestedMainSize = mainAxisMeasureRequest.getSize
+    int finalMainSize
+    if container.isFixedSize:
+        finalMainSize = requestedMainSize
+    else:
+        // not tight
+        finalMainSize = minOf(largestFlexLineMainSize, requestedMainSize)
+    return finalMainSize
 }
 ```
 
-The advantage of using `FlexboxLayoutManager` is that it recycles the views that go off the screen
-for reuse for the views that are appearing as the user scrolls instead of inflating every individual view,
-which consumes much less memory especially when the number of items contained in the Flexbox container is large.
+### 3.calculate the flexible lengths for each flex line
 
-![FlexboxLayoutManager in action](/assets/flexbox-layoutmanager.gif)
+given
 
+- the flex lines data structure
 
-## Supported attributes/features comparison
-Due to some characteristics of `RecyclerView`, some Flexbox attributes are not available/not implemented
-to the `FlexboxLayoutManager`.
-Here is a quick overview of the attributes/features comparison between the two implementations.
+- the determined main size of the container
 
-|Attribute / Feature|FlexboxLayout| FlexboxLayoutManager (RecyclerView)|
-| ------- |:-----------:|:----------------------------------:|
-|flexDirection|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|flexWrap|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png) (except `wrap_reverse`)|
-|justifyContent|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|alignItems|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|alignContent|![Check](/assets/pngs/check_green_small.png)| - |
-|layout_order|![Check](/assets/pngs/check_green_small.png)| - |
-|layout_flexGrow|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_flexShrink|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_alignSelf|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_flexBasisPercent|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_(min/max)Width|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_(min/max)Height|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|layout_wrapBefore|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|Divider|![Check](/assets/pngs/check_green_small.png)|![Check](/assets/pngs/check_green_small.png)|
-|View recycling| - |![Check](/assets/pngs/check_green_small.png)|
-|Scrolling| *1 |![Check](/assets/pngs/check_green_small.png)|
+- measure request of the container
 
-*1 Partially possible by wrapping it with `ScrollView`. But it isn't likely to work with a large set
-   of views inside the layout. Because it doesn't consider view recycling.
+shrink or expand flex items in every flex line inorder to fill the available space(may be negative) of every flex line, and the updated flex lines date structure.
 
-# Supported attributes
+flexible lengths are calculated within each flex line independently
 
-## Attributes for the FlexboxLayout:
-
-* __flexDirection__
-  * This attribute determines the direction of the main axis (and the cross axis, perpendicular to the main axis). The direction children items are placed inside the Flexbox layout.
-  Possible values are:
-    * row (default)
-    * row_reverse
-    * column
-    * column_reverse
-
-    ![Flex Direction explanation](/assets/flex-direction.gif)
-
-* __flexWrap__
-  * This attribute controls whether the flex container is single-line or multi-line, and the
-  direction of the cross axis. Possible values are:
-    * nowrap (default for FlexboxLayout)
-    * wrap (default for FlexboxLayoutManager)
-    * wrap_reverse (not supported by FlexboxLayoutManager)
-
-    ![Flex Wrap explanation](/assets/flex-wrap.gif)
-
-* __justifyContent__
-  * This attribute controls the alignment along the main axis. Possible values are:
-    * flex_start (default)
-    * flex_end
-    * center
-    * space_between
-    * space_around
-    * space_evenly
-
-    ![Justify Content explanation](/assets/justify-content.gif)
-
-* __alignItems__
-  * This attribute controls the alignment along the cross axis. Possible values are:
-    * flex_start (default for FlexboxLayout)
-    * flex_end
-    * center
-    * baseline
-    * stretch (default for FlexboxLayoutManager)
-
-    ![Align Items explanation](/assets/align-items.gif)
-
-* __alignContent__
-  * This attribute controls the alignment of the flex lines in the flex container. Possible values
-  are:
-    * flex_start (default)
-    * flex_end
-    * center
-    * space_between
-    * space_around
-    * stretch
-
-    ![Align Content explanation](/assets/align-content.gif)
-
-* __showDividerHorizontal__ (one or more of `none | beginning | middle | end`)
-* __dividerDrawableHorizontal__ (reference to a drawable)
-  * Puts horizontal dividers between flex lines (or flex items when flexDirection
-  is set to `column` or `column_rebase`).
-  
-* __showDividerVertical__ (one or more of `none | beginning | middle | end`)
-* __dividerDrawableVertical__ (reference to a drawable)
-  * Puts vertical dividers between flex items (or flex lines when flexDirection
-  is set to `column` or `column_rebase`).
-
-* __showDivider__ (one or more of `none | beginning | middle | end`)
-* __dividerDrawable__ (reference to a drawable)
-  * Shorthand for setting both horizontal and vertical dividers. Note that if used with other attributes
-  (such as `justifyContent="space_around"` or `alignContent="space_between"` ... etc) for putting 
-  spaces between flex lines or flex items, you may see unexpected spaces. Please avoid using these
-  at the same time.
-  
-  Example of putting both vertical and horizontal dividers.
-  
-  `res/drawable/divider.xml`
-  ```xml
-  <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <size
-        android:width="8dp"
-        android:height="12dp" />
-    <solid android:color="#44A444" />
-  </shape> 
-  ```
-  
-  `res/layout/content_main.xml`
-  ```xml
-  <com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:alignContent="flex_start"
-    app:alignItems="flex_start"
-    app:flexWrap="wrap"
-    app:showDivider="beginning|middle"
-    app:dividerDrawable="@drawable/divider" >
-
-    <TextView
-        style="@style/FlexItem"
-        android:layout_width="220dp"
-        android:layout_height="80dp"
-        android:text="1" />
-    <TextView
-        style="@style/FlexItem"
-        android:layout_width="120dp"
-        android:layout_height="80dp"
-        android:text="2" />
-    <TextView
-        style="@style/FlexItem"
-        android:layout_width="160dp"
-        android:layout_height="80dp"
-        android:text="3" />
-    <TextView
-        style="@style/FlexItem"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:text="4" />
-    <TextView
-        style="@style/FlexItem"
-        android:layout_width="100dp"
-        android:layout_height="80dp"
-        android:text="5" />
-  ```
-  
-  ![Dividers beginning and middle](/assets/divider-beginning-middle.png)
-
-
-## Attributes for the children of a FlexboxLayout
-
-* __layout_order__ (integer)
-  * This attribute can change how the ordering of the children views are laid out.
-  By default, children are displayed and laid out in the same order as they appear in the
-  layout XML. If not specified, `1` is set as a default value.
-
-    ![Order explanation](/assets/layout_order.gif)
-
-* __layout_flexGrow__ (float)
-  * This attribute determines how much this child will grow if positive free space is
-  distributed relative to the rest of other flex items included in the same flex line.
-  If a flex item has a positive `layout_flexGrow` value, the item will take up the remaining
-  space in the flex line. If multiple flex items in the same flex line have positive `layout_flexGrow`
-  values, the remaining free space is distributed depending on the proportion of their declared
-  `layout_flexGrow` value. (Similar to the `layout_weight` attribute in the `LinearLayout`)
-  If not specified, `0` is set as a default value.
-
-    ![Flex Grow explanation](/assets/layout_flexGrow.gif)
-
-* __layout_flexShrink__ (float)
-  * This attribute determines how much this child will shrink if negative free space is
-  distributed relative to the rest of other flex items included in the same flex line.
-  If not specified, `1` is set as a default value.
-
-    ![Flex Shrink explanation](/assets/layout_flexShrink.gif)
-
-* __layout_alignSelf__
-  * This attribute determines the alignment along the cross axis (perpendicular to the
-  main axis). The alignment in the same direction can be determined by the
-  `alignItems` in the parent, but if this is set to other than
-  `auto`, the cross axis alignment is overridden for this child. Possible values are:
-    * auto (default)
-    * flex_start
-    * flex_end
-    * center
-    * baseline
-    * stretch
-
-    ![Align Self explanation](/assets/layout_alignSelf.gif)
-
-* __layout_flexBasisPercent__ (fraction)
-  * The initial flex item length in a fraction format relative to its parent.
-  The initial main size of this child view is trying to be expanded as the specified
-  fraction against the parent main size.
-  If this value is set, the length specified from `layout_width`
-  (or `layout_height`) is overridden by the calculated value from this attribute.
-  This attribute is only effective when the parent's length is definite (MeasureSpec mode is
-  `MeasureSpec.EXACTLY`). The default value is `-1`, which means not set.
-
-    ![Flex basis percent explanation](/assets/layout_flexBasisPercent.gif)
-
-* __layout_minWidth__ / __layout_minHeight__ (dimension)
-  * These attributes impose minimum size constraints for the children of FlexboxLayout.
-  A child view won't shrink less than the value of these attributes (varies based on the
-  `flexDirection` attribute as to which attribute imposes the size constraint along the
-  main axis) regardless of the `layout_flexShrink` attribute.
-
-    ![Min width explanation](/assets/layout_minWidth.gif)
-
-* __layout_maxWidth__ / __layout_maxHeight__ (dimension)
-  * These attributes impose maximum size constraints for the children of FlexboxLayout.
-  A child view won't be expanded more than the value of these attributes (varies based on the
-  `flexDirection` attribute as to which attribute imposes the size constraint along the
-  main axis) regardless of the `layout_flexGrow` attribute.
-
-    ![Max width explanation](/assets/layout_maxWidth.gif)
-
-* __layout_wrapBefore__ (boolean)
-  * This attribute forces a flex line wrapping, the default value is `false`.
-  i.e. if this is set to `true` for a
-  flex item, the item will become the first item of a flex line. (A wrapping happens
-  regardless of the flex items being processed in the previous flex line)
-  This attribute is ignored if the `flex_wrap` attribute is set to `nowrap`.
-  The equivalent attribute isn't defined in the original CSS Flexible Box Module
-  specification, but having this attribute is useful for Android developers. For example, to flatten
-  the layouts when building a grid-like layout or for a situation where developers want
-  to put a new flex line to make a semantic difference from the previous one, etc.
-
-    ![Wrap before explanation](/assets/layout_wrapBefore.gif)
-
-# Others
-
-## Known differences from the original CSS specification
-This library tries to achieve the same capabilities of the original
-[Flexible Box specification](https://www.w3.org/TR/css-flexbox-1) as much as possible,
-but due to some reasons such as the way specifying attributes can't be the same between
-CSS and Android XML, there are some known differences from the original specification.
-
-(1) There is no [flex-flow](https://www.w3.org/TR/css-flexbox-1/#flex-flow-property)
-equivalent attribute
-  * Because `flex-flow` is a shorthand for setting the `flex-direction` and `flex-wrap` properties,
-  specifying two attributes from a single attribute is not practical in Android.
-
-(2) There is no [flex](https://www.w3.org/TR/css-flexbox-1/#flex-property) equivalent attribute
-  * Likewise `flex` is a shorthand for setting the `flex-grow`, `flex-shrink` and `flex-basis`,
-  specifying those attributes from a single attribute is not practical.
-
-(3) `layout_flexBasisPercent` is introduced instead of
-  [flexBasis](https://www.w3.org/TR/css-flexbox-1/#flex-basis-property)
-  * Both `layout_flexBasisPercent` in this library and `flex-basis` property in the CSS are used to
-  determine the initial length of an individual flex item. The `flex-basis` property accepts width
-  values such as `1em`, `10px`, and `content` as strings as well as percentage values such as
-  `10%` and `30%`. `layout_flexBasisPercent` only accepts percentage values.
-  However, specifying initial fixed width values can be done by specifying width (or height) values in
-  layout_width (or layout_height, varies depending on the `flexDirection`). Also, the same
-  effect can be done by specifying "wrap_content" in layout_width (or layout_height) if
-  developers want to achieve the same effect as 'content'. Thus, `layout_flexBasisPercent` only
-  accepts percentage values, which can't be done through layout_width (or layout_height) for
-  simplicity.
-
-(4) `layout_wrapBefore` is introduced.
-  * The equivalent attribute doesn't exist in the CSS Flexible Box Module specification,
-  but as explained above, Android developers will benefit by having this attribute for having
-  more control over when a wrapping happens.
-
-(5) Default values for `alignItems` and `alignContent` are set to `flex_start` instead of `stretch`.
-  * Setting `stretch` for the `alignItems` is expensive because the children of `FlexboxLayout` are measured more than twice. The difference is more obvious when the layout hierarchy is deeply nested.
-
-## Xamarin Binding
-Xamarin binding is now available on [NuGet](https://www.nuget.org/packages/FlexboxLayoutXamarinBindingAndroid/) thanks to [@btripp](https://github.com/btripp)
-
-## Demo apps
-### Flexbox Playground demo app
-The `demo-playground` module works as a playground demo app for trying various values for the supported attributes.
-You can install it by
 ```
-./gradlew demo-playground:installDebug
+for each flexLine in flexLines:
+    calculate flexible lengths of current flexLine
 ```
 
-### Cat gallery demo app
-The `demo-cat-gallery` module showcases the usage of the FlexboxLayoutManager inside the RecyclerView
-that handles various sizes of views aligned nicely regardless of the device width like the
-Google Photo app without loading all the images on the memory.
-Thus compared to using the {@link FlexboxLayout}, it's much less likely to abuse the memory,
-which sometimes leads to the OutOfMemoryError.
+#### the frozen item
+
+a frozen item means it can no longer shrink or expend
+
+a flex is frozen when
+
+- it has a flex factor of zero
+
+- it has exceeds its dimension boundary constraints (min/max) after shrink or expand
+
+#### flexible length calculation
+
+- calculate the available space
+
+     - grow when positive
+
+     - shrink when negative
+
+- calculate the space unit size
+
+- for each item
+
+     - grow or shrink according to its flex factor
+
+     - check min/max constraint
+
+     - remeasure
+
+     - update flex line state
+
+#### flexible length calculation may occur multiple times
+
+if some item violates and clamps itself to the min or max constraint after shrink or expand calculation, the available space is not fully distributed, we have to calculate the flexible again untill the main size of the flexline equals to the main size of the conatiner
+
+#### rounding error accumulation and compensation
+
+##### the problem
+
+when you distribute available space to flex items, the distributed size is of type float, but the android view system accept integer pixels only, so rounding is required, along with deminsion errors.
+
+for example, if a flex line has 100 flex items, after the flexible lengths are calculated, every flex item has a main size of 10.4 pixels, which will be 10 pixels after rounding, then the total difference of main size of this flex line will be 40 pixels.
+
+##### the solution
+
+an error accumulation and compensation strategy, by accumulating the rounding error while calculate the flexible length for each flex item
+
+- if the accumulated error is greater than 1 pixel, add 1 pixel to current item, and decrease the accumulated error sum by 1
+
+- if the accumulated error is less than -1 pixel, minus 1 pixel to current item, and increase the accumulated error sum by 1
+
+#### pseudo code
+
 ```
-./gradlew demo-cat-gallery:installDebug
+while (flexLine.isNotFrozen && flexLine.mainSize != containerMainSize) {
+    int available = containerMainSize - flexLine.mainSize
+    float unit = available / flexLine.flexFactorSum
+    boolean hasViolation = false
+    for each item in flexLine.items:
+        if item.isFrozen || item.hasBeenClamped:
+            continue
+        int measuredMainSize = item.getMeasuredMainSize
+        int newMainSize = measuredMainSize - item.flexFactor * unit
+        if (newMainSize < item.minMainSize):
+            hasViolation = true
+            newMainSize = item.minMainSize
+            flexLine.flexFactorSum -= item.flexFactor
+            item.markFrozen
+        } else if (newMainSize > item.maxMainSize) {
+            hasViolation = true
+            newMainSize = item.maxMainSize
+            flexLine.flexFactorSum -= item.flexFactor
+            item.markFrozen
+        }
+        item.remeasureWidthFixedMainSize(containerMeasureRequests,
+            newMainSize, flexLine.crossSizeBrfore)
+        item.clampByMinMax
+        update the flex line state
+        if (hasViolation) {
+            break;
+        }
+}
 ```
 
-## How to make contributions
-Please read and follow the steps in [CONTRIBUTING.md](/CONTRIBUTING.md)
+### 4.determine the cross size of the container
 
-## License
-Please see [LICENSE](/LICENSE)
+given
+
+- the cross axis measure request of the conatiner
+
+- the flex lines data structure
+
+calculate the cross size of the container, which determines whether cross axis alignment is required.
+
+if the container requires fixed cross size and the container itself has multiple flex lines, we may need to perform cross axis alignment to flex lines within the container, otherwise the flex container just wrap flex lines.
+
+```
+if crossAxisMeasureRequest require fixed size:
+    return crossAxisMeasureRequest.getRequireSize
+else
+    return flexLines.crossSize + containerCrossAxisPadding
+```
+
+set cross size for single-line flex container
+
+```
+if crossAxisMeasureRequest require fixed size && flexLines.size() == 1:
+    flexLine.get(0).crossSize = conatainerCrossSize - containerCrossPaddings
+```
+
+### 5.align flex lines along the cross axis
+
+given
+
+- flex lines
+
+- cross size of the container
+
+- align-content
+
+perform flex lines alignment according to the align-content property.
+
+#### check whether alignment is required
+
+if the cross size of the container is unspecified, it just wrap the flex lines, so no room for alignment. if there is only one flex line, no need for alignment neither.
+
+when the cross size of the container is specified, flex lines are aligned according to property align-content.
+
+```
+boolean needAlignment(containerCrossAxisMeasureRequest, flexLines):
+    if (flexLines.size == 1) -> false
+    if (!containerCrossAxisMeasureRequest.requireExactSize) -> false
+    return true
+```
+
+#### perform alignment by align-content
+
+to perform flex line alignment along the cross axis, we calculate the free space, and distribute the free space to existing flex lines or new dummy flex lines used as placeholders
+
+##### flex-start
+
+do nothing, flex lines satisfied flex-start by nature
+
+##### flex-end
+
+calculate the free space
+
+- if positive, add a dummy spacee flex line to the top of the flex lines
+
+- if negative, overflow the top flex line
+
+```
+freeSpace = containerCrossSize - flexLines.crossSize
+flexLines.addTop(DummyFlexLine.withCrossSize(freeSpace))
+```
+
+> note that add a dummy flex line with negative cross size is equivalent to offsetting next real flex line backward along the cross axis, so that it can be overflowed
+
+##### stretch
+
+calculate the free space
+
+- if positive, distribute to each flex line
+
+- if negative, do nothing
+
+```
+freeSpace = containerCrossSize - flexLines.crossSize
+if (freeSpace > 0) {
+    unitSpace = freeSpace / flexLines.count
+    for each flexLine in flexLines {
+        flexLine += unitSpace
+    }
+}
+```
+
+##### space-around
+
+calculate the free space
+
+- if positive, calculate the cross size of dummy flex line, and add a dummy flex line to the top and bottom of every flex line
+
+- if negative, treat it as align-content center
+
+```
+freeSpace = containerCrossSize - flexLines.crossSize
+if (freeSpace > 0) {
+    unitSpace = freeSpace / (flexLines.count * 2)
+    for each flexLine in flexLines {
+        flexLine.insertAbove(DummyFlexLine.withCrossSize(unitSpace)
+        flexLine.insertAfter(DummyFlexLine.withCrossSize(unitSpace)
+    }
+} else {
+    // see align-content center
+}
+```
+
+##### space-between
+
+calculate the free space
+
+- if positive, calculate the space between two flex lines, add a dummy flex line between every two flex lines
+
+- if negative, do nothing
+
+```
+freeSpace = containerCrossSize - flexLines.crossSize
+if (freeSpace > 0) {
+    unitSpace = freeSpace / (flexLines.count - 1)
+    for each flexLine in flexLines {
+        if (flexLine is the first one) {
+            continue; // skip the first flex line
+        }
+        flexLine.insertAbove(DummyFlexLine.withCrossSize(unitSpace)
+    }
+}
+```
+
+##### center
+
+calculate the free space
+
+- if positive, add two dummy space flex line with cross size equals to (free space / 2) to the top and bottom of the flex lines
+
+- if negative, overflow the top and bottom flex lines equally in both directions
+
+```
+freeSpace = containerCrossSize - flexLines.crossSize
+unitSpace = freeSpace / 2
+flexLines.addTop(DummyFlexLine.withCrossSize(unisSpace))
+flexLines.addBotom(DummyFlexLine.withCrossSize(unisSpace))
+```
+
+### 6.stretch items along the cross axis
+
+since the cross size of every flex line has been determined, it is time to stretch flex items within a flex line if required
+
+given
+
+- flex lines structure
+
+- align-items and align-self property
+
+we iterate every flex item in every flex line, if the flex item require stretch, then stretch it. then return the flex lines structure after stretched.
+
+#### check whether a flex item need stretch
+
+```
+boolean needStretch(flexItem, containerAlignItems, flexLine) {
+    if (flexItem.outerCrossSize >= flexLine.crossSize) {
+        return false;
+    }
+    if (flexItem.alignSelf is stretch) {
+        return true
+    }
+    if (flexItem.alignSelf is auto && container.alignItems is stretch) {
+        return true
+    }
+    return false
+}
+```
+
+#### stretch an item
+
+remeasure it with specified cross size after stretched and specified current main size of the item
+
+```
+stretch(flexItem, flexLine) {
+    newCrossSize = flexLine.crossSize - flexItem.crossAxisMargin
+    newCrossSize = clamp(flexItem.minCrossSize, flexItem.maxCrossSize)
+    item.fixedSizeMeasure(item.mainSize, newCrossSize)
+}
+```
+## The Layout Phase
+
+### how to layout an item in general
+
+#### the main idea
+
+to layout an item, given the layout area of the container, i.e, the inner area of the container, calculate the left top right bottom position relative to the layout area
+
+#### two anchors
+
+an anchor is the start layout position for an item in one direction, vertically or horizontally, you calculate the position of an item start from the anchor position
+
+once a item's layout position is determined, the anchor is forwarded and prepared for next item
+
+#### layout direction
+
+- horizontally
+
+layout from left to right by default, from right to left if reversed
+
+- vertically
+
+layout from top to bottom by default, from bottom to top if reversed
+
+#### layout process
+
+1. detemine the LTRB position
+
+given the horizontal and vertical layout anchor, calculate the start coordinates for each direction, then calculate the end coordinates for each direction according to the dimension of the item
+
+```
+left
+top
+right
+bottom
+
+if (horitonalAnchor.isReversed) {
+    right = horitonalAnchor.value - item.rightMargin
+    left = right - item.width
+} else {
+    left = horitonalAnchor.value + item.leftMargin
+    right = left + item.width
+}
+
+if (verticalAnchor.isReversed) {
+    bottom = verticalAnchor.value - item.bottomMargin
+    top = bottom - item.height
+} eles {
+    top = verticalAnchor.value + item.topMargin
+    bottom = top + item.height
+}
+```
+
+2. prepare anchors for next item
+
+```
+if (horitonalAnchor.isReversed) {
+    horitonalAnchor.value -= (item.width + item.leftMargin)
+    horitonalAnchor.value -= spaceBetweenItems
+} else {
+    horitonalAnchor.value += (item.width + item.rightMargin)
+    horitonalAnchor.value += spaceBetweenItems
+}
+
+if (verticalAnchor.isReversed) {
+    verticalAnchor.value -= (item.height + item.topMargin)
+    verticalAnchor.value -= spaceBetweenItems
+} else {
+    verticalAnchor.value += (item.height + item.bottomMargin)
+    verticalAnchor.value += spaceBetweenItems
+}
+```
+
+### flexbox style layout process
+
+#### 1.resolve the flex layout direction
+
+the main axis or cross axis is from left to right or from top to bottom
+
+we determine whether the layout direction should be reversed according to the flexDirection, flexWrap and the LTR/RTL propertes
+
+```
+boolean mainAxisReversed = false
+boolean crossAxisReversed = false
+
+when flexDirection:
+    row:
+        if (RTL) {
+            mainAxisReversed = true
+        }
+        if (flexRrap = wrap-reverse) {
+            crossAxisReversed = true
+        }
+    row-reverse:
+        if (LTR) {
+            mainAxisReversed = true
+        }
+        if (flexRrap = wrap-reverse) {
+            crossAxisReversed = true
+        }
+    column:
+        if (LTR && flexWrap = wrap-reverse) {
+            crossAxisReversed = true
+        }
+        if (RTL && flexWrap = wrap) {
+            crossAxisReversed = true
+        }
+    column-reverse:
+        if (LTR && flexWrap = wrap-reverse) {
+            crossAxisReversed = true
+        }
+        if (RTL && flexWrap = wrap) {
+            crossAxisReversed = true
+        }
+        mainAxisReversed = true
+```
+
+#### 2.determine the main axis anchor position and the space between items
+
+given the
+
+- layout direction
+
+- justify content
+
+- inner main size of container
+
+- main size of flex line
+
+calculate the main axis anchor position and the space between two flex items if exists.
+
+##### calculation according to property justify-content
+
+- flex-start
+
+```
+anchor = reversed ? containerInnerMainSize : 0
+
+```
+
+- flex-end
+
+```
+anchor = reversed ? flexLineMainSize : containerInnerMainSize - flexLineMainSize
+```
+
+- center
+
+```
+anchor = reversed ? (containerInnerMainSize + flexLineMainSize) / 2 : (containerInnerMainSize - flexLineMainSize) / 2
+```
+
+- space-around
+
+```
+spaceBetween = (containerMainSize - flexLineMainSize) / itemCount
+anchor = reversed ? containerInnerMainSize - spaceBetween / 2 : spaceBetween / 2
+
+```
+
+- space-between
+
+```
+spaceBetween = itemCount > 1 ? (containerInnerMainSize - flexLineMainSize) / (itemCount - 1) : 0
+anchor = reversed ? containerInnerMainSize : 0
+```
+
+- space-evenly
+
+```
+spaceBetween = (containerInnerMainSize - flexLineMainSize) / (itemCount + 1)
+anchor = reversed ? containerInnerMainSize - spaceBetween : spaceBetween
+```
+
+#### 3.determine the cross axis anchor position
+
+given the inner cross size of the container, determin the cross axis anchor position
+
+```
+crossAnchor = isReversed ? containerCrossSize: 0
+for each flexLine in FlexLines {
+    layoutFlexLine(flexLine, crossAnchor)
+    if (isReversed) {
+        crossAnchor -= flexLine.crossSize
+    } else {
+        crossAnchor += flexLine.crossSize
+    }
+}
+```
+
+#### 4.layout a single flex item
+
+given
+
+- isMainAxisReversed and isCrossAxisReversed
+
+- mainAxisAnchor and crossAxisAnchor
+
+- the flex item
+
+instead of calculating the LTRB position, you calculate the
+
+- mainStart
+- mainEnd
+- crossStart
+- crossEnd
+
+of and flex item, taking the alignItems and alignSelf properties into accnout, and then layout the flex item.
+
+##### 4.1 calculate the mainStart and mainEnd
+
+```
+if (isMainAxisReversed) {
+    mainEnd = mainAxisAnchor - item.mainEndMargin
+    mainStart = mainEnd - item.mainSize
+} else {
+    mainStart = mainAxisAnchor + item.mainStartMargin
+    mainEnd = mainStart + item.mainSize
+}
+```
+
+##### 4.2 resolve the cross alignment property
+
+```
+if (alignSelf != AUTO) {
+    use alignSelf
+} else {
+    use alignItems
+}
+```
+
+##### 4.3 align and calculate the crossStart and crossEnd
+
+```
+switch (alignSelf) {
+    case stretch // we have stretched this item during the measure phase, so do nothing here
+    case flex-start
+        if (isCrossAxisReversed) {
+            crossEnd = crossAnchor - crossEndMargin
+            crossStart = crossEnd - item.crossSize
+        } else {
+            crossStart = crossAnchor + crossStartMargin
+            crossEnd = crossStart + item.crossSize
+        }
+    case flex-end
+        if (isCrossAxisReversed) {
+            crossStart = crossAnchor - flexLineCrossSize + item.crossStartMargin
+            crossEnd = crossStart + item.crossSize
+        } else {
+            crossEnd = crossAnchor + flexLineCrossSize - item.crossEndMargin
+            crossStart = crossEnd - item.crossSize
+        }
+    case center
+        if (isCrossAxisReversed) {
+            crossEnd = crossAnchor - (flexLineCrossSize / 2 - item.outerCrossSize / 2) - item.crossEndMargin
+            crossStart = crossEnd - item.crossSize
+        } else {
+            crossStart = crossAnchor + (flexLineCrossSize / 2 - item.crossSize / 2) + item.crossStartMargin
+            crossEnd = crossStart + item.crossSize
+        }
+}
+```
+
+##### 4.4 layout the item
+
+```
+item.layout(mainStart, mainEnd, crossSize, crossEnd)
+```
+
+#### 5.prepare main axis anchor for next item
+
+```
+if (isMainAxisReversed) {
+    mainAxisAnchor -= (item.mainStartMargin + itemMainSize + spaceBetweenItems)
+} else {
+    mainAxisAnchor += (item.mainEndMargin + spaceBetweenItems)
+}
+```
+
+#### 6.prepare cross axis anchor for next flex line
+
+```
+if (isCrossAxisReversed) {
+    crossAxisAnchor -= flexLine.crossSize
+} else {
+    crossAxisAnchor += flexLine.crossSize
+}
+```
+
+### the overall algorithm of the layout phase
+
+```
+isMainAxisReversed, isCrossAxisReversed :=
+resolveFlexLayoutDirection(flexDirection, flexWrap, isRTL)
+
+for each flexLine in flexLines {
+    mainAxisAnchor, spaceBetweenItems := calculateMainAxisAnchorPosition(isMainAxisReversed, containerInnerMainSize, flexLine)
+    crossAxisAnchor = isCrossAxisReversed ? containerInnerCrossSize : 0
+    for each item in flexLine {
+        layoutItem(mainAxisAnchor, isMainAxisReversed, crossAxisAnchor, isCrossAxisReversed, flexLine)
+        forwardMainAxisAnchor(mainAxisAnchor, isMainAxisReversed, item, spaceBetweenItems)
+    }
+    forwardCrossAxisAnchor(crossAxisAnchor, isCrossAxisReversed, flexLine)
+}
+```
